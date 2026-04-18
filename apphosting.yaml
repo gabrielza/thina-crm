@@ -1,0 +1,20 @@
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyAbozUFMYvw2YWUo6L12xAt5aL2fLNYzO4
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: thina-crm.firebaseapp.com
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: thina-crm
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: thina-crm.firebasestorage.app
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "758961001539"
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:758961001539:web:5ae4e45100fc5220e870f6"
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: G-TV1E3EPERE
