@@ -75,68 +75,72 @@ export default function ContactDetailPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/contacts")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">{contact.name}</h1>
-            <p className="text-muted-foreground">{contact.title ? `${contact.title} at ` : ""}{contact.company}</p>
+          <Button variant="ghost" size="icon" onClick={() => router.push("/contacts")} className="h-8 w-8"><ArrowLeft className="h-4 w-4" /></Button>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/8 text-primary font-semibold">{contact.name.charAt(0)}</div>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">{contact.name}</h1>
+              <p className="text-[13px] text-muted-foreground">{contact.title ? `${contact.title} at ` : ""}{contact.company}</p>
+            </div>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="mr-2 h-4 w-4" /> Edit</Button>
-          <Button variant="destructive" onClick={handleDelete}><Trash2 className="mr-2 h-4 w-4" /> Delete</Button>
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}><Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit</Button>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={handleDelete}><Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete</Button>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Contact Information</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><a href={`mailto:${contact.email}`} className="text-primary hover:underline">{contact.email}</a></div>
-            <div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground" /><span>{contact.phone || "—"}</span></div>
-            <div className="flex items-center gap-3"><Building2 className="h-4 w-4 text-muted-foreground" /><span>{contact.company || "—"}</span></div>
-            <div className="flex items-center gap-3"><Briefcase className="h-4 w-4 text-muted-foreground" /><span>{contact.title || "—"}</span></div>
-            <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground" /><span>Created: {contact.createdAt ? format(contact.createdAt.toDate(), "dd MMM yyyy") : "—"}</span></div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Associated Leads ({leads.length})</CardTitle></CardHeader>
-          <CardContent>
-            {leads.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">No leads linked to this contact.</p>
-            ) : (
-              <div className="space-y-3">
-                {leads.map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer" onClick={() => router.push(`/leads/${lead.id}`)}>
-                    <div>
-                      <p className="text-sm font-medium">{lead.name}</p>
-                      <p className="text-xs text-muted-foreground">{lead.company}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-sm">{lead.value ? formatCurrency(lead.value) : "—"}</span>
-                      <Badge variant={statusColors[lead.status]}>{lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {contact.notes && (
-          <Card className="md:col-span-2">
-            <CardHeader><CardTitle className="text-lg">Notes</CardTitle></CardHeader>
-            <CardContent><p className="whitespace-pre-wrap text-sm">{contact.notes}</p></CardContent>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left column - Details */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader><CardTitle>Contact</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground/60" /><a href={`mailto:${contact.email}`} className="text-[13px] text-primary hover:underline">{contact.email}</a></div>
+              <div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">{contact.phone || "—"}</span></div>
+              <div className="flex items-center gap-3"><Building2 className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">{contact.company || "—"}</span></div>
+              <div className="flex items-center gap-3"><Briefcase className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">{contact.title || "—"}</span></div>
+              <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">Created: {contact.createdAt ? format(contact.createdAt.toDate(), "dd MMM yyyy") : "—"}</span></div>
+            </CardContent>
           </Card>
-        )}
 
-        <div className="md:col-span-2">
-          <ActivityTimeline activities={activities} contactId={contact.id} onActivityAdded={fetchData} />
+          <Card>
+            <CardHeader><CardTitle>Associated Leads ({leads.length})</CardTitle></CardHeader>
+            <CardContent>
+              {leads.length === 0 ? (
+                <p className="text-[13px] text-muted-foreground text-center py-4">No leads linked to this contact.</p>
+              ) : (
+                <div className="space-y-2">
+                  {leads.map((lead) => (
+                    <div key={lead.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => router.push(`/leads/${lead.id}`)}>
+                      <div>
+                        <p className="text-[13px] font-medium">{lead.name}</p>
+                        <p className="text-[11px] text-muted-foreground">{lead.company}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-[13px]">{lead.value ? formatCurrency(lead.value) : "—"}</span>
+                        <Badge variant={statusColors[lead.status]} className="text-[10px]">{lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {contact.notes && (
+            <Card>
+              <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
+              <CardContent><p className="whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">{contact.notes}</p></CardContent>
+            </Card>
+          )}
         </div>
 
-        <div className="md:col-span-2">
+        {/* Center + Right columns - Activity & Tasks */}
+        <div className="lg:col-span-2 space-y-6">
+          <ActivityTimeline activities={activities} contactId={contact.id} onActivityAdded={fetchData} />
           <TaskList tasks={tasks} contactId={contact.id} onTaskChanged={fetchData} />
         </div>
       </div>

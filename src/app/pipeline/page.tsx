@@ -87,9 +87,9 @@ export default function PipelinePage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Pipeline</h1>
-            <p className="text-muted-foreground mt-1">
-              Drag deals between stages &middot; Pipeline: {formatCurrency(totalPipelineValue)} &middot; Won: {formatCurrency(totalWonValue)}
+            <h1 className="text-xl font-semibold tracking-tight">Pipeline</h1>
+            <p className="text-[13px] text-muted-foreground mt-1">
+              Drag deals between stages &middot; Pipeline: <span className="font-mono font-medium">{formatCurrency(totalPipelineValue)}</span> &middot; Won: <span className="font-mono font-medium">{formatCurrency(totalWonValue)}</span>
             </p>
           </div>
           <NewLeadSheet onLeadAdded={fetchLeads} />
@@ -98,7 +98,7 @@ export default function PipelinePage() {
         {loading ? (
           <div className="flex items-center justify-center py-24"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
         ) : (
-          <div className="grid grid-cols-6 gap-4 min-h-[60vh]">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 min-h-[60vh]">
             {STAGES.map((stage) => {
               const stageLeads = getStageLeads(stage.key);
               const stageValue = getStageValue(stage.key);
@@ -107,7 +107,7 @@ export default function PipelinePage() {
               return (
                 <div
                   key={stage.key}
-                  className={`flex flex-col rounded-lg border-2 p-3 transition-all ${stage.bg} ${isOver ? "ring-2 ring-primary scale-[1.02]" : ""}`}
+                  className={`flex flex-col rounded-xl border p-3 transition-all bg-muted/20 ${isOver ? "ring-2 ring-primary" : "border-border/50"}`}
                   onDragOver={(e) => handleDragOver(e, stage.key)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, stage.key)}
@@ -115,8 +115,8 @@ export default function PipelinePage() {
                   {/* Column Header */}
                   <div className="mb-3 px-1">
                     <div className="flex items-center justify-between">
-                      <h3 className={`text-sm font-semibold ${stage.color}`}>{stage.label}</h3>
-                      <Badge variant="outline" className="text-xs">{stageLeads.length}</Badge>
+                      <h3 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{stage.label}</h3>
+                      <span className="text-[11px] tabular-nums text-muted-foreground">{stageLeads.length}</span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 font-mono">{formatCurrency(stageValue)}</p>
                   </div>

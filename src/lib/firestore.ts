@@ -11,6 +11,7 @@ import {
   where,
   serverTimestamp,
   Timestamp,
+  writeBatch,
 } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase";
 
@@ -229,4 +230,60 @@ export async function updateTask(id: string, data: Partial<Task>) {
 export async function deleteTask(id: string) {
   const db = getFirebaseDb();
   await deleteDoc(doc(db, TASKS_COLLECTION, id));
+}
+
+// ─── BATCH WRITE (for seeding) ───────────────────────────
+
+/**
+ * Write documents in batches of up to 500 (Firestore limit).
+ * Returns array of generated document IDs.
+ */
+export async function batchWrite(
+  collectionName: string,
+  documents: Record<string, unknown>[],
+  onProgress?: (written: number, total: number) => void
+): Promise<string[]> {
+  const db = getFirebaseDb();
+  const ids: string[] = [];
+  const BATCH_SIZE = 450; // stay under 500 limit
+
+  for (let i = 0; i < documents.length; i += BATCH_SIZE) {
+    const batch = writeBatch(db);
+    const chunk = documents.slice(i, i + BATCH_SIZE);
+
+    for (const data of chunk) {
+      const docRef = doc(collection(db, collectionName));
+      batch.set(docRef, { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+      ids.push(docRef.id);
+    }
+
+    await batch.commit();
+    onProgress?.(Math.min(i + BATCH_SIZE, documents.length), documents.length);
+  }
+
+  return ids;
+}
+
+/**
+ * Delete all documents in a collection (for cleanup before re-seeding).
+ */
+export async function clearCollection(
+  collectionName: string,
+  onProgress?: (deleted: number) => void
+): Promise<number> {
+  const db = getFirebaseDb();
+  const snapshot = await getDocs(collection(db, collectionName));
+  let deleted = 0;
+  const BATCH_SIZE = 450;
+
+  for (let i = 0; i < snapshot.docs.length; i += BATCH_SIZE) {
+    const batch = writeBatch(db);
+    const chunk = snapshot.docs.slice(i, i + BATCH_SIZE);
+    chunk.forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+    deleted += chunk.length;
+    onProgress?.(deleted);
+  }
+
+  return deleted;
 }

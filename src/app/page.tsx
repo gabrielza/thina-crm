@@ -60,8 +60,8 @@ export default function DashboardPage() {
     <AppShell>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {firstName}</h1>
-          <p className="text-muted-foreground mt-1">Here&apos;s what&apos;s happening with your sales pipeline.</p>
+          <h1 className="text-xl font-semibold tracking-tight">Welcome back, {firstName}</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">Here&apos;s what&apos;s happening with your sales pipeline.</p>
         </div>
 
         {loading ? (
@@ -72,25 +72,25 @@ export default function DashboardPage() {
             <DashboardCards leads={leads} />
 
             {/* Quick Stats Row */}
-            <div className="grid gap-4 md:grid-cols-4">
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push("/contacts")}>
-                <CardContent className="pt-6"><div className="flex items-center gap-3"><ContactIcon className="h-8 w-8 text-blue-500" /><div><p className="text-2xl font-bold">{contacts.length}</p><p className="text-xs text-muted-foreground">Contacts</p></div></div></CardContent>
+            <div className="grid gap-3 md:grid-cols-4">
+              <Card className="cursor-pointer" onClick={() => router.push("/contacts")}>
+                <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Contacts</p><p className="text-2xl font-semibold tabular-nums mt-1">{contacts.length}</p></div><ContactIcon className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
               </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push("/tasks")}>
-                <CardContent className="pt-6"><div className="flex items-center gap-3"><CheckSquare className="h-8 w-8 text-orange-500" /><div><p className="text-2xl font-bold">{pendingTasks.length}</p><p className="text-xs text-muted-foreground">Pending Tasks</p></div></div></CardContent>
+              <Card className="cursor-pointer" onClick={() => router.push("/tasks")}>
+                <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pending Tasks</p><p className="text-2xl font-semibold tabular-nums mt-1">{pendingTasks.length}</p></div><CheckSquare className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
               </Card>
-              <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push("/tasks")}>
-                <CardContent className="pt-6"><div className="flex items-center gap-3"><AlertTriangle className="h-8 w-8 text-red-500" /><div><p className="text-2xl font-bold">{overdueTasks.length}</p><p className="text-xs text-muted-foreground">Overdue Tasks</p></div></div></CardContent>
+              <Card className="cursor-pointer" onClick={() => router.push("/tasks")}>
+                <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Overdue</p><p className="text-2xl font-semibold tabular-nums mt-1">{overdueTasks.length}</p></div><AlertTriangle className={`h-5 w-5 ${overdueTasks.length > 0 ? 'text-destructive/70' : 'text-muted-foreground/50'}`} /></div></CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-6"><div className="flex items-center gap-3"><ActivityIcon className="h-8 w-8 text-purple-500" /><div><p className="text-2xl font-bold">{activities.length}</p><p className="text-xs text-muted-foreground">Activities Logged</p></div></div></CardContent>
+                <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Activities</p><p className="text-2xl font-semibold tabular-nums mt-1">{activities.length}</p></div><ActivityIcon className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
               </Card>
             </div>
 
             {/* Forecast Card */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-green-500" /> Pipeline Forecast</CardTitle>
+                <CardTitle>Pipeline Forecast</CardTitle>
                 <CardDescription>Weighted pipeline value by probability of close</CardDescription>
               </CardHeader>
               <CardContent>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
             <div className="grid gap-6 md:grid-cols-2">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Recent Activity</CardTitle>
+                  <CardTitle>Recent Activity</CardTitle>
                   <CardDescription>Latest interactions across your CRM</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -161,16 +161,16 @@ export default function DashboardPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Recent Leads</CardTitle>
+                  <CardTitle>Recent Leads</CardTitle>
                   <CardDescription>Latest additions to your pipeline</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {recentLeads.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">No leads yet. Go to the Leads page to add your first one!</p>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {recentLeads.map((lead) => (
-                        <div key={lead.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => router.push(`/leads/${lead.id}`)}>
+                        <div key={lead.id} className="flex items-center justify-between p-3 rounded-lg border border-border/50 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => router.push(`/leads/${lead.id}`)}>
                           <div className="flex items-center gap-3">
                             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary text-sm">{lead.name.charAt(0)}</div>
                             <div><p className="font-medium text-sm">{lead.name}</p><p className="text-xs text-muted-foreground">{lead.company}</p></div>

@@ -6,7 +6,6 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
 export default function LoginPage() {
@@ -52,22 +51,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xl">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="w-full max-w-sm space-y-8">
+        <div className="text-center space-y-2">
+          <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
             T
           </div>
-          <CardTitle className="text-2xl">Welcome to Thina</CardTitle>
-          <CardDescription>
+          <h1 className="text-xl font-semibold tracking-tight">Welcome to Thina</h1>
+          <p className="text-[13px] text-muted-foreground">
             {isSignUp ? "Create your account to get started" : "Sign in to manage your leads"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+
+        <div className="space-y-4">
           {/* Google Sign-In */}
           <Button
             variant="outline"
-            className="w-full"
+            className="w-full h-10 text-[13px]"
             onClick={handleGoogleSignIn}
             disabled={loading}
           >
@@ -97,14 +97,14 @@ export default function LoginPage() {
               <Separator />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">Or continue with email</span>
+              <span className="bg-background px-2 text-muted-foreground">Or continue with email</span>
             </div>
           </div>
 
           {/* Email/Password */}
           <form onSubmit={handleEmailSubmit} className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-[13px]">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -112,10 +112,11 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
+                className="h-10 text-[13px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-[13px]">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -124,17 +125,18 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                className="h-10 text-[13px]"
               />
             </div>
             {error && (
-              <p className="text-sm text-destructive">{error}</p>
+              <p className="text-[13px] text-destructive">{error}</p>
             )}
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full h-10 text-[13px]" disabled={loading}>
               {loading ? "Please wait..." : isSignUp ? "Create Account" : "Sign In"}
             </Button>
           </form>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <p className="text-center text-[13px] text-muted-foreground">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <button
               type="button"
@@ -147,8 +149,8 @@ export default function LoginPage() {
               {isSignUp ? "Sign in" : "Sign up"}
             </button>
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

@@ -59,20 +59,18 @@ export function DashboardCards({ leads }: DashboardCardsProps) {
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
         <Card key={stat.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
               {stat.title}
             </CardTitle>
-            <div className={`rounded-md p-2 ${stat.bg}`}>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </div>
+            <stat.icon className={`h-4 w-4 ${stat.color}`} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
+            <div className="text-2xl font-semibold tabular-nums">{stat.value}</div>
+            <p className="text-[11px] text-muted-foreground mt-1">{stat.description}</p>
           </CardContent>
         </Card>
       ))}

@@ -18,8 +18,8 @@ export default function LeadsPage() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Leads</h1>
-            <p className="text-muted-foreground mt-1">
+            <h1 className="text-xl font-semibold tracking-tight">Leads</h1>
+            <p className="text-[13px] text-muted-foreground mt-1">
               Manage your contacts and track your pipeline.
             </p>
           </div>

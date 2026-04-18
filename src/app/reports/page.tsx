@@ -134,57 +134,57 @@ export default function ReportsPage() {
   return (
     <AppShell>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-            <p className="text-muted-foreground mt-1">Analytics, insights &amp; data export</p>
+            <h1 className="text-xl font-semibold tracking-tight">Reports</h1>
+            <p className="text-[13px] text-muted-foreground mt-1">Analytics, insights &amp; data export</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={exportLeads}><Download className="mr-2 h-4 w-4" /> Leads CSV</Button>
-            <Button variant="outline" size="sm" onClick={exportContacts}><Download className="mr-2 h-4 w-4" /> Contacts CSV</Button>
-            <Button variant="outline" size="sm" onClick={exportTasks}><Download className="mr-2 h-4 w-4" /> Tasks CSV</Button>
+            <Button variant="outline" size="sm" onClick={exportLeads} className="text-xs"><Download className="mr-1.5 h-3.5 w-3.5" /> Leads</Button>
+            <Button variant="outline" size="sm" onClick={exportContacts} className="text-xs"><Download className="mr-1.5 h-3.5 w-3.5" /> Contacts</Button>
+            <Button variant="outline" size="sm" onClick={exportTasks} className="text-xs"><Download className="mr-1.5 h-3.5 w-3.5" /> Tasks</Button>
           </div>
         </div>
 
         {/* KPI Overview */}
-        <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-8">
-          <Card className="md:col-span-1 lg:col-span-2">
-            <CardContent className="pt-6"><div className="flex items-center gap-3"><Users className="h-8 w-8 text-blue-500" /><div><p className="text-2xl font-bold">{totalLeads}</p><p className="text-xs text-muted-foreground">Total Leads</p></div></div></CardContent>
+        <div className="grid gap-3 md:grid-cols-4">
+          <Card>
+            <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Total Leads</p><p className="text-2xl font-semibold tabular-nums mt-1">{totalLeads}</p></div><Users className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
           </Card>
-          <Card className="md:col-span-1 lg:col-span-2">
-            <CardContent className="pt-6"><div className="flex items-center gap-3"><Target className="h-8 w-8 text-green-500" /><div><p className="text-2xl font-bold">{winRate.toFixed(1)}%</p><p className="text-xs text-muted-foreground">Win Rate</p></div></div></CardContent>
+          <Card>
+            <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Win Rate</p><p className="text-2xl font-semibold tabular-nums mt-1">{winRate.toFixed(1)}%</p></div><Target className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
           </Card>
-          <Card className="md:col-span-1 lg:col-span-2">
-            <CardContent className="pt-6"><div className="flex items-center gap-3"><DollarSign className="h-8 w-8 text-emerald-500" /><div><p className="text-2xl font-bold">{formatCurrency(avgDealSize)}</p><p className="text-xs text-muted-foreground">Avg Deal Size</p></div></div></CardContent>
+          <Card>
+            <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Avg Deal Size</p><p className="text-2xl font-semibold tabular-nums mt-1 font-mono">{formatCurrency(avgDealSize)}</p></div><DollarSign className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
           </Card>
-          <Card className="md:col-span-1 lg:col-span-2">
-            <CardContent className="pt-6"><div className="flex items-center gap-3"><Activity className="h-8 w-8 text-purple-500" /><div><p className="text-2xl font-bold">{activities.length}</p><p className="text-xs text-muted-foreground">Activities Logged</p></div></div></CardContent>
+          <Card>
+            <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Activities</p><p className="text-2xl font-semibold tabular-nums mt-1">{activities.length}</p></div><Activity className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
           </Card>
         </div>
 
         {/* Revenue Summary */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-3">
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="h-6 w-6 text-green-500" />
-                <div><p className="text-xl font-bold font-mono">{formatCurrency(wonRevenue)}</p><p className="text-xs text-muted-foreground">Won Revenue</p></div>
+            <CardContent className="pt-5">
+              <div className="flex items-center justify-between">
+                <div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Won Revenue</p><p className="text-xl font-semibold font-mono mt-1">{formatCurrency(wonRevenue)}</p></div>
+                <TrendingUp className="h-5 w-5 text-muted-foreground/50" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <BarChart3 className="h-6 w-6 text-blue-500" />
-                <div><p className="text-xl font-bold font-mono">{formatCurrency(pipelineValue)}</p><p className="text-xs text-muted-foreground">Open Pipeline</p></div>
+            <CardContent className="pt-5">
+              <div className="flex items-center justify-between">
+                <div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Open Pipeline</p><p className="text-xl font-semibold font-mono mt-1">{formatCurrency(pipelineValue)}</p></div>
+                <BarChart3 className="h-5 w-5 text-muted-foreground/50" />
               </div>
             </CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <TrendingDown className="h-6 w-6 text-red-500" />
-                <div><p className="text-xl font-bold font-mono">{formatCurrency(lostDeals.reduce((s, l) => s + (l.value || 0), 0))}</p><p className="text-xs text-muted-foreground">Lost Revenue</p></div>
+            <CardContent className="pt-5">
+              <div className="flex items-center justify-between">
+                <div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Lost Revenue</p><p className="text-xl font-semibold font-mono mt-1">{formatCurrency(lostDeals.reduce((s, l) => s + (l.value || 0), 0))}</p></div>
+                <TrendingDown className="h-5 w-5 text-muted-foreground/50" />
               </div>
             </CardContent>
           </Card>

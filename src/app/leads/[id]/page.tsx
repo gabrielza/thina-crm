@@ -65,53 +65,57 @@ export default function LeadDetailPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/leads")}><ArrowLeft className="h-5 w-5" /></Button>
-          <div>
-            <h1 className="text-2xl font-bold">{lead.name}</h1>
-            <p className="text-muted-foreground">{lead.company}</p>
+          <Button variant="ghost" size="icon" onClick={() => router.push("/leads")} className="h-8 w-8"><ArrowLeft className="h-4 w-4" /></Button>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/8 text-primary font-semibold">{lead.name.charAt(0)}</div>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">{lead.name}</h1>
+              <p className="text-[13px] text-muted-foreground">{lead.company}</p>
+            </div>
           </div>
-          <Badge variant={statusColors[lead.status]} className="ml-2 text-sm">{lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</Badge>
+          <Badge variant={statusColors[lead.status]} className="text-[11px]">{lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</Badge>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setEditOpen(true)}><Pencil className="mr-2 h-4 w-4" /> Edit</Button>
-          <Button variant="destructive" onClick={handleDelete}><Trash2 className="mr-2 h-4 w-4" /> Delete</Button>
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}><Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit</Button>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={handleDelete}><Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete</Button>
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Contact Information</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><a href={`mailto:${lead.email}`} className="text-primary hover:underline">{lead.email}</a></div>
-            <div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground" /><a href={`tel:${lead.phone}`} className="hover:underline">{lead.phone || "—"}</a></div>
-            <div className="flex items-center gap-3"><Building2 className="h-4 w-4 text-muted-foreground" /><span>{lead.company || "—"}</span></div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Deal Details</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3"><DollarSign className="h-4 w-4 text-muted-foreground" /><span className="font-mono text-lg font-semibold">{lead.value ? formatCurrency(lead.value) : "No value set"}</span></div>
-            <div className="flex items-center gap-3"><Tag className="h-4 w-4 text-muted-foreground" /><span>Source: {lead.source || "—"}</span></div>
-            <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground" /><span>Created: {lead.createdAt ? format(lead.createdAt.toDate(), "dd MMM yyyy, HH:mm") : "—"}</span></div>
-            {lead.updatedAt && <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground" /><span>Updated: {format(lead.updatedAt.toDate(), "dd MMM yyyy, HH:mm")}</span></div>}
-          </CardContent>
-        </Card>
-
-        {lead.notes && (
-          <Card className="md:col-span-2">
-            <CardHeader><CardTitle className="text-lg">Notes</CardTitle></CardHeader>
-            <CardContent><p className="whitespace-pre-wrap text-sm leading-relaxed">{lead.notes}</p></CardContent>
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left column - Details */}
+        <div className="space-y-6">
+          <Card>
+            <CardHeader><CardTitle>Contact</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground/60" /><a href={`mailto:${lead.email}`} className="text-[13px] text-primary hover:underline">{lead.email}</a></div>
+              <div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">{lead.phone || "—"}</span></div>
+              <div className="flex items-center gap-3"><Building2 className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">{lead.company || "—"}</span></div>
+            </CardContent>
           </Card>
-        )}
 
-        <div className="md:col-span-2">
-          <ActivityTimeline activities={activities} leadId={lead.id} onActivityAdded={fetchData} />
+          <Card>
+            <CardHeader><CardTitle>Deal</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-center gap-3"><DollarSign className="h-4 w-4 text-muted-foreground/60" /><span className="font-mono text-sm font-semibold">{lead.value ? formatCurrency(lead.value) : "No value set"}</span></div>
+              <div className="flex items-center gap-3"><Tag className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">Source: {lead.source || "—"}</span></div>
+              <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">Created: {lead.createdAt ? format(lead.createdAt.toDate(), "dd MMM yyyy, HH:mm") : "—"}</span></div>
+              {lead.updatedAt && <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">Updated: {format(lead.updatedAt.toDate(), "dd MMM yyyy, HH:mm")}</span></div>}
+            </CardContent>
+          </Card>
+
+          {lead.notes && (
+            <Card>
+              <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
+              <CardContent><p className="whitespace-pre-wrap text-[13px] leading-relaxed text-muted-foreground">{lead.notes}</p></CardContent>
+            </Card>
+          )}
         </div>
 
-        <div className="md:col-span-2">
+        {/* Center + Right columns - Activity & Tasks */}
+        <div className="lg:col-span-2 space-y-6">
+          <ActivityTimeline activities={activities} leadId={lead.id} onActivityAdded={fetchData} />
           <TaskList tasks={tasks} leadId={lead.id} onTaskChanged={fetchData} />
         </div>
       </div>

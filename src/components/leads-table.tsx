@@ -3,17 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Search, Pencil } from "lucide-react";
+import { Trash2, Search, Pencil, Phone, Mail } from "lucide-react";
 import { getLeads, deleteLead, type Lead } from "@/lib/firestore";
 import { EditLeadSheet } from "@/components/edit-lead-sheet";
 
@@ -53,9 +48,7 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
     }
   }, []);
 
-  useEffect(() => {
-    fetchLeads();
-  }, [fetchLeads, refreshKey]);
+  useEffect(() => { fetchLeads(); }, [fetchLeads, refreshKey]);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this lead?")) return;
@@ -86,7 +79,7 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-16">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     );
@@ -95,112 +88,95 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative max-w-sm flex-1">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Search leads..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Search leads..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-[13px] border-border/50 bg-background" />
         </div>
-        <div className="flex gap-1 flex-wrap">
-          <Button
-            variant={statusFilter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setStatusFilter("all")}
-          >
-            All ({leads.length})
-          </Button>
+        <div className="flex gap-1.5 flex-wrap">
+          <button onClick={() => setStatusFilter("all")} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${statusFilter === "all" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+            All {leads.length}
+          </button>
           {ALL_STATUSES.map((status) => {
             const count = leads.filter((l) => l.status === status).length;
+            if (count === 0) return null;
             return (
-              <Button
-                key={status}
-                variant={statusFilter === status ? "default" : "outline"}
-                size="sm"
-                onClick={() => setStatusFilter(status)}
-              >
-                {status.charAt(0).toUpperCase() + status.slice(1)} ({count})
-              </Button>
+              <button key={status} onClick={() => setStatusFilter(status)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${statusFilter === status ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+                {status.charAt(0).toUpperCase() + status.slice(1)} {count}
+              </button>
             );
           })}
         </div>
       </div>
 
-      {/* Table */}
       {filtered.length === 0 ? (
-        <div className="rounded-md border py-12 text-center">
-          <p className="text-muted-foreground">
-            {leads.length === 0
-              ? "No leads yet. Click 'Add Lead' to get started!"
-              : "No leads match your filters."}
-          </p>
+        <div className="rounded-xl border border-border/50 py-16 text-center">
+          <p className="text-[13px] text-muted-foreground">{leads.length === 0 ? "No leads yet. Click 'Add Lead' to get started!" : "No leads match your filters."}</p>
         </div>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead className="w-[80px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((lead) => (
-                <TableRow key={lead.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/leads/${lead.id}`)}>
-                  <TableCell className="font-medium">{lead.name}</TableCell>
-                  <TableCell>{lead.email}</TableCell>
-                  <TableCell>{lead.company}</TableCell>
-                  <TableCell className="font-mono text-sm">
-                    {lead.value ? formatCurrency(lead.value) : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={statusColors[lead.status]}>
-                      {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{lead.source}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => { e.stopPropagation(); handleEdit(lead); }}
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => { e.stopPropagation(); lead.id && handleDelete(lead.id); }}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block rounded-xl border border-border/50 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead>Name</TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Value</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead className="w-[120px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((lead) => (
+                  <TableRow key={lead.id} className="cursor-pointer" onClick={() => router.push(`/leads/${lead.id}`)}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary text-xs font-semibold">{lead.name.charAt(0)}</div>
+                        <div><p className="font-medium text-[13px]">{lead.name}</p><p className="text-[11px] text-muted-foreground">{lead.email}</p></div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">{lead.company || "—"}</TableCell>
+                    <TableCell className="font-mono text-[13px] font-medium">{lead.value ? formatCurrency(lead.value) : "—"}</TableCell>
+                    <TableCell><Badge variant={statusColors[lead.status]} className="text-[11px]">{lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</Badge></TableCell>
+                    <TableCell className="text-muted-foreground text-[13px]">{lead.source}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {lead.phone && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); window.open(`tel:${lead.phone}`); }}><Phone className="h-3.5 w-3.5" /></Button>}
+                        {lead.email && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); window.open(`mailto:${lead.email}`); }}><Mail className="h-3.5 w-3.5" /></Button>}
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleEdit(lead); }}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-destructive" onClick={(e) => { e.stopPropagation(); lead.id && handleDelete(lead.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Card List */}
+          <div className="md:hidden space-y-2">
+            {filtered.map((lead) => (
+              <div key={lead.id} className="rounded-xl border border-border/50 p-4 active:bg-muted/30 transition-colors" onClick={() => router.push(`/leads/${lead.id}`)}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">{lead.name.charAt(0)}</div>
+                    <div><p className="font-medium text-sm">{lead.name}</p><p className="text-[12px] text-muted-foreground">{lead.company}</p></div>
+                  </div>
+                  <Badge variant={statusColors[lead.status]} className="text-[10px]">{lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</Badge>
+                </div>
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/30">
+                  <span className="font-mono text-sm font-medium">{lead.value ? formatCurrency(lead.value) : "—"}</span>
+                  <span className="text-[12px] text-muted-foreground">{lead.source}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
-      {/* Edit Sheet */}
-      <EditLeadSheet
-        lead={editLead}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onLeadUpdated={fetchLeads}
-      />
+      <EditLeadSheet lead={editLead} open={editOpen} onOpenChange={setEditOpen} onLeadUpdated={fetchLeads} />
     </div>
   );
 }

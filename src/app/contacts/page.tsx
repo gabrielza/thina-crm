@@ -14,8 +14,8 @@ export default function ContactsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
-            <p className="text-muted-foreground mt-1">Manage your contacts and customer relationships.</p>
+            <h1 className="text-xl font-semibold tracking-tight">Contacts</h1>
+            <p className="text-[13px] text-muted-foreground mt-1">Manage your contacts and customer relationships.</p>
           </div>
           <NewContactSheet onContactAdded={handleContactAdded} />
         </div>

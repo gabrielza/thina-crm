@@ -96,45 +96,25 @@ export default function TasksPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
-            <p className="text-muted-foreground mt-1">Manage your to-dos and follow-ups</p>
+            <h1 className="text-xl font-semibold tracking-tight">Tasks</h1>
+            <p className="text-[13px] text-muted-foreground mt-1">Manage your to-dos and follow-ups</p>
           </div>
-          <Button onClick={() => setShowForm(!showForm)}><Plus className="mr-2 h-4 w-4" /> New Task</Button>
+          <Button onClick={() => setShowForm(!showForm)} size="sm"><Plus className="mr-2 h-3.5 w-3.5" /> New Task</Button>
         </div>
 
         {/* KPI Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter("pending")}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Clock className="h-8 w-8 text-orange-500" />
-                <div><p className="text-2xl font-bold">{pendingCount}</p><p className="text-xs text-muted-foreground">Pending</p></div>
-              </div>
-            </CardContent>
+        <div className="grid gap-3 md:grid-cols-4">
+          <Card className="cursor-pointer" onClick={() => setFilter("pending")}>
+            <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pending</p><p className="text-2xl font-semibold tabular-nums mt-1">{pendingCount}</p></div><Clock className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
           </Card>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter("overdue")}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="h-8 w-8 text-red-500" />
-                <div><p className="text-2xl font-bold">{overdueCount}</p><p className="text-xs text-muted-foreground">Overdue</p></div>
-              </div>
-            </CardContent>
+          <Card className="cursor-pointer" onClick={() => setFilter("overdue")}>
+            <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Overdue</p><p className="text-2xl font-semibold tabular-nums mt-1">{overdueCount}</p></div><AlertTriangle className={`h-5 w-5 ${overdueCount > 0 ? 'text-destructive/70' : 'text-muted-foreground/50'}`} /></div></CardContent>
           </Card>
           <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Filter className="h-8 w-8 text-blue-500" />
-                <div><p className="text-2xl font-bold">{todayCount}</p><p className="text-xs text-muted-foreground">Due Today</p></div>
-              </div>
-            </CardContent>
+            <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Due Today</p><p className="text-2xl font-semibold tabular-nums mt-1">{todayCount}</p></div><Filter className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
           </Card>
-          <Card className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setFilter("completed")}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <Check className="h-8 w-8 text-green-600" />
-                <div><p className="text-2xl font-bold">{completedCount}</p><p className="text-xs text-muted-foreground">Completed</p></div>
-              </div>
-            </CardContent>
+          <Card className="cursor-pointer" onClick={() => setFilter("completed")}>
+            <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Completed</p><p className="text-2xl font-semibold tabular-nums mt-1">{completedCount}</p></div><Check className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
           </Card>
         </div>
 
@@ -180,11 +160,11 @@ export default function TasksPage() {
         )}
 
         {/* Filter Tabs */}
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           {(["all", "pending", "overdue", "completed"] as const).map((f) => (
-            <Button key={f} variant={filter === f ? "default" : "outline"} size="sm" onClick={() => setFilter(f)}>
+            <button key={f} onClick={() => setFilter(f)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${filter === f ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
               {f.charAt(0).toUpperCase() + f.slice(1)}
-            </Button>
+            </button>
           ))}
         </div>
 
@@ -192,12 +172,12 @@ export default function TasksPage() {
         {loading ? (
           <div className="flex items-center justify-center py-24"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
         ) : sortedTasks.length === 0 ? (
-          <Card><CardContent className="py-12 text-center"><p className="text-muted-foreground">No tasks found. Create one to get started!</p></CardContent></Card>
+          <Card><CardContent className="py-16 text-center"><p className="text-[13px] text-muted-foreground">No tasks found. Create one to get started!</p></CardContent></Card>
         ) : (
           <div className="space-y-2">
             {sortedTasks.map((task) => (
-              <Card key={task.id} className={`transition-all hover:shadow-sm ${task.status === "completed" ? "opacity-60" : ""} ${isOverdue(task) ? "border-red-200 bg-red-50/30 dark:border-red-900 dark:bg-red-950/20" : ""}`}>
-                <CardContent className="flex items-center gap-4 py-4">
+              <Card key={task.id} className={`transition-all ${task.status === "completed" ? "opacity-50" : ""} ${isOverdue(task) ? "border-destructive/30 bg-destructive/5" : ""}`}>
+                <CardContent className="flex items-center gap-4 py-3.5">
                   <button
                     onClick={() => toggleComplete(task)}
                     className={`shrink-0 rounded-full h-6 w-6 flex items-center justify-center transition-colors ${task.status === "completed" ? "bg-green-100 text-green-600" : "border-2 border-muted-foreground/30 hover:border-primary"}`}
