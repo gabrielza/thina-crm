@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { addLead } from "@/lib/firestore";
+import { addLead, getContacts, type Contact } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
 
 interface NewLeadSheetProps {
@@ -31,6 +31,7 @@ export function NewLeadSheet({ onLeadAdded }: NewLeadSheetProps) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([]);
 
   const [form, setForm] = useState({
     name: "",
@@ -41,7 +42,32 @@ export function NewLeadSheet({ onLeadAdded }: NewLeadSheetProps) {
     source: "",
     notes: "",
     value: 0,
+    contactId: "",
   });
+
+  useEffect(() => {
+    if (open) {
+      getContacts().then(setContacts).catch(console.error);
+    }
+  }, [open]);
+
+  const handleContactSelect = (contactId: string) => {
+    if (contactId === "__none__") {
+      setForm({ ...form, contactId: "" });
+      return;
+    }
+    const contact = contacts.find((c) => c.id === contactId);
+    if (contact) {
+      setForm({
+        ...form,
+        contactId,
+        name: form.name || contact.name,
+        email: form.email || contact.email,
+        phone: form.phone || contact.phone,
+        company: form.company || contact.company,
+      });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +88,7 @@ export function NewLeadSheet({ onLeadAdded }: NewLeadSheetProps) {
         source: "",
         notes: "",
         value: 0,
+        contactId: "",
       });
       setOpen(false);
       onLeadAdded();
@@ -86,6 +113,20 @@ export function NewLeadSheet({ onLeadAdded }: NewLeadSheetProps) {
           <SheetDescription>Add a new contact to your pipeline.</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+          {contacts.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="contactId">Link to Contact</Label>
+              <Select value={form.contactId || "__none__"} onValueChange={handleContactSelect}>
+                <SelectTrigger><SelectValue placeholder="Select a contact (optional)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No contact</SelectItem>
+                  {contacts.map((c) => (
+                    <SelectItem key={c.id} value={c.id!}>{c.name} — {c.company}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="name">Full Name *</Label>
             <Input

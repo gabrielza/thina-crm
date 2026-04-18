@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { updateLead, type Lead } from "@/lib/firestore";
+import { updateLead, getContacts, type Lead, type Contact } from "@/lib/firestore";
 
 interface EditLeadSheetProps {
   lead: Lead | null;
@@ -29,6 +29,7 @@ interface EditLeadSheetProps {
 
 export function EditLeadSheet({ lead, open, onOpenChange, onLeadUpdated }: EditLeadSheetProps) {
   const [saving, setSaving] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -38,6 +39,7 @@ export function EditLeadSheet({ lead, open, onOpenChange, onLeadUpdated }: EditL
     source: "",
     notes: "",
     value: 0,
+    contactId: "",
   });
 
   useEffect(() => {
@@ -51,9 +53,16 @@ export function EditLeadSheet({ lead, open, onOpenChange, onLeadUpdated }: EditL
         source: lead.source,
         notes: lead.notes,
         value: lead.value || 0,
+        contactId: lead.contactId || "",
       });
     }
   }, [lead]);
+
+  useEffect(() => {
+    if (open) {
+      getContacts().then(setContacts).catch(console.error);
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +88,20 @@ export function EditLeadSheet({ lead, open, onOpenChange, onLeadUpdated }: EditL
           <SheetDescription>Update lead information.</SheetDescription>
         </SheetHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+          {contacts.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="edit-contactId">Linked Contact</Label>
+              <Select value={form.contactId || "__none__"} onValueChange={(v) => setForm({ ...form, contactId: v === "__none__" ? "" : v })}>
+                <SelectTrigger><SelectValue placeholder="Select a contact (optional)" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">No contact</SelectItem>
+                  {contacts.map((c) => (
+                    <SelectItem key={c.id} value={c.id!}>{c.name} — {c.company}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="edit-name">Full Name *</Label>
             <Input

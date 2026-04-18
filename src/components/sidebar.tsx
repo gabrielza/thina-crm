@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -11,6 +11,10 @@ import { useAuth } from "@/lib/hooks/use-auth";
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Leads", href: "/leads", icon: Users },
+  { name: "Contacts", href: "/contacts", icon: Contact },
+  { name: "Tasks", href: "/tasks", icon: CheckSquare },
+  { name: "Pipeline", href: "/pipeline", icon: Kanban },
+  { name: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
 export function Sidebar() {
