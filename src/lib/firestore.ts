@@ -3,12 +3,14 @@ import {
   addDoc,
   getDocs,
   getDoc,
+  getCountFromServer,
   doc,
   updateDoc,
   deleteDoc,
   query,
   orderBy,
   where,
+  limit,
   serverTimestamp,
   Timestamp,
   writeBatch,
@@ -46,9 +48,11 @@ export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "updatedAt">
   return docRef.id;
 }
 
-export async function getLeads(): Promise<Lead[]> {
+export async function getLeads(maxResults?: number): Promise<Lead[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, LEADS_COLLECTION), orderBy("createdAt", "desc"));
+  const q = maxResults
+    ? query(collection(db, LEADS_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults))
+    : query(collection(db, LEADS_COLLECTION), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Lead[];
 }
@@ -106,9 +110,11 @@ export async function addContact(contact: Omit<Contact, "id" | "createdAt" | "up
   return docRef.id;
 }
 
-export async function getContacts(): Promise<Contact[]> {
+export async function getContacts(maxResults?: number): Promise<Contact[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, CONTACTS_COLLECTION), orderBy("createdAt", "desc"));
+  const q = maxResults
+    ? query(collection(db, CONTACTS_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults))
+    : query(collection(db, CONTACTS_COLLECTION), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Contact[];
 }
@@ -154,9 +160,11 @@ export async function addActivity(activity: Omit<Activity, "id" | "createdAt">) 
   return docRef.id;
 }
 
-export async function getActivities(): Promise<Activity[]> {
+export async function getActivities(maxResults?: number): Promise<Activity[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, ACTIVITIES_COLLECTION), orderBy("createdAt", "desc"));
+  const q = maxResults
+    ? query(collection(db, ACTIVITIES_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults))
+    : query(collection(db, ACTIVITIES_COLLECTION), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Activity[];
 }
@@ -208,11 +216,19 @@ export async function addTask(task: Omit<Task, "id" | "createdAt" | "updatedAt">
   return docRef.id;
 }
 
-export async function getTasks(): Promise<Task[]> {
+export async function getTasks(maxResults?: number): Promise<Task[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, TASKS_COLLECTION), orderBy("dueDate", "asc"));
+  const q = maxResults
+    ? query(collection(db, TASKS_COLLECTION), orderBy("dueDate", "asc"), limit(maxResults))
+    : query(collection(db, TASKS_COLLECTION), orderBy("dueDate", "asc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Task[];
+}
+
+export async function getCollectionCount(collectionName: string): Promise<number> {
+  const db = getFirebaseDb();
+  const snapshot = await getCountFromServer(collection(db, collectionName));
+  return snapshot.data().count;
 }
 
 export async function getTasksByLead(leadId: string): Promise<Task[]> {

@@ -2,17 +2,23 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { AppShell } from "@/components/app-shell";
 import { DashboardCards } from "@/components/dashboard-cards";
-import { DashboardCharts } from "@/components/dashboard-charts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { getLeads, getContacts, getTasks, getActivities, type Lead, type Contact, type Task, type Activity } from "@/lib/firestore";
+import { getLeads, getTasks, getActivities, getCollectionCount, type Lead, type Task, type Activity } from "@/lib/firestore";
 import { calculateForecast } from "@/lib/scoring";
 import { format, isPast, isToday, parseISO } from "date-fns";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import { Users, Contact as ContactIcon, CheckSquare, AlertTriangle, TrendingUp, DollarSign, Activity as ActivityIcon, Phone, Mail, Calendar, StickyNote } from "lucide-react";
+
+const DashboardCharts = dynamic(() => import("@/components/dashboard-charts").then((m) => m.DashboardCharts), {
+  loading: () => <div className="flex items-center justify-center py-16"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>,
+  ssr: false,
+});
+
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const statusColors: Record<Lead["status"], "default" | "secondary" | "success" | "warning" | "destructive" | "outline"> = {
   new: "default", contacted: "secondary", qualified: "success", proposal: "warning", won: "success", lost: "destructive",
@@ -27,19 +33,27 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [contactCount, setContactCount] = useState(0);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [activityCount, setActivityCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [l, c, t, a] = await Promise.all([getLeads(), getContacts(), getTasks(), getActivities()]);
+        const [l, cc, t, a, ac] = await Promise.all([
+          getLeads(),
+          getCollectionCount("contacts"),
+          getTasks(),
+          getActivities(10),
+          getCollectionCount("activities"),
+        ]);
         setLeads(l);
-        setContacts(c);
+        setContactCount(cc);
         setTasks(t);
         setActivities(a);
+        setActivityCount(ac);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -74,7 +88,7 @@ export default function DashboardPage() {
             {/* Quick Stats Row */}
             <div className="grid gap-3 md:grid-cols-4">
               <Card className="cursor-pointer" onClick={() => router.push("/contacts")}>
-                <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Contacts</p><p className="text-2xl font-semibold tabular-nums mt-1">{contacts.length}</p></div><ContactIcon className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
+                <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Contacts</p><p className="text-2xl font-semibold tabular-nums mt-1">{contactCount}</p></div><ContactIcon className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
               </Card>
               <Card className="cursor-pointer" onClick={() => router.push("/tasks")}>
                 <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pending Tasks</p><p className="text-2xl font-semibold tabular-nums mt-1">{pendingTasks.length}</p></div><CheckSquare className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
@@ -83,7 +97,7 @@ export default function DashboardPage() {
                 <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Overdue</p><p className="text-2xl font-semibold tabular-nums mt-1">{overdueTasks.length}</p></div><AlertTriangle className={`h-5 w-5 ${overdueTasks.length > 0 ? 'text-destructive/70' : 'text-muted-foreground/50'}`} /></div></CardContent>
               </Card>
               <Card>
-                <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Activities</p><p className="text-2xl font-semibold tabular-nums mt-1">{activities.length}</p></div><ActivityIcon className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
+                <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Activities</p><p className="text-2xl font-semibold tabular-nums mt-1">{activityCount}</p></div><ActivityIcon className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
               </Card>
             </div>
 

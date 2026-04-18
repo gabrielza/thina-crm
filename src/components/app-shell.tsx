@@ -1,10 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Sidebar, MobileNav } from "@/components/sidebar";
 import { AuthGuard } from "@/components/auth-guard";
-import { CommandPalette } from "@/components/command-palette";
 import { PageTransition } from "@/components/page-transition";
 import { Search } from "lucide-react";
+
+const CommandPalette = dynamic(() => import("@/components/command-palette").then((m) => m.CommandPalette), { ssr: false });
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
