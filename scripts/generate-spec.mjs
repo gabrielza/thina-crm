@@ -33,7 +33,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "0.5.0";
+const VERSION = "0.6.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -1042,6 +1042,11 @@ function sectionVersionHistory() {
           "April 2026",
           'UI Redesign ("Linear Aesthetic") — Complete visual overhaul with Zinc/Indigo palette, Geist fonts, command palette, dark mode, page transitions, mobile-optimised bottom nav, hover-reveal table actions, responsive layouts. Added massive data seeder (1,200 records).',
         ],
+        [
+          "v0.6.0",
+          "April 2026",
+          'Performance Optimisations — Added optional limit() to all Firestore list queries, server-side getCollectionCount() via getCountFromServer, shared AuthProvider context in root layout (single onAuthStateChanged listener), lazy-loaded CommandPalette (cmdk + framer-motion) and DashboardCharts (recharts) via next/dynamic, reduced dashboard data fetching from 4 full collections to targeted queries.',
+        ],
       ]
     ),
 
@@ -1075,10 +1080,11 @@ function sectionAppendix() {
     bullet("activity-timeline.tsx — Activity feed component"),
     bullet("app-shell.tsx — Main layout wrapper"),
     bullet("auth-guard.tsx — Route protection"),
-    bullet("command-palette.tsx — ⌘+K command palette"),
+    bullet("auth-provider.tsx — Shared authentication context provider"),
+    bullet("command-palette.tsx — ⌘+K command palette (lazy-loaded)"),
     bullet("contacts-table.tsx — Contacts data table"),
     bullet("dashboard-cards.tsx — Dashboard KPI cards"),
-    bullet("dashboard-charts.tsx — Dashboard chart compositions"),
+    bullet("dashboard-charts.tsx — Dashboard chart compositions (lazy-loaded)"),
     bullet("edit-contact-sheet.tsx — Edit contact form"),
     bullet("edit-lead-sheet.tsx — Edit lead form"),
     bullet("leads-table.tsx — Leads data table"),
