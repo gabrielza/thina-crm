@@ -2,6 +2,7 @@ import {
   collection,
   addDoc,
   getDocs,
+  getDoc,
   doc,
   updateDoc,
   deleteDoc,
@@ -21,6 +22,7 @@ export interface Lead {
   status: "new" | "contacted" | "qualified" | "proposal" | "won" | "lost";
   source: string;
   notes: string;
+  value: number;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   ownerId: string;
@@ -55,6 +57,14 @@ export async function updateLead(id: string, data: Partial<Lead>) {
     ...data,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function getLeadById(id: string): Promise<Lead | null> {
+  const db = getFirebaseDb();
+  const docRef = doc(db, LEADS_COLLECTION, id);
+  const snapshot = await getDoc(docRef);
+  if (!snapshot.exists()) return null;
+  return { id: snapshot.id, ...snapshot.data() } as Lead;
 }
 
 export async function deleteLead(id: string) {

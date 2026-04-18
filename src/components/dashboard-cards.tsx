@@ -1,44 +1,63 @@
 "use client";
 
-import { Users, UserCheck, TrendingUp, Clock } from "lucide-react";
+import { Users, UserCheck, TrendingUp, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Lead } from "@/lib/firestore";
 
-const stats = [
-  {
-    title: "Total Leads",
-    value: "0",
-    description: "All leads in pipeline",
-    icon: Users,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-  },
-  {
-    title: "Qualified",
-    value: "0",
-    description: "Ready for proposal",
-    icon: UserCheck,
-    color: "text-green-600",
-    bg: "bg-green-50",
-  },
-  {
-    title: "Conversion Rate",
-    value: "0%",
-    description: "Won / Total leads",
-    icon: TrendingUp,
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-  },
-  {
-    title: "Follow-ups Due",
-    value: "0",
-    description: "Needs attention today",
-    icon: Clock,
-    color: "text-orange-600",
-    bg: "bg-orange-50",
-  },
-];
+interface DashboardCardsProps {
+  leads: Lead[];
+}
 
-export function DashboardCards() {
+export function DashboardCards({ leads }: DashboardCardsProps) {
+  const totalLeads = leads.length;
+  const activeLeads = leads.filter((l) => !["won", "lost"].includes(l.status)).length;
+  const wonLeads = leads.filter((l) => l.status === "won").length;
+  const conversionRate = totalLeads > 0 ? ((wonLeads / totalLeads) * 100).toFixed(1) : "0";
+  const totalPipelineValue = leads
+    .filter((l) => !["won", "lost"].includes(l.status))
+    .reduce((sum, l) => sum + (l.value || 0), 0);
+  const wonRevenue = leads
+    .filter((l) => l.status === "won")
+    .reduce((sum, l) => sum + (l.value || 0), 0);
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
+
+  const stats = [
+    {
+      title: "Total Leads",
+      value: totalLeads.toString(),
+      description: `${activeLeads} active in pipeline`,
+      icon: Users,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      title: "Won Deals",
+      value: wonLeads.toString(),
+      description: `${conversionRate}% conversion rate`,
+      icon: UserCheck,
+      color: "text-green-600",
+      bg: "bg-green-50",
+    },
+    {
+      title: "Won Revenue",
+      value: formatCurrency(wonRevenue),
+      description: "Total closed revenue",
+      icon: DollarSign,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+    },
+    {
+      title: "Pipeline Value",
+      value: formatCurrency(totalPipelineValue),
+      description: "Active deal value",
+      icon: TrendingUp,
+      color: "text-orange-600",
+      bg: "bg-orange-50",
+    },
+  ];
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
