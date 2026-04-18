@@ -10,7 +10,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { getFirebaseDb } from "./firebase";
 
 export interface Lead {
   id?: string;
@@ -29,6 +29,7 @@ export interface Lead {
 const LEADS_COLLECTION = "leads";
 
 export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "updatedAt">) {
+  const db = getFirebaseDb();
   const docRef = await addDoc(collection(db, LEADS_COLLECTION), {
     ...lead,
     createdAt: serverTimestamp(),
@@ -38,6 +39,7 @@ export async function addLead(lead: Omit<Lead, "id" | "createdAt" | "updatedAt">
 }
 
 export async function getLeads(): Promise<Lead[]> {
+  const db = getFirebaseDb();
   const q = query(collection(db, LEADS_COLLECTION), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((doc) => ({
@@ -47,6 +49,7 @@ export async function getLeads(): Promise<Lead[]> {
 }
 
 export async function updateLead(id: string, data: Partial<Lead>) {
+  const db = getFirebaseDb();
   const docRef = doc(db, LEADS_COLLECTION, id);
   await updateDoc(docRef, {
     ...data,
@@ -55,6 +58,7 @@ export async function updateLead(id: string, data: Partial<Lead>) {
 }
 
 export async function deleteLead(id: string) {
+  const db = getFirebaseDb();
   const docRef = doc(db, LEADS_COLLECTION, id);
   await deleteDoc(docRef);
 }

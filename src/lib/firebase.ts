@@ -1,6 +1,6 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,9 +11,24 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase only once
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+// Lazy initialization to avoid crashing during build when env vars are absent
+function getApp(): FirebaseApp {
+  return getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+}
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export default app;
+let _auth: Auth | undefined;
+let _db: Firestore | undefined;
+
+export function getFirebaseAuth(): Auth {
+  if (!_auth) _auth = getAuth(getApp());
+  return _auth;
+}
+
+export function getFirebaseDb(): Firestore {
+  if (!_db) _db = getFirestore(getApp());
+  return _db;
+}
+
+// Convenience getters (only use in client components at runtime)
+export const auth = typeof window !== "undefined" ? getFirebaseAuth() : (undefined as unknown as Auth);
+export const db = typeof window !== "undefined" ? getFirebaseDb() : (undefined as unknown as Firestore);
