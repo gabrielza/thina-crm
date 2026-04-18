@@ -139,7 +139,7 @@ export default function ReportsPage() {
             <h1 className="text-xl font-semibold tracking-tight">Reports</h1>
             <p className="text-[13px] text-muted-foreground mt-1">Analytics, insights &amp; data export</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" size="sm" onClick={exportLeads} className="text-xs"><Download className="mr-1.5 h-3.5 w-3.5" /> Leads</Button>
             <Button variant="outline" size="sm" onClick={exportContacts} className="text-xs"><Download className="mr-1.5 h-3.5 w-3.5" /> Contacts</Button>
             <Button variant="outline" size="sm" onClick={exportTasks} className="text-xs"><Download className="mr-1.5 h-3.5 w-3.5" /> Tasks</Button>
@@ -147,7 +147,7 @@ export default function ReportsPage() {
         </div>
 
         {/* KPI Overview */}
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Total Leads</p><p className="text-2xl font-semibold tabular-nums mt-1">{totalLeads}</p></div><Users className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
           </Card>

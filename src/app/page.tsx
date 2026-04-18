@@ -86,7 +86,7 @@ export default function DashboardPage() {
             <DashboardCards leads={leads} />
 
             {/* Quick Stats Row */}
-            <div className="grid gap-3 md:grid-cols-4">
+            <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
               <Card className="cursor-pointer" onClick={() => router.push("/contacts")}>
                 <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Contacts</p><p className="text-2xl font-semibold tabular-nums mt-1">{contactCount}</p></div><ContactIcon className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
               </Card>

@@ -65,19 +65,19 @@ export default function LeadDetailPage() {
 
   return (
     <AppShell>
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/leads")} className="h-8 w-8"><ArrowLeft className="h-4 w-4" /></Button>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/8 text-primary font-semibold">{lead.name.charAt(0)}</div>
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">{lead.name}</h1>
-              <p className="text-[13px] text-muted-foreground">{lead.company}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex items-center gap-3 min-w-0">
+          <Button variant="ghost" size="icon" onClick={() => router.push("/leads")} className="h-8 w-8 shrink-0"><ArrowLeft className="h-4 w-4" /></Button>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary font-semibold">{lead.name.charAt(0)}</div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-semibold tracking-tight truncate">{lead.name}</h1>
+              <Badge variant={statusColors[lead.status]} className="text-[11px] shrink-0">{lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</Badge>
             </div>
+            <p className="text-[13px] text-muted-foreground truncate">{lead.company}</p>
           </div>
-          <Badge variant={statusColors[lead.status]} className="text-[11px]">{lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</Badge>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 ml-11 sm:ml-0 shrink-0">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}><Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit</Button>
           <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={handleDelete}><Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete</Button>
         </div>

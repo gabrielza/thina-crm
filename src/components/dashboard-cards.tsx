@@ -59,7 +59,7 @@ export function DashboardCards({ leads }: DashboardCardsProps) {
   ];
 
   return (
-    <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
       {stats.map((stat) => (
         <Card key={stat.title}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

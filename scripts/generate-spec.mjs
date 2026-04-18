@@ -33,7 +33,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "0.6.0";
+const VERSION = "0.7.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -1047,6 +1047,11 @@ function sectionVersionHistory() {
           "April 2026",
           'Performance Optimisations — Added optional limit() to all Firestore list queries, server-side getCollectionCount() via getCountFromServer, shared AuthProvider context in root layout (single onAuthStateChanged listener), lazy-loaded CommandPalette (cmdk + framer-motion) and DashboardCharts (recharts) via next/dynamic, reduced dashboard data fetching from 4 full collections to targeted queries.',
         ],
+        [
+          "v0.7.0",
+          "April 2026",
+          'Mobile Responsiveness & Server-Side Seeder — Rewrote mobile navigation as slide-up drawer with all nav items, user profile, theme toggle, and sign out. Made dashboard cards, detail page headers, pipeline board (horizontal scroll), and reports page fully responsive for small screens. Redesigned data seeder: moved all generation logic to a server-side API route (api/seed) using Firebase Admin SDK with parallel batch writes for maximum speed; seed page now calls the API via fetch with Bearer token authentication.',
+        ],
       ]
     ),
 
@@ -1072,8 +1077,9 @@ function sectionAppendix() {
     bullet("login/page.tsx — Authentication"),
     bullet("pipeline/page.tsx — Pipeline board"),
     bullet("reports/page.tsx — Business reports"),
-    bullet("seed/page.tsx — Data seeder"),
+    bullet("seed/page.tsx — Data seeder UI"),
     bullet("tasks/page.tsx — Task management"),
+    bullet("api/seed/route.ts — Server-side seed API route (Firebase Admin)"),
     emptyPara(),
 
     h3("Components (src/components/)"),
