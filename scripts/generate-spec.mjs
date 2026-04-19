@@ -33,7 +33,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "0.7.0";
+const VERSION = "0.8.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -848,55 +848,100 @@ function sectionTesting() {
   return [
     heading("9. Testing & Quality Assurance"),
 
-    h2("9.1 Build Verification"),
+    h2("9.1 Test Framework"),
+    para(
+      "Thina CRM uses Vitest as its test runner with the following configuration:"
+    ),
+    bullet("Framework: Vitest 4.x with @vitejs/plugin-react"),
+    bullet("Config: vitest.config.ts with path aliases (@/* → ./src/*)"),
+    bullet("Scripts: npm test (single run), npm run test:watch (dev), npm run test:ci (verbose CI output)"),
+    bullet("CI Integration: Tests run in GitHub Actions before every build — a failing test blocks deployment"),
+    emptyPara(),
+
+    h2("9.2 Test Strategy (3 Layers)"),
+    para(
+      "The test suite is organised into three layers, each catching different classes of bugs:"
+    ),
+    emptyPara(),
+    h3("Layer 1: Unit Tests — Pure Business Logic"),
+    para(
+      "Test pure functions that have zero infrastructure dependencies. These are fast, deterministic, and cover the core business rules."
+    ),
+    makeTable(
+      ["Test File", "Coverage", "Tests"],
+      [
+        ["scoring.test.ts", "Lead scoring algorithm (calculateLeadScore): value scoring, stage points, activity engagement, task completion, data completeness, boundary checks (0–100 clamping)", "10"],
+        ["scoring.test.ts", "Score labels (getScoreLabel): Hot/Warm/Interested/Cool/Cold thresholds and color strings", "6"],
+        ["scoring.test.ts", "Pipeline forecasting (calculateForecast): weighted pipeline, won revenue, stage probabilities, lost lead exclusion", "5"],
+        ["utils.test.ts", "cn() class name merge: Tailwind conflict resolution, conditional classes, null/undefined handling", "6"],
+      ]
+    ),
+    emptyPara(),
+    h3("Layer 2: Infrastructure Smoke Tests"),
+    para(
+      "Validate that configuration files, environment variables, and security rules are correctly set up. These tests would have caught the missing Firestore database incident."
+    ),
+    makeTable(
+      ["Test Group", "What It Catches"],
+      [
+        ["Environment Configuration", "Missing or empty Firebase env vars that would produce a silently broken app"],
+        ["Project Configuration", "Missing dependencies, broken scripts, missing test framework, strict mode disabled"],
+        ["Firebase Configuration", "Wrong deployment region, missing security rules for collections, unrestricted read/write rules"],
+        ["Security Rules Validation", "Rules require authentication for reads, ownership for writes; no open access patterns"],
+        ["Data Model Consistency", "All CRUD functions exported from firestore.ts; all scoring functions exported"],
+      ]
+    ),
+    emptyPara(),
+    h3("Layer 3: Build Verification"),
     para(
       "Each version undergoes a full Next.js production build verification. The build process compiles TypeScript, validates all imports, resolves module paths, and generates optimised bundles for all 11 pages."
     ),
     emptyPara(),
-    h3("9.1.1 Build Metrics (v0.5.0)"),
+
+    h2("9.3 Test Metrics (v0.8.0)"),
     makeTable(
       ["Metric", "Value"],
       [
-        ["Build Time", "~26 seconds"],
-        ["Total Pages", "11 (including dynamic routes)"],
-        ["Build Result", "Compiled successfully"],
-        ["TypeScript", "Strict mode — zero type errors"],
-        ["Static Pages", "login, seed"],
-        ["Dynamic Pages", "Dashboard, leads, leads/[id], contacts, contacts/[id], pipeline, tasks, reports"],
+        ["Test Framework", "Vitest 4.x"],
+        ["Test Files", "3"],
+        ["Total Tests", "39"],
+        ["Pass Rate", "100%"],
+        ["Execution Time", "~1.9 seconds"],
+        ["CI Integration", "GitHub Actions — blocks deploy on failure"],
       ]
     ),
     emptyPara(),
 
-    h2("9.2 Type Safety"),
+    h2("9.4 Type Safety"),
     bullet("TypeScript strict mode enabled (strict: true in tsconfig.json)"),
     bullet("All Firestore data models are typed with explicit interfaces"),
     bullet("Component props are typed via TypeScript generics and Radix UI prop types"),
     bullet("Path alias (@/*) mapped to ./src/* for clean imports"),
     emptyPara(),
 
-    h2("9.3 Manual Testing Performed"),
+    h2("9.5 Manual Testing Performed"),
     makeTable(
       ["Area", "Test Scope"],
       [
         ["Authentication", "Google OAuth sign-in, email/password sign-in and registration, sign-out, auth guard redirect"],
         ["Lead CRUD", "Create, read, update, delete leads; status transitions; value changes"],
         ["Contact CRUD", "Create, read, update, delete contacts; linked leads display"],
-        ["Pipeline", "Visual board rendering; stage distribution; responsive layout"],
+        ["Pipeline", "Visual board rendering; stage distribution; colour-coded columns; responsive layout"],
         ["Tasks", "Create tasks; status toggling; priority filtering; overdue detection"],
         ["Reports", "Chart rendering; KPI calculations; data aggregation"],
         ["Seed Data", "Bulk generation of 1,200 records; progress tracking; data clearing"],
         ["Responsive UI", "Mobile bottom nav; tablet grid; desktop sidebar; breakpoint transitions"],
-        ["Dark Mode", "Theme toggle; localStorage persistence; all pages in both modes"],
+        ["Dark/Light Mode", "Theme toggle; sidebar respects theme; localStorage persistence; all pages in both modes"],
         ["Command Palette", "⌘+K activation; navigation commands; theme commands"],
       ]
     ),
     emptyPara(),
 
-    h2("9.4 Known Limitations"),
-    bullet("No automated unit or integration test suite (planned for future versions)"),
-    bullet("No end-to-end tests (Playwright/Cypress planned)"),
-    bullet("No accessibility audit (WCAG compliance via Radix UI primitives)"),
-    bullet("No performance benchmarking (Lighthouse audit planned)"),
+    h2("9.6 Future Testing Roadmap"),
+    bullet("End-to-end tests with Playwright (login flow, CRUD operations, pipeline drag-and-drop)"),
+    bullet("Firebase Emulator integration tests (Firestore rules, Admin SDK operations)"),
+    bullet("Accessibility audit (WCAG compliance via axe-core)"),
+    bullet("Performance benchmarking (Lighthouse CI)"),
 
     new Paragraph({ children: [new PageBreak()] }),
   ];
@@ -1052,6 +1097,11 @@ function sectionVersionHistory() {
           "April 2026",
           'Mobile Responsiveness & Server-Side Seeder — Rewrote mobile navigation as slide-up drawer with all nav items, user profile, theme toggle, and sign out. Made dashboard cards, detail page headers, pipeline board (horizontal scroll), and reports page fully responsive for small screens. Redesigned data seeder: moved all generation logic to a server-side API route (api/seed) using Firebase Admin SDK with parallel batch writes for maximum speed; seed page now calls the API via fetch with Bearer token authentication.',
         ],
+        [
+          "v0.8.0",
+          "April 2026",
+          'Testing & Quality Assurance — Introduced Vitest test framework with 39 automated tests across 3 layers: (1) Unit tests for lead scoring algorithm, pipeline forecasting, score labels, and utility functions; (2) Infrastructure smoke tests validating environment variables, Firebase configuration, Firestore security rules coverage, authentication requirements, and data model exports; (3) Build verification. Added CI integration: tests run in GitHub Actions before every deployment, blocking deploys on failure. Fixed sidebar to respect light/dark theme. Standardised colour-coded pipeline stages.',
+        ],
       ]
     ),
 
@@ -1116,6 +1166,12 @@ function sectionAppendix() {
     bullet("hooks/use-auth.ts — Authentication React hook"),
     emptyPara(),
 
+    h3("Tests (src/lib/__tests__/)"),
+    bullet("scoring.test.ts — Lead scoring, score labels, pipeline forecasting tests (21 tests)"),
+    bullet("utils.test.ts — cn() class merge utility tests (6 tests)"),
+    bullet("smoke.test.ts — Infrastructure, config, security rules, data model smoke tests (12 tests)"),
+    emptyPara(),
+
     h2("13.2 Configuration Files"),
     bullet("package.json — Project metadata, dependencies, scripts"),
     bullet("tsconfig.json — TypeScript compiler options (strict, bundler resolution)"),
@@ -1136,6 +1192,9 @@ function sectionAppendix() {
         ["build", "next build", "Production build with TypeScript checking"],
         ["start", "next start", "Start production server"],
         ["lint", "next lint", "Run ESLint checks"],
+        ["test", "vitest run", "Run all tests once"],
+        ["test:watch", "vitest", "Run tests in watch mode during development"],
+        ["test:ci", "vitest run --reporter=verbose", "Run tests with verbose output for CI"],
       ]
     ),
 

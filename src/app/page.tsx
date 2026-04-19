@@ -113,8 +113,8 @@ export default function DashboardPage() {
                     <ResponsiveContainer width="100%" height={200}>
                       <BarChart data={forecast.stages}>
                         <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="stage" className="text-xs" />
-                        <YAxis className="text-xs" tickFormatter={(v) => `R${(v / 1000).toFixed(0)}k`} />
+                        <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 10 }} width={55} tickFormatter={(v) => `R${(v / 1000).toFixed(0)}k`} />
                         <Tooltip formatter={(value) => formatCurrency(Number(value))} />
                         <Bar dataKey="totalValue" fill="#93c5fd" name="Total Value" radius={[4, 4, 0, 0]} />
                         <Bar dataKey="weightedValue" fill="#3b82f6" name="Weighted Value" radius={[4, 4, 0, 0]} />
