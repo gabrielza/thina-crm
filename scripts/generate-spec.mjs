@@ -33,7 +33,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "0.11.0";
+const VERSION = "0.12.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -494,7 +494,7 @@ function sectionPages() {
         ["Overview", "Command centre — daily snapshot of KPIs and agency health", "Dashboard"],
         ["Prospecting", "Lead generation — capture, automate first response, measure source ROI", "Inbound Leads, Show Days, Speed-to-Lead, Lead ROI"],
         ["Pipeline", "Working the deal — nurture, qualify, communicate, match buyers", "Leads, Pipeline Board, Contacts, Buyer Match, Sequences, Messaging"],
-        ["Listings", "Property inventory — manage mandates, specs, and listing status", "Properties"],
+        ["Listings", "Property inventory — manage mandates, specs, valuations, and listing status", "Properties, CMA Reports"],
         ["Transactions", "Closing the deal — OTP through commission, paperwork, FICA", "Deals, Documents"],
         ["Operations", "Running the business — tasks, analytics, POPIA/FICA compliance", "Tasks, Reports, Compliance"],
       ]
@@ -542,6 +542,7 @@ function sectionPages() {
       ["Route", "File", "Description"],
       [
         ["/properties", "app/properties/page.tsx", "Property/mandate management with KPI cards, search, add/edit/delete"],
+        ["/cma", "app/cma/page.tsx", "Comparative Market Analysis reports with comparable sales, auto-calculated valuations, confidence levels, and KPI cards"],
       ]
     ),
     emptyPara(),
@@ -685,6 +686,17 @@ function sectionPages() {
     bullet("Tabbed views: POPIA, FICA, Rolling 12-Month income"),
     bullet("KPI cards: Consent Rate, Overdue Reviews, Compliance Score"),
 
+    h2("5.19 CMA Reports"),
+    bullet("Comparative Market Analysis report management for property valuations"),
+    bullet("Subject property details: address, suburb, city, type, bedrooms, bathrooms, erf size, floor size"),
+    bullet("Comparable sales management: add/remove comparables with sale price, date, distance, and adjustments"),
+    bullet("Auto-calculated estimated value and price per square metre from comparables"),
+    bullet("Confidence level indicator (Low / Medium / High) based on number of comparables"),
+    bullet("Report status workflow: Draft → Final → Presented"),
+    bullet("KPI cards: Total Reports, Average Value, High Confidence, Presented Reports"),
+    bullet("Search by title, address, or suburb"),
+    bullet("Inline add, edit, and delete with slide-over Sheet forms"),
+
     new Paragraph({ children: [new PageBreak()] }),
   ];
 }
@@ -718,6 +730,7 @@ function sectionFunctions() {
         ["BuyerProfile", "buyerProfiles", "name, email, phone, minPrice, maxPrice, suburbs[], bedrooms, propertyType, notes, ownerId"],
         ["StoredDocument", "documents", "name, type, size, url, transactionId, contactId, tags[], ownerId"],
         ["AutoResponseRule", "autoResponseRules", "name, triggerEvent, responseTemplate, channel, delaySeconds, isActive, ownerId"],
+        ["CmaReport", "cmaReports", "title, subjectAddress, subjectSuburb, subjectCity, subjectType, subjectBedrooms, subjectBathrooms, subjectErfSize, subjectFloorSize, comparables[] (address, salePrice, saleDate, bedrooms, bathrooms, erfSize, floorSize, distanceKm, adjustedPrice), estimatedValue, pricePerSqm, confidenceLevel (low/medium/high), status (draft/final/presented), propertyId, contactId, contactName, notes, ownerId"],
       ]
     ),
     emptyPara(),
@@ -895,6 +908,19 @@ function sectionFunctions() {
         ["getAutoResponseRules", "getAutoResponseRules() → Promise<AutoResponseRule[]>", "Fetches all auto-response rules."],
         ["updateAutoResponseRule", "updateAutoResponseRule(id, data) → Promise<void>", "Updates an auto-response rule."],
         ["deleteAutoResponseRule", "deleteAutoResponseRule(id) → Promise<void>", "Deletes an auto-response rule."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.16 CMA Report Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addCmaReport", "addCmaReport(report) → Promise<string>", "Creates a new Comparative Market Analysis report. Auto-sets createdAt/updatedAt timestamps."],
+        ["getCmaReports", "getCmaReports() → Promise<CmaReport[]>", "Fetches all CMA reports ordered by createdAt descending."],
+        ["getCmaReportById", "getCmaReportById(id) → Promise<CmaReport|null>", "Fetches a single CMA report by document ID."],
+        ["updateCmaReport", "updateCmaReport(id, data) → Promise<void>", "Partially updates a CMA report. Auto-sets updatedAt."],
+        ["deleteCmaReport", "deleteCmaReport(id) → Promise<void>", "Permanently deletes a CMA report."],
       ]
     ),
     emptyPara(),
@@ -1108,7 +1134,7 @@ function sectionDataSeeder() {
 
     h2("8.1 Overview"),
     para(
-      "The seeder utility (accessible at /seed) generates 1,200 realistic test records for development and demonstration purposes. It uses South African names, companies, and phone formats to create authentic-looking data."
+      "The seeder utility (accessible at /seed) generates 1,604 realistic test records across 16 collections for development and demonstration purposes. It uses South African names, companies, addresses, and phone formats to create authentic-looking data."
     ),
     emptyPara(),
 
@@ -1120,6 +1146,18 @@ function sectionDataSeeder() {
         ["Leads", "500", "Weighted status distribution (realistic funnel shape), value brackets from R5K to R1M"],
         ["Activities", "300", "Distributed across call, email, meeting, and note types with contextual subjects"],
         ["Tasks", "200", "Linked to leads, with realistic titles using name/company placeholders"],
+        ["Transactions", "150", "SA-specific addresses, suburbs, conveyancers, bond originators, 9-stage pipeline"],
+        ["Properties", "120", "Mandate types, SA suburbs, features, price ranges R800K–R15M"],
+        ["Show Days", "30", "Linked to properties, with date/time and registration details"],
+        ["Show Day Leads", "90", "Public registrations linked to show days"],
+        ["Inbound Leads", "80", "Portal sources (Property24, Private Property, manual)"],
+        ["SMS Messages", "200", "Inbound/outbound with SA-specific templates"],
+        ["Follow-Up Sequences", "8", "Multi-step workflows with delay, channel, and template"],
+        ["Sequence Enrollments", "60", "Contacts enrolled in active sequences"],
+        ["Buyer Profiles", "50", "Suburb preferences, price ranges, bedroom requirements"],
+        ["Documents", "100", "FICA, OTP, mandate, bond, transfer document types"],
+        ["Auto-Response Rules", "6", "Speed-to-lead rules with trigger events and delays"],
+        ["CMA Reports", "40", "Comparative Market Analysis reports with 3–6 comparables each, SA suburbs and valuations"],
       ]
     ),
     emptyPara(),
@@ -1136,7 +1174,9 @@ function sectionDataSeeder() {
     emptyPara(),
 
     h2("8.4 Technical Implementation"),
+    bullet("Server-side API route (api/seed) using Firebase Admin SDK with Bearer token authentication"),
     bullet("Uses Firestore writeBatch for bulk writes (450 documents per batch, Firestore limit is 500)"),
+    bullet("Parallel batch writes across all 16 collections for maximum speed"),
     bullet("Progress bar with real-time percentage and record count"),
     bullet("'Clear All' button to delete all existing data before re-seeding"),
     bullet("Batch write utility returns array of generated document IDs for cross-referencing"),
@@ -1196,7 +1236,7 @@ function sectionTesting() {
     emptyPara(),
     h3("Layer 3: Build Verification"),
     para(
-      "Each version undergoes a full Next.js production build verification. The build process compiles TypeScript, validates all imports, resolves module paths, and generates optimised bundles for all 26 pages."
+      "Each version undergoes a full Next.js production build verification. The build process compiles TypeScript, validates all imports, resolves module paths, and generates optimised bundles for all 27 pages."
     ),
     emptyPara(),
 
@@ -1229,15 +1269,16 @@ function sectionTesting() {
         ["Documents", "Document vault loads, upload form, transaction/contact document linking", "4"],
         ["Lead ROI", "ROI analytics page loads, source performance table, cost-per-lead metrics", "3"],
         ["Compliance", "POPIA consent page loads, consent management table, data export/delete actions", "3"],
-        ["Navigation", "Sidebar links navigate correctly to all 26 pages", "8"],
+        ["CMA Reports", "CMA page loads with heading, sidebar navigation to /cma", "2"],
+        ["Navigation", "Sidebar links navigate correctly to all 27 pages including CMA Reports", "9"],
         ["Theme & UI", "Dark/light mode toggle, sidebar collapse, responsive layout", "5"],
         ["Command Palette", "Cmd+K opens palette, navigation commands work, search filters", "4"],
-        ["Seed Data", "Seed page generates records for all 15 collections, progress tracking, clear all", "3"],
+        ["Seed Data", "Seed page generates records for all 16 collections, progress tracking, clear all", "3"],
       ]
     ),
     emptyPara(),
 
-    h2("9.4 Test Metrics (v0.11.0)"),
+    h2("9.4 Test Metrics (v0.12.0)"),
     makeTable(
       ["Metric", "Value"],
       [
@@ -1246,8 +1287,8 @@ function sectionTesting() {
         ["Unit/Smoke Test Files", "3"],
         ["E2E Test Files", "1"],
         ["Total Unit/Smoke Tests", "51"],
-        ["Total E2E Tests", "75"],
-        ["Combined Total Tests", "126"],
+        ["Total E2E Tests", "84"],
+        ["Combined Total Tests", "135"],
         ["Pass Rate", "100%"],
         ["Unit Execution Time", "~3.1 seconds"],
         ["E2E Execution Time", "~7 minutes"],
@@ -1273,7 +1314,7 @@ function sectionTesting() {
         ["Pipeline", "Visual board rendering; stage distribution; colour-coded columns; responsive layout"],
         ["Tasks", "Create tasks; status toggling; priority filtering; overdue detection"],
         ["Reports", "Chart rendering; KPI calculations; data aggregation"],
-        ["Seed Data", "Bulk generation of 1,200 records; progress tracking; data clearing"],
+        ["Seed Data", "Bulk generation of 1,604 records across 16 collections; progress tracking; data clearing"],
         ["Responsive UI", "Mobile bottom nav; tablet grid; desktop sidebar; breakpoint transitions"],
         ["Dark/Light Mode", "Theme toggle; sidebar respects theme; localStorage persistence; all pages in both modes"],
         ["Command Palette", "⌘+K activation; navigation commands; theme commands"],
@@ -1353,7 +1394,7 @@ function sectionIntegration() {
         ["Database", "(default)"],
         ["Region", "africa-south1 (Johannesburg)"],
         ["Edition", "Standard (free tier eligible)"],
-        ["Collections", "leads, contacts, activities, tasks, transactions, showDays, showDayLeads, properties, inboundLeads, smsMessages, followUpSequences, sequenceEnrollments, buyerProfiles, documents, autoResponseRules (15 total)"],
+        ["Collections", "leads, contacts, activities, tasks, transactions, showDays, showDayLeads, properties, inboundLeads, smsMessages, followUpSequences, sequenceEnrollments, buyerProfiles, documents, autoResponseRules, cmaReports (16 total)"],
         ["Client SDK", "firebase/firestore — real-time reads, write operations"],
         ["Admin SDK", "firebase-admin — server-side seed API, health check"],
         ["Batch Operations", "writeBatch for seed data (batches of 450)"],
@@ -1363,7 +1404,7 @@ function sectionIntegration() {
 
     h3("10.2.4 Firestore Security Rules"),
     para(
-      "All 15 collections follow a consistent security pattern defined in firestore.rules:"
+      "All 16 collections follow a consistent security pattern defined in firestore.rules:"
     ),
     bullet("isAuth() — Checks request.auth != null for any authenticated user"),
     bullet("isCreatingOwn() — Validates incoming ownerId matches the authenticated user's UID"),
@@ -1420,7 +1461,7 @@ function sectionIntegration() {
       ["File", "Purpose"],
       [
         ["firebase.json", "Project services configuration, region settings"],
-        ["firestore.rules", "Security rules for all 15 collections"],
+        ["firestore.rules", "Security rules for all 16 collections"],
         ["firestore.indexes.json", "Composite index definitions"],
         ["apphosting.yaml", "App Hosting deployment configuration (instances, memory, region)"],
       ]
@@ -1587,6 +1628,7 @@ function sectionVersionHistory() {
         ["v0.9.0", "Transaction data model (9 stages), commission calculator, FICA compliance tracking, transaction CRUD, pipeline board, seed data"],
         ["v0.10.0", "Dashboard transaction KPIs, won-lead-to-transaction flow, command palette updates, 5 new E2E tests"],
         ["v0.11.0", "13 SA real estate features (properties, show days, inbound leads, messaging, sequences, speed-to-lead, buyer match, documents, lead ROI, compliance), 10 new collections, 39 new functions, 58 new E2E tests, Playwright config hardening"],
+        ["v0.12.0", "Comparative Market Analysis (CMA) reports with comparable sales management, auto-calculated valuations, confidence levels, KPI cards. New cmaReports collection, 5 CRUD functions, 40 seed records, 9 new E2E tests (84 total). Updated spec document generator."],
       ]
     ),
     emptyPara(),
@@ -1604,7 +1646,7 @@ function sectionVersionHistory() {
     emptyPara(),
 
     h3("12.3.2 Firebase"),
-    bullet("Configured Firestore security rules for all 15 collections (authentication + ownership pattern)"),
+    bullet("Configured Firestore security rules for all 16 collections (authentication + ownership pattern)"),
     bullet("Deployed security rules via Firebase CLI (firebase-tools)"),
     bullet("Set up Firebase Client SDK initialisation with environment variables"),
     bullet("Set up Firebase Admin SDK for server-side API routes"),
@@ -1617,7 +1659,7 @@ function sectionVersionHistory() {
     bullet("Installed and configured Vitest 4.x with TypeScript path alias support"),
     bullet("Installed and configured Playwright with Chromium for E2E testing"),
     bullet("Created test user accounts in Firebase Auth"),
-    bullet("Wrote 51 unit/smoke tests and 75 E2E tests (126 total)"),
+    bullet("Wrote 51 unit/smoke tests and 84 E2E tests (135 total)"),
     bullet("Configured GitHub Actions CI pipeline to block deploys on test failure"),
     emptyPara(),
 
@@ -1632,7 +1674,7 @@ function sectionVersionHistory() {
     h3("12.3.5 Documentation"),
     bullet("Created the specification document generator (scripts/generate-spec.mjs)"),
     bullet("Generated .docx specification document at each version milestone"),
-    bullet("Maintained 13+ sections covering all aspects of the system"),
+    bullet("Maintained 14 sections covering all aspects of the system"),
     bullet("Updated version history with detailed descriptions for each release"),
     emptyPara(),
 
@@ -1645,7 +1687,7 @@ function sectionVersionHistory() {
         ["Code Implementation", "", "✓ Wrote all application code, components, and tests"],
         ["Infrastructure Config", "", "✓ Configured Git, Firebase, CI/CD, Playwright"],
         ["Security Rules", "", "✓ Designed and deployed Firestore security rules"],
-        ["Testing", "✓ Directed test strategy", "✓ Wrote and ran all 126 tests"],
+        ["Testing", "✓ Directed test strategy", "✓ Wrote and ran all 135 tests"],
         ["Deployment", "✓ Approved releases", "✓ Built, tested, deployed each version"],
         ["Documentation", "✓ Requested spec document", "✓ Created generator and content"],
         ["Code Review", "✓ Reviewed outputs and directed corrections", ""],
@@ -1724,6 +1766,11 @@ function sectionVersionHistoryContent() {
           "April 2026",
           'SA Real Estate Feature Suite — 13 new features for South African estate agents: Property management with mandate types (sole/open/dual/auction), show days with public QR-code lead registration, inbound lead capture from property portals (Property24, Private Property), SMS/messaging hub, automated follow-up sequences with multi-step workflows, speed-to-lead auto-response rules, buyer–property matching engine, document vault per transaction/contact, lead ROI analytics with cost-per-lead metrics, POPIA compliance management with consent tracking and data subject requests. Added 10 new Firestore collections (15 total), 39 new CRUD functions, 4 new components, 12 new page routes (26 total). Expanded E2E tests from 17 to 75 (126 total with unit/smoke). Updated Playwright config: 60s timeout, 30s expect, 1 retry.',
         ],
+        [
+          "v0.12.0",
+          "April 2026",
+          'Comparative Market Analysis (CMA) — Added CMA report management for property valuations. Subject property details (address, suburb, type, bedrooms, bathrooms, erf/floor size), comparable sales with sale price, date, distance, and adjustments. Auto-calculated estimated value and price per square metre. Confidence level indicator (Low/Medium/High). Report status workflow (Draft → Final → Presented). 4 KPI cards, search, inline CRUD with slide-over Sheet forms. New cmaReports Firestore collection with 5 CRUD functions, security rules, and 40 seed records (1,604 total across 16 collections). 9 new E2E tests (84 total, 135 combined). Updated specification document generator.',
+        ],
       ]
     ),
 
@@ -1766,6 +1813,7 @@ function sectionAppendix() {
     bullet("documents/page.tsx — Document vault"),
     bullet("lead-roi/page.tsx — Lead ROI analytics"),
     bullet("compliance/page.tsx — POPIA compliance management"),
+    bullet("cma/page.tsx — Comparative Market Analysis reports with comparable sales and valuations"),
     bullet("api/seed/route.ts — Server-side seed API route (Firebase Admin)"),
     emptyPara(),
 
@@ -1814,7 +1862,7 @@ function sectionAppendix() {
     emptyPara(),
 
     h3("E2E Tests (e2e/)"),
-    bullet("app.spec.ts — Functional E2E tests: 26 test groups covering auth, dashboard, leads, contacts, pipeline, tasks, reports, transactions, properties, show days, inbound leads, messaging, sequences, speed-to-lead, buyer match, documents, lead ROI, compliance, navigation, theme, command palette, seed data (75 tests)"),
+    bullet("app.spec.ts — Functional E2E tests: 28 test groups covering auth, dashboard, leads, contacts, pipeline, tasks, reports, transactions, properties, show days, inbound leads, messaging, sequences, speed-to-lead, buyer match, documents, lead ROI, compliance, CMA reports, navigation, theme, command palette, seed data (84 tests)"),
     emptyPara(),
 
     h2("14.2 Configuration Files"),
