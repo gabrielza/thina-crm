@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
+import dynamic from "next/dynamic";
 import { AppShell } from "@/components/app-shell";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,12 +18,23 @@ import {
 } from "@/components/ui/sheet";
 import {
   FileBarChart, Plus, Search, Pencil, Trash2, TrendingUp, BarChart3, Target,
+  Copy, Download,
 } from "lucide-react";
 import {
   getCmaReports, addCmaReport, updateCmaReport, deleteCmaReport,
+  getProperties,
   type CmaReport, type CmaComparable, type Property,
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
+
+const PDFDownloadLink = dynamic(
+  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
+  { ssr: false, loading: () => <Button size="sm" variant="ghost" disabled><Download className="h-4 w-4" /></Button> },
+);
+const CmaDocumentModule = dynamic(
+  () => import("@/components/cma-pdf-document").then((mod) => ({ default: mod.CmaDocument })),
+  { ssr: false },
+);
 
 const PROPERTY_TYPES: Property["propertyType"][] = ["house", "apartment", "townhouse", "land", "commercial", "farm"];
 const STATUS_OPTIONS: CmaReport["status"][] = ["draft", "final", "presented"];
@@ -67,13 +79,15 @@ export default function CmaPage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [properties, setProperties] = useState<Property[]>([]);
 
   const fetchData = useCallback(async () => {
     try {
-      const data = await getCmaReports();
-      setReports(data);
+      const [cmaData, propData] = await Promise.all([getCmaReports(), getProperties()]);
+      setReports(cmaData);
+      setProperties(propData);
     } catch (error) {
-      console.error("Failed to fetch CMA reports:", error);
+      console.error("Failed to fetch data:", error);
     } finally {
       setLoading(false);
     }
@@ -128,6 +142,61 @@ export default function CmaPage() {
       notes: report.notes || "",
     });
     setSheetOpen(true);
+  }
+
+  function autoFillFromProperty(propertyId: string) {
+    const prop = properties.find((p) => p.id === propertyId);
+    if (!prop) return;
+    setForm((f) => ({
+      ...f,
+      title: f.title || `CMA - ${prop.address}`,
+      subjectAddress: prop.address,
+      subjectSuburb: prop.suburb,
+      subjectCity: prop.city,
+      subjectType: prop.propertyType,
+      subjectBedrooms: prop.bedrooms,
+      subjectBathrooms: prop.bathrooms,
+      subjectErfSize: prop.erfSize,
+      subjectFloorSize: prop.floorSize,
+    }));
+  }
+
+  function cloneReport(report: CmaReport) {
+    setEditId(null);
+    setForm({
+      title: `${report.title} (Copy)`,
+      subjectAddress: report.subjectAddress,
+      subjectSuburb: report.subjectSuburb,
+      subjectCity: report.subjectCity,
+      subjectType: report.subjectType,
+      subjectBedrooms: report.subjectBedrooms,
+      subjectBathrooms: report.subjectBathrooms,
+      subjectErfSize: report.subjectErfSize,
+      subjectFloorSize: report.subjectFloorSize,
+      comparables: report.comparables.map((c) => ({ ...c })),
+      estimatedValue: report.estimatedValue,
+      pricePerSqm: report.pricePerSqm,
+      confidenceLevel: report.confidenceLevel,
+      status: "draft",
+      contactName: report.contactName || "",
+      notes: report.notes || "",
+    });
+    setSheetOpen(true);
+  }
+
+  function calculateValueRange(report: CmaReport): { low: number; high: number } {
+    const comps = report.comparables.filter((c) => c.salePrice > 0);
+    if (comps.length < 2) {
+      const pct = 0.10;
+      return { low: Math.round(report.estimatedValue * (1 - pct)), high: Math.round(report.estimatedValue * (1 + pct)) };
+    }
+    const prices = comps.map((c) => c.salePrice);
+    const stdDev = Math.sqrt(prices.reduce((sum, p) => sum + Math.pow(p - report.estimatedValue, 2), 0) / prices.length);
+    const pct = Math.min(Math.max(stdDev / report.estimatedValue, 0.03), 0.15);
+    return {
+      low: Math.round(report.estimatedValue * (1 - pct)),
+      high: Math.round(report.estimatedValue * (1 + pct)),
+    };
   }
 
   async function handleSave() {
@@ -202,11 +271,22 @@ export default function CmaPage() {
       .filter((c) => c.floorSize > 0)
       .reduce((sum, c, _, arr) => sum + c.salePrice / c.floorSize / arr.length, 0);
     const estimated = form.subjectFloorSize > 0 ? avgSqm * form.subjectFloorSize : avgPrice;
+
+    // Auto-score confidence: count + recency
+    const now = Date.now();
+    const sixMonthsMs = 180 * 24 * 60 * 60 * 1000;
+    const recentComps = comps.filter((c) => c.saleDate && (now - new Date(c.saleDate).getTime()) < sixMonthsMs);
+    let confidence: CmaReport["confidenceLevel"] = "low";
+    if (comps.length >= 5 && recentComps.length >= 3) confidence = "high";
+    else if (comps.length >= 3 && recentComps.length >= 2) confidence = "high";
+    else if (comps.length >= 3 || recentComps.length >= 2) confidence = "medium";
+    else if (comps.length >= 2) confidence = "medium";
+
     setForm((f) => ({
       ...f,
       estimatedValue: Math.round(estimated),
       pricePerSqm: Math.round(avgSqm),
-      confidenceLevel: comps.length >= 5 ? "high" : comps.length >= 3 ? "medium" : "low",
+      confidenceLevel: confidence,
     }));
   }
 
@@ -274,6 +354,7 @@ export default function CmaPage() {
                   <TableHead>Address</TableHead>
                   <TableHead>Suburb</TableHead>
                   <TableHead className="text-right">Estimated Value</TableHead>
+                  <TableHead className="text-right">Value Range</TableHead>
                   <TableHead className="text-right">R/m²</TableHead>
                   <TableHead>Confidence</TableHead>
                   <TableHead>Status</TableHead>
@@ -283,26 +364,36 @@ export default function CmaPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No CMA reports found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No CMA reports found</TableCell></TableRow>
                 ) : (
-                  filtered.map((r) => (
+                  filtered.map((r) => {
+                    const range = calculateValueRange(r);
+                    return (
                     <TableRow key={r.id}>
                       <TableCell className="font-medium">{r.title}</TableCell>
                       <TableCell>{r.subjectAddress}</TableCell>
                       <TableCell>{r.subjectSuburb}</TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency(r.estimatedValue)}</TableCell>
+                      <TableCell className="text-right font-mono text-xs text-muted-foreground">{formatCurrency(range.low)} – {formatCurrency(range.high)}</TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency(r.pricePerSqm)}</TableCell>
                       <TableCell><Badge variant={confidenceColors[r.confidenceLevel]}>{r.confidenceLevel}</Badge></TableCell>
                       <TableCell><Badge variant={statusColors[r.status]}>{r.status}</Badge></TableCell>
                       <TableCell className="text-right">{r.comparables.length}</TableCell>
-                      <TableCell className="text-right">
-                        <Button size="sm" variant="ghost" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(r.id!)}><Trash2 className="h-4 w-4" /></Button>
+                      <TableCell className="text-right space-x-1">
+                        <Button size="sm" variant="ghost" onClick={() => openEdit(r)} title="Edit"><Pencil className="h-4 w-4" /></Button>
+                        <Button size="sm" variant="ghost" onClick={() => cloneReport(r)} title="Clone"><Copy className="h-4 w-4" /></Button>
+                        <PDFDownloadLink document={<CmaDocumentModule report={r} />} fileName={`CMA-${r.subjectAddress.replace(/\s+/g, "_")}.pdf`}>
+                          {({ loading: pdfLoading }) => (
+                            <Button size="sm" variant="ghost" disabled={pdfLoading} title="Download PDF"><Download className="h-4 w-4" /></Button>
+                          )}
+                        </PDFDownloadLink>
+                        <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(r.id!)} title="Delete"><Trash2 className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
-                  ))
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
@@ -324,6 +415,24 @@ export default function CmaPage() {
             {/* Report Info */}
             <div className="space-y-4">
               <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Report Details</h3>
+
+              {/* Auto-fill from existing property */}
+              {properties.length > 0 && !editId && (
+                <div className="rounded-md border border-dashed border-primary/40 bg-primary/5 p-3">
+                  <Label className="text-xs text-primary font-medium">Auto-fill from existing property</Label>
+                  <Select onValueChange={autoFillFromProperty}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select a property to auto-fill..." /></SelectTrigger>
+                    <SelectContent>
+                      {properties.map((p) => (
+                        <SelectItem key={p.id} value={p.id!}>
+                          {p.address}, {p.suburb} — {p.propertyType}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
                   <Label>Title</Label>

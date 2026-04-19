@@ -11,6 +11,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "date-fns", "framer-motion"],
   },
+  transpilePackages: ["@react-pdf/renderer"],
 };
 
 module.exports = nextConfig;

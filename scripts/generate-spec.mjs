@@ -33,7 +33,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "0.12.0";
+const VERSION = "0.13.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -542,7 +542,7 @@ function sectionPages() {
       ["Route", "File", "Description"],
       [
         ["/properties", "app/properties/page.tsx", "Property/mandate management with KPI cards, search, add/edit/delete"],
-        ["/cma", "app/cma/page.tsx", "Comparative Market Analysis reports with comparable sales, auto-calculated valuations, confidence levels, and KPI cards"],
+        ["/cma", "app/cma/page.tsx", "Comparative Market Analysis reports with PDF export, auto-fill from properties, clone, value range, confidence auto-score, and KPI cards"],
       ]
     ),
     emptyPara(),
@@ -691,11 +691,15 @@ function sectionPages() {
     bullet("Subject property details: address, suburb, city, type, bedrooms, bathrooms, erf size, floor size"),
     bullet("Comparable sales management: add/remove comparables with sale price, date, distance, and adjustments"),
     bullet("Auto-calculated estimated value and price per square metre from comparables"),
-    bullet("Confidence level indicator (Low / Medium / High) based on number of comparables"),
+    bullet("Confidence auto-score: factors comparable count AND recency (6-month window) for Low/Medium/High"),
+    bullet("Value range display: statistical ±range based on comparable price standard deviation (3–15% band)"),
     bullet("Report status workflow: Draft → Final → Presented"),
-    bullet("KPI cards: Total Reports, Average Value, High Confidence, Presented Reports"),
-    bullet("Search by title, address, or suburb"),
+    bullet("KPI cards: Total Reports, Average Value, Avg R/m², Finalised Reports"),
+    bullet("Search by title, address, suburb, or contact name"),
     bullet("Inline add, edit, and delete with slide-over Sheet forms"),
+    bullet("Auto-fill from existing properties: select a property to populate all subject fields"),
+    bullet("Clone CMA: duplicate any report as a new draft with '(Copy)' suffix"),
+    bullet("PDF export: professional 4-page PDF with cover page, subject details, valuation summary, comparables table, feature comparison, statistics, and disclaimer (via @react-pdf/renderer)"),
 
     new Paragraph({ children: [new PageBreak()] }),
   ];
@@ -1278,7 +1282,7 @@ function sectionTesting() {
     ),
     emptyPara(),
 
-    h2("9.4 Test Metrics (v0.12.0)"),
+    h2("9.4 Test Metrics (v0.13.0)"),
     makeTable(
       ["Metric", "Value"],
       [
@@ -1629,6 +1633,7 @@ function sectionVersionHistory() {
         ["v0.10.0", "Dashboard transaction KPIs, won-lead-to-transaction flow, command palette updates, 5 new E2E tests"],
         ["v0.11.0", "13 SA real estate features (properties, show days, inbound leads, messaging, sequences, speed-to-lead, buyer match, documents, lead ROI, compliance), 10 new collections, 39 new functions, 58 new E2E tests, Playwright config hardening"],
         ["v0.12.0", "Comparative Market Analysis (CMA) reports with comparable sales management, auto-calculated valuations, confidence levels, KPI cards. New cmaReports collection, 5 CRUD functions, 40 seed records, 9 new E2E tests (84 total). Updated spec document generator."],
+        ["v0.13.0", "CMA enhancements: PDF export via @react-pdf/renderer (4-page professional report), auto-fill from existing properties, clone CMA as draft, value range display (statistical ±band), confidence auto-score (count + 6-month recency). New cma-pdf-document.tsx component. Training guide and demo guide documentation."],
       ]
     ),
     emptyPara(),
@@ -1813,7 +1818,7 @@ function sectionAppendix() {
     bullet("documents/page.tsx — Document vault"),
     bullet("lead-roi/page.tsx — Lead ROI analytics"),
     bullet("compliance/page.tsx — POPIA compliance management"),
-    bullet("cma/page.tsx — Comparative Market Analysis reports with comparable sales and valuations"),
+    bullet("cma/page.tsx — CMA reports with PDF export, auto-fill, clone, value range, confidence auto-score"),
     bullet("api/seed/route.ts — Server-side seed API route (Firebase Admin)"),
     emptyPara(),
 
@@ -1839,6 +1844,7 @@ function sectionAppendix() {
     bullet("new-transaction-sheet.tsx — New transaction form with commission preview"),
     bullet("edit-transaction-sheet.tsx — Edit transaction form with stage management"),
     bullet("forecast-chart.tsx — Pipeline and transaction forecast visualisation"),
+    bullet("cma-pdf-document.tsx — Professional 4-page CMA PDF report (cover, subject, comparables, feature comparison)"),
     emptyPara(),
 
     h3("UI Primitives (src/components/ui/)"),

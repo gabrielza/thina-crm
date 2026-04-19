@@ -350,25 +350,45 @@ KPI cards show:
 
 ### 10.2 Creating a CMA Report
 
-1. Click **"New CMA"**.
-2. **Subject Property** section: Enter the property details (address, suburb, city, type, beds, baths, erf size, floor size).
-3. **Comparables** section: Add comparable sales:
+1. Click **"New CMA Report"**.
+2. **Auto-fill from Property** (optional): Select an existing property from the dropdown to auto-populate all subject fields.
+3. **Subject Property** section: Enter/review the property details (address, suburb, city, type, beds, baths, erf size, floor size).
+4. **Comparables** section: Add comparable sales:
    - Click "Add Comparable"
    - Enter: Address, Suburb, Sale Price, Sale Date, Beds, Baths, Erf Size, Floor Size, Days on Market, Notes
    - Add as many comparables as needed (3+ recommended for high confidence)
-4. **Valuation** section: The estimated value and price/sqm can be auto-calculated from comparables.
-5. Set the **Confidence Level** (Low/Medium/High) and **Status** (Draft/Final/Presented).
-6. Click **"Create Report"**.
+5. **Valuation** section: Click **"Auto-calculate"** to compute estimated value, price/m², and confidence level from comparables.
+6. Set the **Status** (Draft/Final/Presented).
+7. Click **"Create Report"**.
 
-### 10.3 Confidence Levels
+### 10.3 Confidence Auto-Score
 
-| Level | Meaning |
-|-------|---------|
-| **Low** | Few comparables or significant differences |
-| **Medium** | Reasonable comparable data available |
-| **High** | Strong comparable data, 3+ similar recent sales |
+The auto-calculate function scores confidence based on **comparable count** and **recency** (within 6 months):
 
-### 10.4 Report Status Workflow
+| Level | Criteria |
+|-------|----------|
+| **Low** | 0–1 comparables or no recent sales |
+| **Medium** | 2+ comparables or 2+ recent sales |
+| **High** | 3+ comparables with 2+ recent sales, or 5+ comparables with 3+ recent |
+
+### 10.4 Value Range
+
+Each report displays a **value range** (e.g. R2.8M – R3.2M) calculated from the standard deviation of comparable prices. The range is capped between ±3% and ±15% of the estimated value.
+
+### 10.5 Clone a CMA Report
+
+Click the **Copy** button on any report row to duplicate it as a new Draft with "(Copy)" appended to the title. Useful for creating variations or updating valuations.
+
+### 10.6 PDF Export
+
+Click the **Download** button on any report row to generate a professional 4-page PDF containing:
+- **Cover page** with property summary and branding
+- **Subject property details** and valuation summary with value range
+- **Comparables table** with statistics (lowest, highest, average sale, avg price/m², avg days on market)
+- **Feature comparison** (side-by-side subject vs. each comparable)
+- **Disclaimer** and report metadata
+
+### 10.7 Report Status Workflow
 
 **Draft** → **Final** → **Presented**
 - Start in Draft while gathering data
@@ -682,6 +702,9 @@ Just start typing and Thina will filter the results instantly.
 ### Property & CMA Tips
 
 - **Use CMA reports before pricing** — add 3+ comparables for a high confidence valuation.
+- **Auto-fill saves time** — select an existing property to populate subject fields instantly.
+- **Clone for variations** — duplicate a CMA to test different comparable sets or pricing scenarios.
+- **Download PDFs for clients** — use the professional PDF export when presenting valuations.
 - **Track mandate expiry dates** — the Properties page warns you 30 days before expiry.
 - **Add features to listings** — this helps buyer matching find the right properties.
 
