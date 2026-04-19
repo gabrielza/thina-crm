@@ -33,7 +33,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "0.10.0";
+const VERSION = "0.11.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -466,6 +466,7 @@ function sectionComponents() {
         ["DashboardCards", "dashboard-cards.tsx", "KPI summary cards with label-above-number pattern and trend indicators"],
         ["DashboardCharts", "dashboard-charts.tsx", "Recharts-based pipeline funnel, donut, and bar chart compositions"],
         ["ActivityTimeline", "activity-timeline.tsx", "Chronological activity feed for lead/contact detail pages"],
+        ["ForecastChart", "forecast-chart.tsx", "Pipeline and transaction forecast visualisation"],
         ["TaskList", "task-list.tsx", "Task list with completion status and priority indicators"],
         ["NewLeadSheet", "new-lead-sheet.tsx", "Sheet-based form for creating new leads"],
         ["EditLeadSheet", "edit-lead-sheet.tsx", "Sheet-based form for editing existing leads"],
@@ -499,6 +500,17 @@ function sectionPages() {
         ["/reports", "app/reports/page.tsx", "Yes", "Business reports with pipeline analytics, source analysis, and conversion metrics"],
         ["/login", "app/login/page.tsx", "No", "Authentication page with Google OAuth and email/password sign-in"],
         ["/seed", "app/seed/page.tsx", "Yes", "Data seeding utility to generate 1,350 test records with progress tracking"],
+        ["/properties", "app/properties/page.tsx", "Yes", "Property/mandate management with KPI cards, search, add/edit/delete"],
+        ["/showdays", "app/showdays/page.tsx", "Yes", "Show day event management with KPI cards, scheduling, and lead capture"],
+        ["/showday", "app/showday/page.tsx", "Yes", "Individual show day detail/registration view"],
+        ["/inbound", "app/inbound/page.tsx", "Yes", "Inbound lead portal injection with email paste, filter tabs, and KPI cards"],
+        ["/messaging", "app/messaging/page.tsx", "Yes", "SMS messaging hub with compose sheet, gateway notice, and message history"],
+        ["/sequences", "app/sequences/page.tsx", "Yes", "Follow-up sequence builder with KPI cards, automated step configuration"],
+        ["/speed-to-lead", "app/speed-to-lead/page.tsx", "Yes", "Auto-response rule management with trigger configuration and conversion stats"],
+        ["/buyer-match", "app/buyer-match/page.tsx", "Yes", "Buyer-property matching engine with buyer profile management and KPI cards"],
+        ["/documents", "app/documents/page.tsx", "Yes", "Document management with upload sheet, storage notice, and KPI cards"],
+        ["/lead-roi", "app/lead-roi/page.tsx", "Yes", "Lead source ROI analytics with source cost tracking and KPI cards"],
+        ["/compliance", "app/compliance/page.tsx", "Yes", "POPIA compliance and regulatory management with consent tracking and tabbed views"],
       ]
     ),
     emptyPara(),
@@ -548,6 +560,69 @@ function sectionPages() {
     bullet("Revenue by source breakdown"),
     bullet("Lead conversion metrics"),
     bullet("Export-ready layout with compact action buttons"),
+    emptyPara(),
+
+    h2("5.8 Property Management"),
+    bullet("Property/mandate CRUD with listing details"),
+    bullet("Mandate types: Sole, Open, Dual, Auction"),
+    bullet("KPI cards: Total Properties, Active Mandates, Avg Listing Price"),
+    bullet("Search and filter functionality"),
+    emptyPara(),
+
+    h2("5.9 Show Day Management"),
+    bullet("Show day event scheduling with property linking"),
+    bullet("Lead capture/registration per show day"),
+    bullet("KPI cards: Total Show Days, Upcoming, Leads Captured"),
+    bullet("Public registration form flow (QR code compatible)"),
+    emptyPara(),
+
+    h2("5.10 Inbound Lead Portal"),
+    bullet("Email paste-and-parse for portal-injected leads"),
+    bullet("Filter tabs for lead status/source"),
+    bullet("KPI cards: Total Inbound, Unprocessed, Conversion Rate"),
+    emptyPara(),
+
+    h2("5.11 Messaging Hub"),
+    bullet("SMS compose sheet with recipient selection"),
+    bullet("Message history per contact"),
+    bullet("Gateway integration notice (placeholder for SA SMS providers)"),
+    emptyPara(),
+
+    h2("5.12 Follow-up Sequences"),
+    bullet("Automated follow-up sequence builder"),
+    bullet("Step configuration with delay and channel"),
+    bullet("Enrollment management for contacts/leads"),
+    bullet("KPI cards: Active Sequences, Enrolled Contacts, Completion Rate"),
+    emptyPara(),
+
+    h2("5.13 Speed-to-Lead"),
+    bullet("Auto-response rule creation with trigger event selection"),
+    bullet("Conversion statistics and info cards"),
+    bullet("KPI cards: Active Rules, Avg Response Time, Conversion Uplift"),
+    emptyPara(),
+
+    h2("5.14 Buyer-Property Matching"),
+    bullet("Buyer profile management with preference criteria"),
+    bullet("Property matching engine"),
+    bullet("KPI cards: Active Buyers, Matched Properties, Match Rate"),
+    emptyPara(),
+
+    h2("5.15 Document Management"),
+    bullet("Document upload with metadata and tagging"),
+    bullet("Documents linked to transactions and contacts"),
+    bullet("Storage notice with usage tracking"),
+    emptyPara(),
+
+    h2("5.16 Lead Source ROI"),
+    bullet("Source cost tracking per lead channel"),
+    bullet("ROI calculation: revenue vs cost per source"),
+    bullet("KPI cards: Total Sources, Best ROI, Worst ROI"),
+    emptyPara(),
+
+    h2("5.17 Compliance"),
+    bullet("POPIA consent tracking with opt-in/opt-out management"),
+    bullet("Tabbed views: POPIA, FICA, Rolling 12-Month income"),
+    bullet("KPI cards: Consent Rate, Overdue Reviews, Compliance Score"),
 
     new Paragraph({ children: [new PageBreak()] }),
   ];
@@ -572,6 +647,16 @@ function sectionFunctions() {
         ["Activity", "activities", "type (call/email/meeting/note), subject, description, leadId, contactId, ownerId"],
         ["Task", "tasks", "title, description, dueDate, status (pending/completed/overdue), priority (low/medium/high), leadId, contactId, ownerId"],
         ["Transaction", "transactions", "propertyAddress, salePrice, commissionRate, commissionAmount, vatIncluded, vatAmount, splits[], agentNetCommission, stage (9 stages), stageHistory[], ficaBuyer, ficaSeller, conveyancer, bondOriginator, buyerName, sellerName, leadId, contactId, ownerId"],
+        ["ShowDay", "showDays", "title, propertyId, date, startTime, endTime, address, notes, ownerId"],
+        ["ShowDayLead", "showDayLeads", "showDayId, name, email, phone, notes, ownerId"],
+        ["Property", "properties", "title, address, suburb, city, province, price, bedrooms, bathrooms, garages, erfSize, floorSize, mandateType (sole/open/dual/auction), status, notes, ownerId"],
+        ["InboundLead", "inboundLeads", "source, rawContent, parsedName, parsedEmail, parsedPhone, status, notes, ownerId"],
+        ["SmsMessage", "smsMessages", "contactId, contactName, phone, message, direction, status, ownerId"],
+        ["FollowUpSequence", "followUpSequences", "name, description, steps[] (delay, channel, template), isActive, ownerId"],
+        ["SequenceEnrollment", "sequenceEnrollments", "sequenceId, contactId, leadId, currentStep, status, nextRunAt, ownerId"],
+        ["BuyerProfile", "buyerProfiles", "name, email, phone, minPrice, maxPrice, suburbs[], bedrooms, propertyType, notes, ownerId"],
+        ["StoredDocument", "documents", "name, type, size, url, transactionId, contactId, tags[], ownerId"],
+        ["AutoResponseRule", "autoResponseRules", "name, triggerEvent, responseTemplate, channel, delaySeconds, isActive, ownerId"],
       ]
     ),
     emptyPara(),
@@ -649,6 +734,106 @@ function sectionFunctions() {
       [
         ["batchWrite", "batchWrite(collection, documents[], onProgress?) → Promise<string[]>", "Writes documents in batches of 450 (Firestore limit is 500). Returns array of generated IDs. Reports progress via callback."],
         ["clearCollection", "clearCollection(collection, onProgress?) → Promise<number>", "Deletes all documents in a collection using batched deletes. Returns count of deleted documents."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.8 Show Day Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addShowDay", "addShowDay(showDay) → Promise<string>", "Creates a new show day event. Returns document ID."],
+        ["getShowDays", "getShowDays() → Promise<ShowDay[]>", "Fetches all show days ordered by date."],
+        ["getShowDayById", "getShowDayById(id) → Promise<ShowDay|null>", "Fetches a single show day by ID."],
+        ["deleteShowDay", "deleteShowDay(id) → Promise<void>", "Deletes a show day event."],
+        ["addShowDayLead", "addShowDayLead(lead) → Promise<string>", "Registers a lead for a show day event."],
+        ["getShowDayLeads", "getShowDayLeads(showDayId) → Promise<ShowDayLead[]>", "Fetches all leads registered for a show day."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.9 Property Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addProperty", "addProperty(property) → Promise<string>", "Creates a new property listing."],
+        ["getProperties", "getProperties() → Promise<Property[]>", "Fetches all properties."],
+        ["getPropertyById", "getPropertyById(id) → Promise<Property|null>", "Fetches a single property by ID."],
+        ["updateProperty", "updateProperty(id, data) → Promise<void>", "Partially updates a property."],
+        ["deleteProperty", "deleteProperty(id) → Promise<void>", "Deletes a property listing."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.10 Inbound Lead Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addInboundLead", "addInboundLead(lead) → Promise<string>", "Creates an inbound lead from portal injection."],
+        ["getInboundLeads", "getInboundLeads() → Promise<InboundLead[]>", "Fetches all inbound leads."],
+        ["updateInboundLead", "updateInboundLead(id, data) → Promise<void>", "Updates an inbound lead status/notes."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.11 SMS Message Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addSmsMessage", "addSmsMessage(msg) → Promise<string>", "Records an SMS message."],
+        ["getSmsMessages", "getSmsMessages() → Promise<SmsMessage[]>", "Fetches all SMS messages."],
+        ["getSmsByContact", "getSmsByContact(contactId) → Promise<SmsMessage[]>", "Fetches SMS history for a contact."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.12 Follow-up Sequence Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addSequence", "addSequence(seq) → Promise<string>", "Creates a follow-up sequence template."],
+        ["getSequences", "getSequences() → Promise<FollowUpSequence[]>", "Fetches all sequences."],
+        ["updateSequence", "updateSequence(id, data) → Promise<void>", "Updates a sequence template."],
+        ["deleteSequence", "deleteSequence(id) → Promise<void>", "Deletes a sequence."],
+        ["addEnrollment", "addEnrollment(enrollment) → Promise<string>", "Enrolls a contact in a sequence."],
+        ["getEnrollments", "getEnrollments() → Promise<SequenceEnrollment[]>", "Fetches all enrollments."],
+        ["updateEnrollment", "updateEnrollment(id, data) → Promise<void>", "Updates enrollment progress/status."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.13 Buyer Profile Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addBuyerProfile", "addBuyerProfile(profile) → Promise<string>", "Creates a buyer profile."],
+        ["getBuyerProfiles", "getBuyerProfiles() → Promise<BuyerProfile[]>", "Fetches all buyer profiles."],
+        ["updateBuyerProfile", "updateBuyerProfile(id, data) → Promise<void>", "Updates a buyer profile."],
+        ["deleteBuyerProfile", "deleteBuyerProfile(id) → Promise<void>", "Deletes a buyer profile."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.14 Document Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addStoredDocument", "addStoredDocument(doc) → Promise<string>", "Stores document metadata."],
+        ["getDocumentsByTransaction", "getDocumentsByTransaction(txId) → Promise<StoredDocument[]>", "Fetches documents for a transaction."],
+        ["getDocumentsByContact", "getDocumentsByContact(contactId) → Promise<StoredDocument[]>", "Fetches documents for a contact."],
+        ["deleteStoredDocument", "deleteStoredDocument(id) → Promise<void>", "Deletes a stored document."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.15 Auto-Response Rule Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addAutoResponseRule", "addAutoResponseRule(rule) → Promise<string>", "Creates a speed-to-lead auto-response rule."],
+        ["getAutoResponseRules", "getAutoResponseRules() → Promise<AutoResponseRule[]>", "Fetches all auto-response rules."],
+        ["updateAutoResponseRule", "updateAutoResponseRule(id, data) → Promise<void>", "Updates an auto-response rule."],
+        ["deleteAutoResponseRule", "deleteAutoResponseRule(id) → Promise<void>", "Deletes an auto-response rule."],
       ]
     ),
     emptyPara(),
@@ -950,7 +1135,7 @@ function sectionTesting() {
     emptyPara(),
     h3("Layer 3: Build Verification"),
     para(
-      "Each version undergoes a full Next.js production build verification. The build process compiles TypeScript, validates all imports, resolves module paths, and generates optimised bundles for all 14 pages."
+      "Each version undergoes a full Next.js production build verification. The build process compiles TypeScript, validates all imports, resolves module paths, and generates optimised bundles for all 26 pages."
     ),
     emptyPara(),
 
@@ -972,11 +1157,26 @@ function sectionTesting() {
         ["Transaction Pipeline", "Pipeline board loads with 9 stage columns (OTP Signed, Bond Applied, Commission Paid)", "1"],
         ["Dashboard — Tx KPIs", "Transaction KPI cards visible when transactions exist (Active Transactions, Pending/Expected/Earned Commission)", "1"],
         ["Health API", "GET /api/health returns healthy status with Firestore connectivity", "1"],
+        ["Properties", "Property list table loads, property detail page renders with address and mandate type", "3"],
+        ["Show Days", "Show day list loads, create show day form, show day detail with lead registration", "4"],
+        ["Show Day Public", "Public QR code form loads, lead registration works without auth", "2"],
+        ["Inbound Leads", "Inbound lead list loads, source and status columns display", "3"],
+        ["Messaging / SMS", "SMS page loads, conversation list, compose message form", "3"],
+        ["Follow-up Sequences", "Sequence list loads, create sequence with steps, enrollment tracking", "4"],
+        ["Speed-to-Lead", "Auto-response rules list, create/edit rule form, trigger event options", "4"],
+        ["Buyer Match", "Buyer profiles list, profile detail with criteria, property matching", "4"],
+        ["Documents", "Document vault loads, upload form, transaction/contact document linking", "4"],
+        ["Lead ROI", "ROI analytics page loads, source performance table, cost-per-lead metrics", "3"],
+        ["Compliance", "POPIA consent page loads, consent management table, data export/delete actions", "3"],
+        ["Navigation", "Sidebar links navigate correctly to all 26 pages", "8"],
+        ["Theme & UI", "Dark/light mode toggle, sidebar collapse, responsive layout", "5"],
+        ["Command Palette", "Cmd+K opens palette, navigation commands work, search filters", "4"],
+        ["Seed Data", "Seed page generates records for all 15 collections, progress tracking, clear all", "3"],
       ]
     ),
     emptyPara(),
 
-    h2("9.4 Test Metrics (v0.10.0)"),
+    h2("9.4 Test Metrics (v0.11.0)"),
     makeTable(
       ["Metric", "Value"],
       [
@@ -985,11 +1185,11 @@ function sectionTesting() {
         ["Unit/Smoke Test Files", "3"],
         ["E2E Test Files", "1"],
         ["Total Unit/Smoke Tests", "51"],
-        ["Total E2E Tests", "17"],
-        ["Combined Total Tests", "68"],
+        ["Total E2E Tests", "75"],
+        ["Combined Total Tests", "126"],
         ["Pass Rate", "100%"],
         ["Unit Execution Time", "~3.1 seconds"],
-        ["E2E Execution Time", "~1.3 minutes"],
+        ["E2E Execution Time", "~7 minutes"],
         ["CI Integration", "Unit tests in GitHub Actions — E2E on-demand only"],
       ]
     ),
@@ -1043,7 +1243,7 @@ function sectionIntegration() {
         ["Branch", "master"],
         ["Committer", "Gabriel d'Oliveira (gadolive@microsoft.com)"],
         ["Commit Convention", "Conventional commits (feat:, test:, fix:, etc.)"],
-        ["Tagging Strategy", "Semantic version tags (v0.1.0 through v0.10.0)"],
+        ["Tagging Strategy", "Semantic version tags (v0.1.0 through v0.11.0)"],
         ["Push Command", "git push origin master --tags"],
         [".gitignore", "node_modules/, .next/, .env.local, tmp-e2e-user.json, build artifacts"],
       ]
@@ -1092,7 +1292,7 @@ function sectionIntegration() {
         ["Database", "(default)"],
         ["Region", "africa-south1 (Johannesburg)"],
         ["Edition", "Standard (free tier eligible)"],
-        ["Collections", "leads, contacts, activities, tasks, transactions (5 total)"],
+        ["Collections", "leads, contacts, activities, tasks, transactions, showDays, showDayLeads, properties, inboundLeads, smsMessages, followUpSequences, sequenceEnrollments, buyerProfiles, documents, autoResponseRules (15 total)"],
         ["Client SDK", "firebase/firestore — real-time reads, write operations"],
         ["Admin SDK", "firebase-admin — server-side seed API, health check"],
         ["Batch Operations", "writeBatch for seed data (batches of 450)"],
@@ -1102,7 +1302,7 @@ function sectionIntegration() {
 
     h3("10.2.4 Firestore Security Rules"),
     para(
-      "All 5 collections follow a consistent security pattern defined in firestore.rules:"
+      "All 15 collections follow a consistent security pattern defined in firestore.rules:"
     ),
     bullet("isAuth() — Checks request.auth != null for any authenticated user"),
     bullet("isCreatingOwn() — Validates incoming ownerId matches the authenticated user's UID"),
@@ -1111,6 +1311,7 @@ function sectionIntegration() {
     bullet("allow create: if isCreatingOwn() — Must set ownerId to own UID when creating"),
     bullet("allow update, delete: if isOwner() — Only the document owner can modify or delete"),
     bullet("No open access patterns — no 'allow read, write: if true' anywhere in the rules"),
+    bullet("Special rules: showDays allows public read (QR code forms); showDayLeads allows public create (registration)"),
     bullet("Rules deployed via: npx firebase-tools deploy --only firestore:rules --project thina-crm"),
     emptyPara(),
 
@@ -1158,7 +1359,7 @@ function sectionIntegration() {
       ["File", "Purpose"],
       [
         ["firebase.json", "Project services configuration, region settings"],
-        ["firestore.rules", "Security rules for all 5 collections"],
+        ["firestore.rules", "Security rules for all 15 collections"],
         ["firestore.indexes.json", "Composite index definitions"],
         ["apphosting.yaml", "App Hosting deployment configuration (instances, memory, region)"],
       ]
@@ -1191,8 +1392,9 @@ function sectionIntegration() {
         ["Browser", "Chromium only"],
         ["Base URL", "Live deployment (overridable via DEPLOY_URL env var)"],
         ["Execution", "Sequential (not parallel — tests share auth state)"],
-        ["Test Timeout", "30 seconds per test"],
-        ["Expect Timeout", "10 seconds for assertions"],
+        ["Test Timeout", "60 seconds per test"],
+        ["Expect Timeout", "30 seconds for assertions"],
+        ["Retries", "1 (handles transient deployment latency)"],
         ["Screenshots", "Only on failure"],
         ["Trace", "On first retry"],
         ["Reporter", "List + HTML (open: never)"],
@@ -1234,7 +1436,7 @@ function sectionDeployment() {
     }),
     new Paragraph({
       spacing: { after: 40 },
-      children: [bold("Step 2: "), normal("Git tag created for version (e.g., v0.10.0)")],
+      children: [bold("Step 2: "), normal("Git tag created for version (e.g., v0.11.0)")],
     }),
     new Paragraph({
       spacing: { after: 40 },
@@ -1323,6 +1525,7 @@ function sectionVersionHistory() {
         ["v0.8.1", "Playwright E2E test suite (12 tests), test user creation script, Playwright configuration"],
         ["v0.9.0", "Transaction data model (9 stages), commission calculator, FICA compliance tracking, transaction CRUD, pipeline board, seed data"],
         ["v0.10.0", "Dashboard transaction KPIs, won-lead-to-transaction flow, command palette updates, 5 new E2E tests"],
+        ["v0.11.0", "13 SA real estate features (properties, show days, inbound leads, messaging, sequences, speed-to-lead, buyer match, documents, lead ROI, compliance), 10 new collections, 39 new functions, 58 new E2E tests, Playwright config hardening"],
       ]
     ),
     emptyPara(),
@@ -1333,14 +1536,14 @@ function sectionVersionHistory() {
 
     h3("12.3.1 Git & GitHub"),
     bullet("Initialised Git repository and configured remote origin"),
-    bullet("Created semantic version tags (v0.1.0 through v0.10.0) at each milestone"),
+    bullet("Created semantic version tags (v0.1.0 through v0.11.0) at each milestone"),
     bullet("Wrote conventional commit messages with multi-line descriptions"),
     bullet("Pushed code and tags to GitHub after every version"),
     bullet("Configured .gitignore for Node.js/Next.js/Firebase projects"),
     emptyPara(),
 
     h3("12.3.2 Firebase"),
-    bullet("Configured Firestore security rules for all 5 collections (authentication + ownership pattern)"),
+    bullet("Configured Firestore security rules for all 15 collections (authentication + ownership pattern)"),
     bullet("Deployed security rules via Firebase CLI (firebase-tools)"),
     bullet("Set up Firebase Client SDK initialisation with environment variables"),
     bullet("Set up Firebase Admin SDK for server-side API routes"),
@@ -1353,7 +1556,7 @@ function sectionVersionHistory() {
     bullet("Installed and configured Vitest 4.x with TypeScript path alias support"),
     bullet("Installed and configured Playwright with Chromium for E2E testing"),
     bullet("Created test user accounts in Firebase Auth"),
-    bullet("Wrote 51 unit/smoke tests and 17 E2E tests (68 total)"),
+    bullet("Wrote 51 unit/smoke tests and 75 E2E tests (126 total)"),
     bullet("Configured GitHub Actions CI pipeline to block deploys on test failure"),
     emptyPara(),
 
@@ -1381,7 +1584,7 @@ function sectionVersionHistory() {
         ["Code Implementation", "", "✓ Wrote all application code, components, and tests"],
         ["Infrastructure Config", "", "✓ Configured Git, Firebase, CI/CD, Playwright"],
         ["Security Rules", "", "✓ Designed and deployed Firestore security rules"],
-        ["Testing", "✓ Directed test strategy", "✓ Wrote and ran all 68 tests"],
+        ["Testing", "✓ Directed test strategy", "✓ Wrote and ran all 126 tests"],
         ["Deployment", "✓ Approved releases", "✓ Built, tested, deployed each version"],
         ["Documentation", "✓ Requested spec document", "✓ Created generator and content"],
         ["Code Review", "✓ Reviewed outputs and directed corrections", ""],
@@ -1455,6 +1658,11 @@ function sectionVersionHistoryContent() {
           "April 2026",
           'Dashboard Integration & Won-Lead Flow — Integrated transaction KPIs into the dashboard (Active Transactions, Pending Commission, Expected Income, Earned Commission). Added won-lead-to-transaction flow: "Create Transaction" button on won lead detail pages and automatic prompt when dragging a lead to "won" on the pipeline board. Added transactions to command palette navigation and quick actions. Added 5 Playwright E2E tests for transaction pages (list, detail, pipeline, dashboard KPIs). Updated tests to 68 total (51 Vitest + 17 Playwright E2E).',
         ],
+        [
+          "v0.11.0",
+          "April 2026",
+          'SA Real Estate Feature Suite — 13 new features for South African estate agents: Property management with mandate types (sole/open/dual/auction), show days with public QR-code lead registration, inbound lead capture from property portals (Property24, Private Property), SMS/messaging hub, automated follow-up sequences with multi-step workflows, speed-to-lead auto-response rules, buyer–property matching engine, document vault per transaction/contact, lead ROI analytics with cost-per-lead metrics, POPIA compliance management with consent tracking and data subject requests. Added 10 new Firestore collections (15 total), 39 new CRUD functions, 4 new components, 12 new page routes (26 total). Expanded E2E tests from 17 to 75 (126 total with unit/smoke). Updated Playwright config: 60s timeout, 30s expect, 1 retry.',
+        ],
       ]
     ),
 
@@ -1485,6 +1693,18 @@ function sectionAppendix() {
     bullet("transactions/page.tsx — Transaction list with search, stage filters, commission tracking"),
     bullet("transactions/[id]/page.tsx — Transaction detail with stage timeline, commission, FICA, parties"),
     bullet("transactions/pipeline/page.tsx — Transaction Kanban board with 9-stage drag-and-drop"),
+    bullet("properties/page.tsx — Property listing management with mandate types"),
+    bullet("properties/[id]/page.tsx — Property detail"),
+    bullet("showdays/page.tsx — Show day event management"),
+    bullet("showday/[id]/page.tsx — Public show day registration (QR code)"),
+    bullet("inbound/page.tsx — Inbound lead capture from portals"),
+    bullet("messaging/page.tsx — SMS/messaging hub"),
+    bullet("sequences/page.tsx — Follow-up sequence builder"),
+    bullet("speed-to-lead/page.tsx — Auto-response rule management"),
+    bullet("buyer-match/page.tsx — Buyer–property matching"),
+    bullet("documents/page.tsx — Document vault"),
+    bullet("lead-roi/page.tsx — Lead ROI analytics"),
+    bullet("compliance/page.tsx — POPIA compliance management"),
     bullet("api/seed/route.ts — Server-side seed API route (Firebase Admin)"),
     emptyPara(),
 
@@ -1509,6 +1729,7 @@ function sectionAppendix() {
     bullet("transactions-table.tsx — Transactions data table with FICA status"),
     bullet("new-transaction-sheet.tsx — New transaction form with commission preview"),
     bullet("edit-transaction-sheet.tsx — Edit transaction form with stage management"),
+    bullet("forecast-chart.tsx — Pipeline and transaction forecast visualisation"),
     emptyPara(),
 
     h3("UI Primitives (src/components/ui/)"),
@@ -1532,7 +1753,7 @@ function sectionAppendix() {
     emptyPara(),
 
     h3("E2E Tests (e2e/)"),
-    bullet("app.spec.ts — Functional E2E tests: auth, dashboard, leads, contacts, pipeline, tasks, reports, transactions, transaction pipeline, dashboard tx KPIs, health API (17 tests)"),
+    bullet("app.spec.ts — Functional E2E tests: 26 test groups covering auth, dashboard, leads, contacts, pipeline, tasks, reports, transactions, properties, show days, inbound leads, messaging, sequences, speed-to-lead, buyer match, documents, lead ROI, compliance, navigation, theme, command palette, seed data (75 tests)"),
     emptyPara(),
 
     h2("14.2 Configuration Files"),
