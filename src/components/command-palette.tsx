@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3,
   Plus, Search, Settings, Moon, Sun, Monitor, Receipt,
+  Building2, Home, Inbox, MessageSquare, Zap, UserSearch, FileText, TrendingUp, ShieldCheck, Timer,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
@@ -18,7 +19,17 @@ const NAV_ITEMS = [
   { label: "Transactions", href: "/transactions", icon: Receipt, keywords: "deals commission property sales" },
   { label: "Transaction Pipeline", href: "/transactions/pipeline", icon: Kanban, keywords: "transaction board stages otp" },
   { label: "Pipeline", href: "/pipeline", icon: Kanban, keywords: "kanban board stages" },
+  { label: "Properties", href: "/properties", icon: Building2, keywords: "listings mandates property" },
+  { label: "Show Days", href: "/showdays", icon: Home, keywords: "open house qr code registration" },
+  { label: "Inbound Leads", href: "/inbound", icon: Inbox, keywords: "portal property24 private property import" },
+  { label: "Messaging", href: "/messaging", icon: MessageSquare, keywords: "sms text message bulksms" },
+  { label: "Sequences", href: "/sequences", icon: Zap, keywords: "follow-up drip campaign automation" },
+  { label: "Speed-to-Lead", href: "/speed-to-lead", icon: Timer, keywords: "auto response instant reply sms" },
+  { label: "Buyer Match", href: "/buyer-match", icon: UserSearch, keywords: "buyer property matching profile" },
+  { label: "Documents", href: "/documents", icon: FileText, keywords: "files upload fica otp mandate" },
+  { label: "Lead ROI", href: "/lead-roi", icon: TrendingUp, keywords: "roi cost per lead source" },
   { label: "Reports", href: "/reports", icon: BarChart3, keywords: "analytics charts export" },
+  { label: "Compliance", href: "/compliance", icon: ShieldCheck, keywords: "popia fica vat cpd consent" },
 ];
 
 const ACTIONS = [

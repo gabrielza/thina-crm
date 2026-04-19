@@ -85,6 +85,17 @@ export async function getLeadsByContact(contactId: string): Promise<Lead[]> {
 
 // ─── CONTACTS ────────────────────────────────────────────
 
+export interface PopiaConsent {
+  given: boolean;
+  date: string; // ISO date
+  method: "verbal" | "written" | "electronic" | "opt-in-form";
+  optEmail: boolean;
+  optSms: boolean;
+  optPhone: boolean;
+  optWhatsapp: boolean;
+  revokedDate?: string;
+}
+
 export interface Contact {
   id?: string;
   name: string;
@@ -93,6 +104,7 @@ export interface Contact {
   company: string;
   title: string;
   notes: string;
+  popiaConsent?: PopiaConsent;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   ownerId: string;
@@ -364,6 +376,463 @@ export async function getTransactionsByLead(leadId: string): Promise<Transaction
   const q = query(collection(db, TRANSACTIONS_COLLECTION), where("leadId", "==", leadId), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Transaction[];
+}
+
+// ─── SHOW DAYS ───────────────────────────────────────────
+
+export interface ShowDay {
+  id?: string;
+  propertyAddress: string;
+  date: string; // ISO date
+  timeSlot: string;
+  notes: string;
+  active: boolean;
+  ownerId: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+export interface ShowDayLead {
+  id?: string;
+  showDayId: string;
+  name: string;
+  email: string;
+  phone: string;
+  budget: string;
+  bedrooms: string;
+  notes: string;
+  marketingConsent: boolean;
+  createdAt?: Timestamp;
+}
+
+const SHOWDAYS_COLLECTION = "showDays";
+const SHOWDAY_LEADS_COLLECTION = "showDayLeads";
+
+export async function addShowDay(showDay: Omit<ShowDay, "id" | "createdAt" | "updatedAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, SHOWDAYS_COLLECTION), {
+    ...showDay,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getShowDays(): Promise<ShowDay[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, SHOWDAYS_COLLECTION), orderBy("date", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ShowDay[];
+}
+
+export async function getShowDayById(id: string): Promise<ShowDay | null> {
+  const db = getFirebaseDb();
+  const snapshot = await getDoc(doc(db, SHOWDAYS_COLLECTION, id));
+  if (!snapshot.exists()) return null;
+  return { id: snapshot.id, ...snapshot.data() } as ShowDay;
+}
+
+export async function deleteShowDay(id: string) {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, SHOWDAYS_COLLECTION, id));
+}
+
+export async function addShowDayLead(lead: Omit<ShowDayLead, "id" | "createdAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, SHOWDAY_LEADS_COLLECTION), {
+    ...lead,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getShowDayLeads(showDayId: string): Promise<ShowDayLead[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, SHOWDAY_LEADS_COLLECTION), where("showDayId", "==", showDayId), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as ShowDayLead[];
+}
+
+// ─── PROPERTIES / MANDATES ───────────────────────────────
+
+export type MandateType = "sole" | "open" | "dual" | "auction";
+
+export interface Property {
+  id?: string;
+  address: string;
+  suburb: string;
+  city: string;
+  province: string;
+  propertyType: "house" | "apartment" | "townhouse" | "land" | "commercial" | "farm";
+  bedrooms: number;
+  bathrooms: number;
+  garages: number;
+  erfSize: number; // sqm
+  floorSize: number; // sqm
+  askingPrice: number;
+  mandateType: MandateType;
+  mandateStart: string; // ISO date
+  mandateEnd: string; // ISO date
+  status: "active" | "under_offer" | "sold" | "withdrawn" | "expired";
+  description: string;
+  features: string[];
+  sellerName: string;
+  sellerPhone: string;
+  sellerEmail: string;
+  transactionId?: string;
+  leadId?: string;
+  ownerId: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+const PROPERTIES_COLLECTION = "properties";
+
+export async function addProperty(property: Omit<Property, "id" | "createdAt" | "updatedAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, PROPERTIES_COLLECTION), {
+    ...property,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getProperties(maxResults?: number): Promise<Property[]> {
+  const db = getFirebaseDb();
+  const q = maxResults
+    ? query(collection(db, PROPERTIES_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults))
+    : query(collection(db, PROPERTIES_COLLECTION), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Property[];
+}
+
+export async function getPropertyById(id: string): Promise<Property | null> {
+  const db = getFirebaseDb();
+  const snapshot = await getDoc(doc(db, PROPERTIES_COLLECTION, id));
+  if (!snapshot.exists()) return null;
+  return { id: snapshot.id, ...snapshot.data() } as Property;
+}
+
+export async function updateProperty(id: string, data: Partial<Property>) {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, PROPERTIES_COLLECTION, id), { ...data, updatedAt: serverTimestamp() });
+}
+
+export async function deleteProperty(id: string) {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, PROPERTIES_COLLECTION, id));
+}
+
+// ─── INBOUND LEADS (Portal Injection) ───────────────────
+
+export interface InboundLead {
+  id?: string;
+  source: string; // "property24" | "private-property" | "manual"
+  rawContent: string;
+  parsed: {
+    name: string;
+    email: string;
+    phone: string;
+    propertyRef: string;
+    propertyAddress: string;
+    message: string;
+  };
+  status: "pending" | "accepted" | "rejected";
+  leadId?: string; // linked lead after acceptance
+  receivedAt?: Timestamp;
+  reviewedAt?: Timestamp;
+  ownerId: string;
+}
+
+const INBOUND_LEADS_COLLECTION = "inboundLeads";
+
+export async function addInboundLead(inbound: Omit<InboundLead, "id" | "receivedAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, INBOUND_LEADS_COLLECTION), {
+    ...inbound,
+    receivedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getInboundLeads(): Promise<InboundLead[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, INBOUND_LEADS_COLLECTION), orderBy("receivedAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as InboundLead[];
+}
+
+export async function updateInboundLead(id: string, data: Partial<InboundLead>) {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, INBOUND_LEADS_COLLECTION, id), { ...data });
+}
+
+// ─── SMS MESSAGES ────────────────────────────────────────
+
+export interface SmsMessage {
+  id?: string;
+  to: string;
+  body: string;
+  status: "queued" | "sent" | "delivered" | "failed";
+  provider: "bulksms" | "clickatell";
+  contactId?: string;
+  leadId?: string;
+  direction: "outbound" | "inbound";
+  sentAt?: Timestamp;
+  createdAt?: Timestamp;
+  ownerId: string;
+}
+
+const SMS_COLLECTION = "smsMessages";
+
+export async function addSmsMessage(sms: Omit<SmsMessage, "id" | "createdAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, SMS_COLLECTION), {
+    ...sms,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getSmsMessages(maxResults?: number): Promise<SmsMessage[]> {
+  const db = getFirebaseDb();
+  const q = maxResults
+    ? query(collection(db, SMS_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults))
+    : query(collection(db, SMS_COLLECTION), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as SmsMessage[];
+}
+
+export async function getSmsByContact(contactId: string): Promise<SmsMessage[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, SMS_COLLECTION), where("contactId", "==", contactId), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as SmsMessage[];
+}
+
+// ─── FOLLOW-UP SEQUENCES ────────────────────────────────
+
+export interface SequenceStep {
+  day: number; // days after trigger
+  channel: "sms" | "email" | "whatsapp";
+  template: string;
+}
+
+export interface FollowUpSequence {
+  id?: string;
+  name: string;
+  trigger: "new_lead" | "show_day" | "proposal" | "manual";
+  steps: SequenceStep[];
+  active: boolean;
+  ownerId: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+export interface SequenceEnrollment {
+  id?: string;
+  sequenceId: string;
+  leadId?: string;
+  contactId?: string;
+  currentStep: number;
+  status: "active" | "completed" | "paused" | "cancelled";
+  startedAt?: Timestamp;
+  nextStepAt?: Timestamp;
+  ownerId: string;
+}
+
+const SEQUENCES_COLLECTION = "followUpSequences";
+const ENROLLMENTS_COLLECTION = "sequenceEnrollments";
+
+export async function addSequence(seq: Omit<FollowUpSequence, "id" | "createdAt" | "updatedAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, SEQUENCES_COLLECTION), {
+    ...seq,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getSequences(): Promise<FollowUpSequence[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, SEQUENCES_COLLECTION), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as FollowUpSequence[];
+}
+
+export async function updateSequence(id: string, data: Partial<FollowUpSequence>) {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, SEQUENCES_COLLECTION, id), { ...data, updatedAt: serverTimestamp() });
+}
+
+export async function deleteSequence(id: string) {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, SEQUENCES_COLLECTION, id));
+}
+
+export async function addEnrollment(enrollment: Omit<SequenceEnrollment, "id" | "startedAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, ENROLLMENTS_COLLECTION), {
+    ...enrollment,
+    startedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getEnrollments(): Promise<SequenceEnrollment[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, ENROLLMENTS_COLLECTION), orderBy("startedAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as SequenceEnrollment[];
+}
+
+export async function updateEnrollment(id: string, data: Partial<SequenceEnrollment>) {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, ENROLLMENTS_COLLECTION, id), { ...data });
+}
+
+// ─── BUYER PROFILES ──────────────────────────────────────
+
+export interface BuyerProfile {
+  id?: string;
+  contactId: string;
+  contactName: string;
+  minBudget: number;
+  maxBudget: number;
+  areas: string[]; // suburbs/cities
+  propertyTypes: Property["propertyType"][];
+  minBedrooms: number;
+  minBathrooms: number;
+  features: string[]; // pool, garden, security, etc.
+  notes: string;
+  active: boolean;
+  ownerId: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+const BUYER_PROFILES_COLLECTION = "buyerProfiles";
+
+export async function addBuyerProfile(profile: Omit<BuyerProfile, "id" | "createdAt" | "updatedAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, BUYER_PROFILES_COLLECTION), {
+    ...profile,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getBuyerProfiles(): Promise<BuyerProfile[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, BUYER_PROFILES_COLLECTION), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as BuyerProfile[];
+}
+
+export async function updateBuyerProfile(id: string, data: Partial<BuyerProfile>) {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, BUYER_PROFILES_COLLECTION, id), { ...data, updatedAt: serverTimestamp() });
+}
+
+export async function deleteBuyerProfile(id: string) {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, BUYER_PROFILES_COLLECTION, id));
+}
+
+// ─── DOCUMENTS ───────────────────────────────────────────
+
+export interface StoredDocument {
+  id?: string;
+  name: string;
+  type: "fica" | "otp" | "mandate" | "bond" | "transfer" | "other";
+  url: string; // Firebase Storage URL
+  storagePath: string;
+  fileSize: number;
+  mimeType: string;
+  transactionId?: string;
+  contactId?: string;
+  propertyId?: string;
+  ownerId: string;
+  createdAt?: Timestamp;
+}
+
+const DOCUMENTS_COLLECTION = "documents";
+
+export async function addStoredDocument(doc_data: Omit<StoredDocument, "id" | "createdAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, DOCUMENTS_COLLECTION), {
+    ...doc_data,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getDocumentsByTransaction(transactionId: string): Promise<StoredDocument[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, DOCUMENTS_COLLECTION), where("transactionId", "==", transactionId), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as StoredDocument[];
+}
+
+export async function getDocumentsByContact(contactId: string): Promise<StoredDocument[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, DOCUMENTS_COLLECTION), where("contactId", "==", contactId), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as StoredDocument[];
+}
+
+export async function deleteStoredDocument(id: string) {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, DOCUMENTS_COLLECTION, id));
+}
+
+// ─── SPEED-TO-LEAD AUTO-RESPONSE ─────────────────────────
+
+export interface AutoResponseRule {
+  id?: string;
+  name: string;
+  trigger: "new_lead" | "inbound_portal" | "show_day_registration";
+  enabled: boolean;
+  messageTemplate: string; // Supports {{name}}, {{property}}, {{agent_name}}, {{agent_phone}}
+  delayMinutes: number; // 0 = immediate
+  channel: "sms";
+  agentName: string;
+  agentPhone: string;
+  ownerId: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+const AUTO_RESPONSE_COLLECTION = "autoResponseRules";
+
+export async function addAutoResponseRule(rule: Omit<AutoResponseRule, "id" | "createdAt" | "updatedAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, AUTO_RESPONSE_COLLECTION), {
+    ...rule,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getAutoResponseRules(): Promise<AutoResponseRule[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, AUTO_RESPONSE_COLLECTION), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as AutoResponseRule[];
+}
+
+export async function updateAutoResponseRule(id: string, data: Partial<AutoResponseRule>) {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, AUTO_RESPONSE_COLLECTION, id), { ...data, updatedAt: serverTimestamp() });
+}
+
+export async function deleteAutoResponseRule(id: string) {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, AUTO_RESPONSE_COLLECTION, id));
 }
 
 // ─── BATCH WRITE (for seeding) ───────────────────────────

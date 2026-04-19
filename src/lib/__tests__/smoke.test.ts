@@ -108,8 +108,9 @@ describe("Firebase Configuration Files", () => {
 
     // Every collection should require auth for read
     expect(rules).toContain("allow read: if isAuth()");
-    // Should NOT have any unrestricted reads
-    expect(rules).not.toMatch(/allow read: if true/);
+    // Should NOT have any unrestricted reads (except showDays which is public for QR code form)
+    const rulesWithoutShowDays = rules.replace(/\/\/ Show Days[\s\S]*?match \/showDays\/\{docId\} \{[\s\S]*?\}/, "");
+    expect(rulesWithoutShowDays).not.toMatch(/allow read: if true/);
     expect(rules).not.toMatch(/allow read, write;/);
   });
 

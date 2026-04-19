@@ -51,5 +51,74 @@ service cloud.firestore {
       allow create: if isCreatingOwn();
       allow update, delete: if isOwner();
     }
+
+    // Show Days
+    match /showDays/{docId} {
+      allow read: if true; // public read for QR code form
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Show Day Leads (public write for registration)
+    match /showDayLeads/{docId} {
+      allow read: if isAuth();
+      allow create: if true; // public form submission
+    }
+
+    // Properties / Mandates
+    match /properties/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Inbound Leads (Portal Injection)
+    match /inboundLeads/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // SMS Messages
+    match /smsMessages/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Follow-up Sequences
+    match /followUpSequences/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Sequence Enrollments
+    match /sequenceEnrollments/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Buyer Profiles
+    match /buyerProfiles/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Documents
+    match /documents/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Auto-Response Rules (Speed-to-Lead)
+    match /autoResponseRules/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
   }
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3, LogOut, Moon, Sun, Menu, X, Receipt } from "lucide-react";
+import { LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3, LogOut, Moon, Sun, Menu, X, Receipt, ShieldCheck, Home, MessageSquare, Building2, Inbox, Zap, UserSearch, FileText, TrendingUp, Timer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -15,9 +15,19 @@ const navigation = [
   { name: "Leads", href: "/leads", icon: Users },
   { name: "Contacts", href: "/contacts", icon: Contact },
   { name: "Transactions", href: "/transactions", icon: Receipt },
+  { name: "Properties", href: "/properties", icon: Building2 },
   { name: "Tasks", href: "/tasks", icon: CheckSquare },
   { name: "Pipeline", href: "/pipeline", icon: Kanban },
+  { name: "Show Days", href: "/showdays", icon: Home },
+  { name: "Inbound", href: "/inbound", icon: Inbox },
+  { name: "Messaging", href: "/messaging", icon: MessageSquare },
+  { name: "Sequences", href: "/sequences", icon: Zap },
+  { name: "Speed-to-Lead", href: "/speed-to-lead", icon: Timer },
+  { name: "Buyer Match", href: "/buyer-match", icon: UserSearch },
+  { name: "Documents", href: "/documents", icon: FileText },
+  { name: "Lead ROI", href: "/lead-roi", icon: TrendingUp },
   { name: "Reports", href: "/reports", icon: BarChart3 },
+  { name: "Compliance", href: "/compliance", icon: ShieldCheck },
 ];
 
 export function Sidebar() {
