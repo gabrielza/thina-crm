@@ -120,5 +120,12 @@ service cloud.firestore {
       allow create: if isCreatingOwn();
       allow update, delete: if isOwner();
     }
+
+    // CMA Reports
+    match /cmaReports/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
   }
 }

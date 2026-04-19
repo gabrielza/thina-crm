@@ -97,7 +97,7 @@ describe("Firebase Configuration Files", () => {
       "leads", "contacts", "activities", "tasks", "transactions",
       "showDays", "showDayLeads", "properties", "inboundLeads",
       "smsMessages", "followUpSequences", "sequenceEnrollments",
-      "buyerProfiles", "documents", "autoResponseRules",
+      "buyerProfiles", "documents", "autoResponseRules", "cmaReports",
     ];
     for (const col of collections) {
       expect(rules, `Missing security rule for collection: ${col}`).toContain(
@@ -221,6 +221,13 @@ describe("Data Model Consistency", () => {
     expect(firestore.getAutoResponseRules).toBeTypeOf("function");
     expect(firestore.updateAutoResponseRule).toBeTypeOf("function");
     expect(firestore.deleteAutoResponseRule).toBeTypeOf("function");
+
+    // CMA Reports
+    expect(firestore.addCmaReport).toBeTypeOf("function");
+    expect(firestore.getCmaReports).toBeTypeOf("function");
+    expect(firestore.getCmaReportById).toBeTypeOf("function");
+    expect(firestore.updateCmaReport).toBeTypeOf("function");
+    expect(firestore.deleteCmaReport).toBeTypeOf("function");
   });
 
   it("firestore.ts exports TRANSACTION_STAGES constant", async () => {

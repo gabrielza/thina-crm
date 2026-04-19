@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3, LogOut, Moon, Sun, Menu, X, Receipt, ShieldCheck, Home, MessageSquare, Building2, Inbox, Zap, UserSearch, FileText, TrendingUp, Timer } from "lucide-react";
+import { LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3, LogOut, Moon, Sun, Menu, X, Receipt, ShieldCheck, Home, MessageSquare, Building2, Inbox, Zap, UserSearch, FileText, TrendingUp, Timer, FileBarChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -52,6 +52,7 @@ const navGroups: NavGroup[] = [
     label: "Listings",
     items: [
       { name: "Properties", href: "/properties", icon: Building2 },
+      { name: "CMA Reports", href: "/cma", icon: FileBarChart },
     ],
   },
   {

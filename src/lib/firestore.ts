@@ -835,6 +835,84 @@ export async function deleteAutoResponseRule(id: string) {
   await deleteDoc(doc(db, AUTO_RESPONSE_COLLECTION, id));
 }
 
+// ─── CMA REPORTS ─────────────────────────────────────────
+
+export interface CmaComparable {
+  address: string;
+  suburb: string;
+  salePrice: number;
+  saleDate: string; // ISO date
+  bedrooms: number;
+  bathrooms: number;
+  erfSize: number;
+  floorSize: number;
+  propertyType: Property["propertyType"];
+  daysOnMarket: number;
+  adjustedPrice?: number;
+  notes: string;
+}
+
+export interface CmaReport {
+  id?: string;
+  title: string;
+  propertyId?: string;
+  subjectAddress: string;
+  subjectSuburb: string;
+  subjectCity: string;
+  subjectType: Property["propertyType"];
+  subjectBedrooms: number;
+  subjectBathrooms: number;
+  subjectErfSize: number;
+  subjectFloorSize: number;
+  comparables: CmaComparable[];
+  estimatedValue: number;
+  pricePerSqm: number;
+  confidenceLevel: "low" | "medium" | "high";
+  status: "draft" | "final" | "presented";
+  contactId?: string;
+  contactName?: string;
+  notes: string;
+  ownerId: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+const CMA_COLLECTION = "cmaReports";
+
+export async function addCmaReport(report: Omit<CmaReport, "id" | "createdAt" | "updatedAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, CMA_COLLECTION), {
+    ...report,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getCmaReports(): Promise<CmaReport[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, CMA_COLLECTION), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as CmaReport[];
+}
+
+export async function getCmaReportById(id: string): Promise<CmaReport | null> {
+  const db = getFirebaseDb();
+  const snap = await getDoc(doc(db, CMA_COLLECTION, id));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...snap.data() } as CmaReport;
+}
+
+export async function updateCmaReport(id: string, data: Partial<CmaReport>) {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, CMA_COLLECTION, id), { ...data, updatedAt: serverTimestamp() });
+}
+
+export async function deleteCmaReport(id: string) {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, CMA_COLLECTION, id));
+}
+
 // ─── BATCH WRITE (for seeding) ───────────────────────────
 
 /**

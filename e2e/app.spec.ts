@@ -560,6 +560,12 @@ test.describe("Sidebar Navigation — Grouped Workflow Structure", () => {
     await expect(page.locator("h1")).toContainText("Properties", { timeout: 10000 });
   });
 
+  test('Listings: "CMA Reports" navigates to /cma', async ({ page }) => {
+    await page.goto("/cma");
+    await page.waitForURL("**/cma", { timeout: 10000 });
+    await expect(page.locator("h1")).toContainText("CMA Reports", { timeout: 10000 });
+  });
+
   // Transactions group
   const transactionRoutes = [
     { name: "Deals", path: "/transactions", heading: "Transactions" },
@@ -689,6 +695,7 @@ test.describe("Page Load Performance", () => {
     { path: "/documents", name: "Documents" },
     { path: "/lead-roi", name: "Lead ROI" },
     { path: "/compliance", name: "Compliance" },
+    { path: "/cma", name: "CMA Reports" },
   ];
 
   for (const pg of pages) {
@@ -709,6 +716,7 @@ test.describe("Accessibility Basics", () => {
     const pages = [
       "/properties", "/showdays", "/inbound", "/messaging", "/sequences",
       "/speed-to-lead", "/buyer-match", "/documents", "/lead-roi", "/compliance",
+      "/cma",
     ];
     for (const path of pages) {
       await page.goto(path);

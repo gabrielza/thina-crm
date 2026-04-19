@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3,
   Plus, Search, Settings, Moon, Sun, Monitor, Receipt,
-  Building2, Home, Inbox, MessageSquare, Zap, UserSearch, FileText, TrendingUp, ShieldCheck, Timer,
+  Building2, Home, Inbox, MessageSquare, Zap, UserSearch, FileText, TrendingUp, ShieldCheck, Timer, FileBarChart,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
@@ -42,6 +42,7 @@ const NAV_GROUPS = [
     label: "Listings",
     items: [
       { label: "Properties", href: "/properties", icon: Building2, keywords: "listings mandates property" },
+      { label: "CMA Reports", href: "/cma", icon: FileBarChart, keywords: "cma comparative market analysis valuation" },
     ],
   },
   {

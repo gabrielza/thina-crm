@@ -7,8 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { getFirebaseAuth } from "@/lib/firebase";
 
-const COUNTS = { contacts: 200, leads: 500, activities: 300, tasks: 200, transactions: 150 };
-const TOTAL = COUNTS.contacts + COUNTS.leads + COUNTS.activities + COUNTS.tasks + COUNTS.transactions;
+const COUNTS = {
+  contacts: 200, leads: 500, activities: 300, tasks: 200, transactions: 150,
+  properties: 120, showDays: 30, showDayLeads: 90, inboundLeads: 80,
+  smsMessages: 200, sequences: 8, enrollments: 60, buyerProfiles: 50,
+  documents: 100, autoResponseRules: 6, cmaReports: 40,
+};
+const TOTAL = Object.values(COUNTS).reduce((a, b) => a + b, 0);
 
 export default function SeedPage() {
   const { user } = useAuth();
@@ -27,7 +32,7 @@ export default function SeedPage() {
   }
 
   const handleClear = async () => {
-    if (!confirm("This will DELETE all existing data in Leads, Contacts, Activities, and Tasks. Are you sure?")) return;
+    if (!confirm("This will DELETE all existing data across all collections. Are you sure?")) return;
     setClearing(true);
     setPhase("Clearing all data via server...");
     try {
