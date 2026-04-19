@@ -44,5 +44,12 @@ service cloud.firestore {
       allow create: if isCreatingOwn();
       allow update, delete: if isOwner();
     }
+
+    // Transactions
+    match /transactions/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
   }
 }

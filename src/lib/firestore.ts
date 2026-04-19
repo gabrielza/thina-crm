@@ -250,6 +250,124 @@ export async function deleteTask(id: string) {
 
 // ─── BATCH WRITE (for seeding) ───────────────────────────
 
+// ─── TRANSACTIONS ────────────────────────────────────────
+
+export type TransactionStage =
+  | "otp_signed"
+  | "fica_submitted"
+  | "fica_verified"
+  | "bond_applied"
+  | "bond_approved"
+  | "transfer_lodged"
+  | "transfer_registered"
+  | "commission_paid"
+  | "fallen_through";
+
+export interface CommissionSplit {
+  party: string;
+  percentage: number;
+  amount: number;
+}
+
+export interface StageHistoryEntry {
+  stage: TransactionStage;
+  date: string; // ISO date
+  note?: string;
+}
+
+export interface Transaction {
+  id?: string;
+  propertyAddress: string;
+  salePrice: number;
+  commissionRate: number;
+  commissionAmount: number;
+  vatIncluded: boolean;
+  vatAmount: number;
+  splits: CommissionSplit[];
+  agentNetCommission: number;
+  stage: TransactionStage;
+  stageHistory: StageHistoryEntry[];
+  ficaBuyer: boolean;
+  ficaSeller: boolean;
+  conveyancer: string;
+  bondOriginator: string;
+  buyerName: string;
+  sellerName: string;
+  leadId?: string;
+  contactId?: string;
+  notes: string;
+  dates: {
+    otpSigned?: string;
+    bondApplied?: string;
+    bondApproved?: string;
+    transferLodged?: string;
+    transferRegistered?: string;
+    commissionPaid?: string;
+  };
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+  ownerId: string;
+}
+
+export const TRANSACTION_STAGES: { key: TransactionStage; label: string }[] = [
+  { key: "otp_signed", label: "OTP Signed" },
+  { key: "fica_submitted", label: "FICA Submitted" },
+  { key: "fica_verified", label: "FICA Verified" },
+  { key: "bond_applied", label: "Bond Applied" },
+  { key: "bond_approved", label: "Bond Approved" },
+  { key: "transfer_lodged", label: "Transfer Lodged" },
+  { key: "transfer_registered", label: "Transfer Registered" },
+  { key: "commission_paid", label: "Commission Paid" },
+  { key: "fallen_through", label: "Fallen Through" },
+];
+
+const TRANSACTIONS_COLLECTION = "transactions";
+
+export async function addTransaction(transaction: Omit<Transaction, "id" | "createdAt" | "updatedAt">) {
+  const db = getFirebaseDb();
+  const docRef = await addDoc(collection(db, TRANSACTIONS_COLLECTION), {
+    ...transaction,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getTransactions(maxResults?: number): Promise<Transaction[]> {
+  const db = getFirebaseDb();
+  const q = maxResults
+    ? query(collection(db, TRANSACTIONS_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults))
+    : query(collection(db, TRANSACTIONS_COLLECTION), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Transaction[];
+}
+
+export async function getTransactionById(id: string): Promise<Transaction | null> {
+  const db = getFirebaseDb();
+  const snapshot = await getDoc(doc(db, TRANSACTIONS_COLLECTION, id));
+  if (!snapshot.exists()) return null;
+  return { id: snapshot.id, ...snapshot.data() } as Transaction;
+}
+
+export async function updateTransaction(id: string, data: Partial<Transaction>) {
+  const db = getFirebaseDb();
+  await updateDoc(doc(db, TRANSACTIONS_COLLECTION, id), { ...data, updatedAt: serverTimestamp() });
+}
+
+export async function deleteTransaction(id: string) {
+  const db = getFirebaseDb();
+  await deleteDoc(doc(db, TRANSACTIONS_COLLECTION, id));
+}
+
+export async function getTransactionsByLead(leadId: string): Promise<Transaction[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, TRANSACTIONS_COLLECTION), where("leadId", "==", leadId), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Transaction[];
+}
+
+// ─── BATCH WRITE (for seeding) ───────────────────────────
+
 /**
  * Write documents in batches of up to 500 (Firestore limit).
  * Returns array of generated document IDs.

@@ -7,8 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { getFirebaseAuth } from "@/lib/firebase";
 
-const COUNTS = { contacts: 200, leads: 500, activities: 300, tasks: 200 };
-const TOTAL = COUNTS.contacts + COUNTS.leads + COUNTS.activities + COUNTS.tasks;
+const COUNTS = { contacts: 200, leads: 500, activities: 300, tasks: 200, transactions: 150 };
+const TOTAL = COUNTS.contacts + COUNTS.leads + COUNTS.activities + COUNTS.tasks + COUNTS.transactions;
 
 export default function SeedPage() {
   const { user } = useAuth();

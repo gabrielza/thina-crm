@@ -88,12 +88,12 @@ describe("Firebase Configuration Files", () => {
     }
   });
 
-  it("firestore.rules covers all 4 collections", async () => {
+  it("firestore.rules covers all 5 collections", async () => {
     const { readFileSync } = await import("fs");
     const { resolve } = await import("path");
     const rules = readFileSync(resolve(process.cwd(), "firestore.rules"), "utf-8");
 
-    const collections = ["leads", "contacts", "activities", "tasks"];
+    const collections = ["leads", "contacts", "activities", "tasks", "transactions"];
     for (const col of collections) {
       expect(rules, `Missing security rule for collection: ${col}`).toContain(
         `match /${col}/{docId}`
@@ -151,6 +151,23 @@ describe("Data Model Consistency", () => {
     expect(firestore.getTasks).toBeTypeOf("function");
     expect(firestore.updateTask).toBeTypeOf("function");
     expect(firestore.deleteTask).toBeTypeOf("function");
+
+    // Transactions
+    expect(firestore.addTransaction).toBeTypeOf("function");
+    expect(firestore.getTransactions).toBeTypeOf("function");
+    expect(firestore.getTransactionById).toBeTypeOf("function");
+    expect(firestore.updateTransaction).toBeTypeOf("function");
+    expect(firestore.deleteTransaction).toBeTypeOf("function");
+    expect(firestore.getTransactionsByLead).toBeTypeOf("function");
+  });
+
+  it("firestore.ts exports TRANSACTION_STAGES constant", async () => {
+    const firestore = await import("@/lib/firestore");
+    expect(firestore.TRANSACTION_STAGES).toBeDefined();
+    expect(Array.isArray(firestore.TRANSACTION_STAGES)).toBe(true);
+    expect(firestore.TRANSACTION_STAGES.length).toBe(9);
+    expect(firestore.TRANSACTION_STAGES[0]).toHaveProperty("key");
+    expect(firestore.TRANSACTION_STAGES[0]).toHaveProperty("label");
   });
 
   it("scoring.ts exports all expected functions", async () => {
@@ -158,5 +175,7 @@ describe("Data Model Consistency", () => {
     expect(scoring.calculateLeadScore).toBeTypeOf("function");
     expect(scoring.getScoreLabel).toBeTypeOf("function");
     expect(scoring.calculateForecast).toBeTypeOf("function");
+    expect(scoring.calculateCommission).toBeTypeOf("function");
+    expect(scoring.calculateTransactionForecast).toBeTypeOf("function");
   });
 });

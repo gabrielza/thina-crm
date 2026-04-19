@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { calculateLeadScore, getScoreLabel, calculateForecast } from "@/lib/scoring";
-import type { Lead, Activity, Task } from "@/lib/firestore";
+import { calculateLeadScore, getScoreLabel, calculateForecast, calculateCommission, calculateTransactionForecast } from "@/lib/scoring";
+import type { Lead, Activity, Task, Transaction, TransactionStage } from "@/lib/firestore";
 import { Timestamp } from "firebase/firestore";
 
 // ─── Factories ───────────────────────────────────────────
@@ -223,5 +223,138 @@ describe("calculateForecast", () => {
     const result = calculateForecast([]);
     const stageNames = result.stages.map((s) => s.stage.toLowerCase());
     expect(stageNames).toEqual(["new", "contacted", "qualified", "proposal"]);
+  });
+});
+
+// ─── calculateCommission ────────────────────────────────
+
+describe("calculateCommission", () => {
+  it("calculates gross commission from sale price and rate", () => {
+    const result = calculateCommission(2000000, 5, false, []);
+    expect(result.grossCommission).toBe(100000);
+    expect(result.vatAmount).toBe(0);
+    expect(result.agentNetCommission).toBe(100000);
+  });
+
+  it("adds 15% VAT when vatIncluded is true", () => {
+    const result = calculateCommission(2000000, 5, true, []);
+    expect(result.grossCommission).toBe(100000);
+    expect(result.vatAmount).toBe(15000); // 15% of 100000
+    expect(result.agentNetCommission).toBe(100000); // no splits, agent keeps gross
+  });
+
+  it("subtracts commission splits from agent net", () => {
+    const splits = [
+      { party: "Agency", percentage: 50, amount: 0 },
+      { party: "Referrer", percentage: 10, amount: 0 },
+    ];
+    const result = calculateCommission(2000000, 5, false, splits);
+    // grossCommission = 100000
+    // Agency split: 50000, Referrer split: 10000 → totalSplits: 60000
+    expect(result.totalSplits).toBe(60000);
+    expect(result.agentNetCommission).toBe(40000);
+  });
+
+  it("returns zero for zero sale price", () => {
+    const result = calculateCommission(0, 5, true, []);
+    expect(result.grossCommission).toBe(0);
+    expect(result.vatAmount).toBe(0);
+    expect(result.agentNetCommission).toBe(0);
+  });
+
+  it("handles high commission rates", () => {
+    const result = calculateCommission(1000000, 7.5, false, []);
+    expect(result.grossCommission).toBe(75000);
+  });
+});
+
+// ─── calculateTransactionForecast ───────────────────────
+
+function makeTransaction(overrides: Partial<Transaction> = {}): Transaction {
+  return {
+    id: "tx-1",
+    propertyAddress: "123 Main St, Sandton",
+    salePrice: 2000000,
+    commissionRate: 5,
+    commissionAmount: 100000,
+    vatIncluded: true,
+    vatAmount: 15000,
+    splits: [],
+    agentNetCommission: 100000,
+    stage: "otp_signed" as TransactionStage,
+    stageHistory: [{ stage: "otp_signed" as TransactionStage, date: "2025-01-01" }],
+    ficaBuyer: false,
+    ficaSeller: false,
+    conveyancer: "",
+    bondOriginator: "",
+    buyerName: "John Doe",
+    sellerName: "Jane Smith",
+    notes: "",
+    dates: {},
+    ownerId: "user-1",
+    ...overrides,
+  };
+}
+
+describe("calculateTransactionForecast", () => {
+  it("returns zero totals for empty transactions", () => {
+    const result = calculateTransactionForecast([]);
+    expect(result.totalPendingCommission).toBe(0);
+    expect(result.weightedPendingCommission).toBe(0);
+    expect(result.earnedCommission).toBe(0);
+    expect(result.activeTransactions).toBe(0);
+  });
+
+  it("counts active transactions (excludes commission_paid and fallen_through)", () => {
+    const txs = [
+      makeTransaction({ stage: "otp_signed" as TransactionStage }),
+      makeTransaction({ stage: "bond_applied" as TransactionStage }),
+      makeTransaction({ stage: "commission_paid" as TransactionStage }),
+      makeTransaction({ stage: "fallen_through" as TransactionStage }),
+    ];
+    const result = calculateTransactionForecast(txs);
+    expect(result.activeTransactions).toBe(2);
+  });
+
+  it("separates earned commission from pending", () => {
+    const txs = [
+      makeTransaction({ stage: "commission_paid" as TransactionStage, agentNetCommission: 100000 }),
+      makeTransaction({ stage: "otp_signed" as TransactionStage, agentNetCommission: 80000 }),
+    ];
+    const result = calculateTransactionForecast(txs);
+    expect(result.earnedCommission).toBe(100000);
+    expect(result.totalPendingCommission).toBe(80000);
+  });
+
+  it("excludes fallen_through from all totals", () => {
+    const txs = [
+      makeTransaction({ stage: "fallen_through" as TransactionStage, agentNetCommission: 200000 }),
+    ];
+    const result = calculateTransactionForecast(txs);
+    expect(result.totalPendingCommission).toBe(0);
+    expect(result.weightedPendingCommission).toBe(0);
+    expect(result.earnedCommission).toBe(0);
+  });
+
+  it("applies probability weighting to pending commission", () => {
+    const txs = [
+      makeTransaction({ stage: "otp_signed" as TransactionStage, agentNetCommission: 100000 }),
+    ];
+    const result = calculateTransactionForecast(txs);
+    // otp_signed probability = 0.3, so weighted = 30000
+    expect(result.weightedPendingCommission).toBe(30000);
+  });
+
+  it("returns stages breakdown", () => {
+    const txs = [
+      makeTransaction({ stage: "otp_signed" as TransactionStage, agentNetCommission: 100000 }),
+      makeTransaction({ stage: "bond_approved" as TransactionStage, agentNetCommission: 80000 }),
+    ];
+    const result = calculateTransactionForecast(txs);
+    expect(result.stages.length).toBeGreaterThan(0);
+    const otpStage = result.stages.find((s) => s.stage === "Otp Signed");
+    expect(otpStage).toBeDefined();
+    expect(otpStage!.count).toBe(1);
+    expect(otpStage!.totalCommission).toBe(100000);
   });
 });

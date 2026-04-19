@@ -69,6 +69,14 @@ export default function PipelinePage() {
     setLeads((prev) => prev.map((l) => (l.id === draggedLead.id ? { ...l, status: newStatus } : l)));
     try {
       await updateLead(draggedLead.id, { status: newStatus });
+      // Prompt to create transaction when lead moves to "won"
+      if (newStatus === "won" && draggedLead.id) {
+        const createTx = confirm(`${draggedLead.name} won! Create a transaction for this deal?`);
+        if (createTx) {
+          router.push(`/transactions?newFromLead=${draggedLead.id}&buyerName=${encodeURIComponent(draggedLead.name)}`);
+          return;
+        }
+      }
     } catch (error) {
       console.error("Failed to update lead:", error);
       fetchLeads(); // Revert on error

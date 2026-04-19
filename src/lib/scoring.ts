@@ -1,4 +1,4 @@
-import type { Lead, Activity, Task } from "./firestore";
+import type { Lead, Activity, Task, Transaction, TransactionStage, CommissionSplit } from "./firestore";
 
 /**
  * Lead scoring algorithm — scores leads from 0–100 based on:
@@ -123,5 +123,103 @@ export function calculateForecast(leads: Lead[]): {
     weightedPipeline,
     wonRevenue,
     expectedClose: wonRevenue + weightedPipeline,
+  };
+}
+
+// ─── Commission Calculator ──────────────────────────────
+
+const SA_VAT_RATE = 0.15;
+
+export function calculateCommission(
+  salePrice: number,
+  commissionRate: number,
+  vatIncluded: boolean,
+  splits: CommissionSplit[]
+): {
+  grossCommission: number;
+  vatAmount: number;
+  totalSplits: number;
+  agentNetCommission: number;
+} {
+  const grossCommission = Math.round(salePrice * (commissionRate / 100));
+  const vatAmount = vatIncluded ? Math.round(grossCommission * SA_VAT_RATE) : 0;
+  const afterVat = grossCommission + vatAmount;
+
+  // Calculate splits as percentages of gross commission
+  const splitAmounts = splits.map((s) => ({
+    ...s,
+    amount: Math.round(grossCommission * (s.percentage / 100)),
+  }));
+  const totalSplits = splitAmounts.reduce((sum, s) => sum + s.amount, 0);
+  const agentNetCommission = grossCommission - totalSplits;
+
+  return {
+    grossCommission,
+    vatAmount,
+    totalSplits,
+    agentNetCommission,
+  };
+}
+
+// ─── Transaction Forecasting ────────────────────────────
+
+const TRANSACTION_STAGE_PROBABILITY: Record<TransactionStage, number> = {
+  otp_signed: 0.3,
+  fica_submitted: 0.4,
+  fica_verified: 0.55,
+  bond_applied: 0.65,
+  bond_approved: 0.8,
+  transfer_lodged: 0.9,
+  transfer_registered: 0.95,
+  commission_paid: 1.0,
+  fallen_through: 0.0,
+};
+
+export interface TransactionForecastData {
+  stage: string;
+  count: number;
+  totalCommission: number;
+  weightedCommission: number;
+  probability: number;
+}
+
+export function calculateTransactionForecast(transactions: Transaction[]): {
+  stages: TransactionForecastData[];
+  totalPendingCommission: number;
+  weightedPendingCommission: number;
+  earnedCommission: number;
+  activeTransactions: number;
+} {
+  const activeStages: TransactionStage[] = [
+    "otp_signed", "fica_submitted", "fica_verified",
+    "bond_applied", "bond_approved", "transfer_lodged", "transfer_registered",
+  ];
+
+  const stages: TransactionForecastData[] = activeStages.map((stage) => {
+    const stageTransactions = transactions.filter((t) => t.stage === stage);
+    const totalCommission = stageTransactions.reduce((s, t) => s + (t.agentNetCommission || 0), 0);
+    const probability = TRANSACTION_STAGE_PROBABILITY[stage];
+    return {
+      stage: stage.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" "),
+      count: stageTransactions.length,
+      totalCommission,
+      weightedCommission: Math.round(totalCommission * probability),
+      probability,
+    };
+  });
+
+  const totalPendingCommission = stages.reduce((s, st) => s + st.totalCommission, 0);
+  const weightedPendingCommission = stages.reduce((s, st) => s + st.weightedCommission, 0);
+  const earnedCommission = transactions
+    .filter((t) => t.stage === "commission_paid")
+    .reduce((s, t) => s + (t.agentNetCommission || 0), 0);
+  const activeTransactions = transactions.filter((t) => t.stage !== "fallen_through" && t.stage !== "commission_paid").length;
+
+  return {
+    stages,
+    totalPendingCommission,
+    weightedPendingCommission,
+    earnedCommission,
+    activeTransactions,
   };
 }

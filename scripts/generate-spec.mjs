@@ -33,7 +33,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "0.8.1";
+const VERSION = "0.10.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -492,10 +492,13 @@ function sectionPages() {
         ["/contacts", "app/contacts/page.tsx", "Yes", "Contacts list with search, create/edit/delete actions"],
         ["/contacts/[id]", "app/contacts/[id]/page.tsx", "Yes", "Contact detail with linked leads, activities, and tasks"],
         ["/pipeline", "app/pipeline/page.tsx", "Yes", "Visual pipeline board with 6 stages (New → Won/Lost), responsive grid layout"],
+        ["/transactions", "app/transactions/page.tsx", "Yes", "Transaction list with search, stage filters, commission tracking, and FICA status"],
+        ["/transactions/[id]", "app/transactions/[id]/page.tsx", "Yes", "Transaction detail with stage timeline, commission calculator, FICA compliance, parties, dates, and stage history"],
+        ["/transactions/pipeline", "app/transactions/pipeline/page.tsx", "Yes", "Transaction Kanban board with 9 stages (OTP Signed → Commission Paid), drag-and-drop"],
         ["/tasks", "app/tasks/page.tsx", "Yes", "Task management with KPIs, status filters, priority indicators, and completion toggling"],
         ["/reports", "app/reports/page.tsx", "Yes", "Business reports with pipeline analytics, source analysis, and conversion metrics"],
         ["/login", "app/login/page.tsx", "No", "Authentication page with Google OAuth and email/password sign-in"],
-        ["/seed", "app/seed/page.tsx", "Yes", "Data seeding utility to generate 1,200 test records with progress tracking"],
+        ["/seed", "app/seed/page.tsx", "Yes", "Data seeding utility to generate 1,350 test records with progress tracking"],
       ]
     ),
     emptyPara(),
@@ -568,6 +571,7 @@ function sectionFunctions() {
         ["Contact", "contacts", "name, email, phone, company, title, notes, ownerId"],
         ["Activity", "activities", "type (call/email/meeting/note), subject, description, leadId, contactId, ownerId"],
         ["Task", "tasks", "title, description, dueDate, status (pending/completed/overdue), priority (low/medium/high), leadId, contactId, ownerId"],
+        ["Transaction", "transactions", "propertyAddress, salePrice, commissionRate, commissionAmount, vatIncluded, vatAmount, splits[], agentNetCommission, stage (9 stages), stageHistory[], ficaBuyer, ficaSeller, conveyancer, bondOriginator, buyerName, sellerName, leadId, contactId, ownerId"],
       ]
     ),
     emptyPara(),
@@ -625,7 +629,21 @@ function sectionFunctions() {
     ),
     emptyPara(),
 
-    h3("6.1.6 Batch Operations"),
+    h3("6.1.6 Transaction Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["addTransaction", "addTransaction(tx) → Promise<string>", "Creates a new transaction document. Returns generated ID."],
+        ["getTransactions", "getTransactions() → Promise<Transaction[]>", "Fetches all transactions ordered by createdAt descending."],
+        ["getTransactionById", "getTransactionById(id) → Promise<Transaction|null>", "Fetches a single transaction by ID."],
+        ["updateTransaction", "updateTransaction(id, data) → Promise<void>", "Partially updates a transaction."],
+        ["deleteTransaction", "deleteTransaction(id) → Promise<void>", "Deletes a transaction."],
+        ["getTransactionsByLead", "getTransactionsByLead(leadId) → Promise<Transaction[]>", "Fetches transactions linked to a lead."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.7 Batch Operations"),
     makeTable(
       ["Function", "Signature", "Description"],
       [
@@ -682,7 +700,44 @@ function sectionFunctions() {
     emptyPara(),
     para("Forecast Output: totalPipeline, weightedPipeline, wonRevenue, and expectedClose (wonRevenue + weightedPipeline)."),
 
-    h2("6.4 Authentication (src/lib/hooks/use-auth.ts)"),
+    h2("6.4 Commission Calculator"),
+    para(
+      "The commission calculator computes gross commission, VAT (15% SA standard rate), commission splits, and agent net commission for property transactions."
+    ),
+    makeTable(
+      ["Input", "Type", "Description"],
+      [
+        ["salePrice", "number", "Property sale price in ZAR"],
+        ["commissionRate", "number", "Commission percentage (typically 3–7.5%)"],
+        ["vatIncluded", "boolean", "Whether to add 15% VAT to gross commission"],
+        ["splits", "CommissionSplit[]", "Array of { party, percentage, amount } for commission sharing"],
+      ]
+    ),
+    emptyPara(),
+    para("Output: { grossCommission, vatAmount, totalSplits, agentNetCommission }"),
+
+    h2("6.5 Transaction Forecasting"),
+    para(
+      "Transaction forecasting uses stage-specific probability to weight pending commission amounts:"
+    ),
+    makeTable(
+      ["Stage", "Probability"],
+      [
+        ["OTP Signed", "30%"],
+        ["FICA Submitted", "40%"],
+        ["FICA Verified", "55%"],
+        ["Bond Applied", "65%"],
+        ["Bond Approved", "80%"],
+        ["Transfer Lodged", "90%"],
+        ["Transfer Registered", "95%"],
+        ["Commission Paid", "100%"],
+        ["Fallen Through", "0%"],
+      ]
+    ),
+    emptyPara(),
+    para("Forecast Output: stages[], totalPendingCommission, weightedPendingCommission, earnedCommission, activeTransactions."),
+
+    h2("6.6 Authentication (src/lib/hooks/use-auth.ts)"),
     para(
       "Custom React hook providing authentication state and methods:"
     ),
@@ -698,7 +753,7 @@ function sectionFunctions() {
       ]
     ),
 
-    h2("6.5 Utility Functions"),
+    h2("6.7 Utility Functions"),
     bulletBold("cn(...inputs)", "Merges Tailwind CSS class names using clsx + tailwind-merge to resolve conflicts intelligently"),
 
     new Paragraph({ children: [new PageBreak()] }),
@@ -895,7 +950,7 @@ function sectionTesting() {
     emptyPara(),
     h3("Layer 3: Build Verification"),
     para(
-      "Each version undergoes a full Next.js production build verification. The build process compiles TypeScript, validates all imports, resolves module paths, and generates optimised bundles for all 11 pages."
+      "Each version undergoes a full Next.js production build verification. The build process compiles TypeScript, validates all imports, resolves module paths, and generates optimised bundles for all 14 pages."
     ),
     emptyPara(),
 
@@ -1132,6 +1187,16 @@ function sectionVersionHistory() {
           "April 2026",
           'Playwright E2E Functional Tests — Added 12 on-demand end-to-end tests using Playwright (Chromium) that validate all application screens against the live deployment: authentication flow, dashboard KPIs, leads/contacts tables and detail pages, pipeline board columns, tasks page, reports page, and health API endpoint. Tests run only when manually triggered (npm run test:e2e), not in CI. Includes test user creation script. Total test count: 51 (39 unit/smoke + 12 E2E).',
         ],
+        [
+          "v0.9.0",
+          "April 2026",
+          'Transaction Model & Commission Calculator — Added full Transaction data model with 9 stages (OTP Signed → Commission Paid / Fallen Through) for SA real estate. Commission calculator with VAT (15%), splits, and agent net commission. Transaction forecasting with stage-weighted probability. Firestore CRUD (6 functions), security rules, and 150-record seed data with SA-specific addresses, suburbs, conveyancers, and bond originators. Transaction list page with search and stage filters, detail page with visual stage timeline, commission card, FICA compliance tracking, parties, key dates, and stage history. Transaction Kanban pipeline with drag-and-drop across 9 columns.',
+        ],
+        [
+          "v0.10.0",
+          "April 2026",
+          'Dashboard Integration & Won-Lead Flow — Integrated transaction KPIs into the dashboard (Active Transactions, Pending Commission, Expected Income, Earned Commission). Added won-lead-to-transaction flow: "Create Transaction" button on won lead detail pages and automatic prompt when dragging a lead to "won" on the pipeline board. Added transactions to command palette navigation and quick actions. Updated tests to 51 (12 new tests for commission calculator, transaction forecasting, transaction CRUD exports, and TRANSACTION_STAGES constant).',
+        ],
       ]
     ),
 
@@ -1159,6 +1224,9 @@ function sectionAppendix() {
     bullet("reports/page.tsx — Business reports"),
     bullet("seed/page.tsx — Data seeder UI"),
     bullet("tasks/page.tsx — Task management"),
+    bullet("transactions/page.tsx — Transaction list with search, stage filters, commission tracking"),
+    bullet("transactions/[id]/page.tsx — Transaction detail with stage timeline, commission, FICA, parties"),
+    bullet("transactions/pipeline/page.tsx — Transaction Kanban board with 9-stage drag-and-drop"),
     bullet("api/seed/route.ts — Server-side seed API route (Firebase Admin)"),
     emptyPara(),
 
@@ -1180,6 +1248,9 @@ function sectionAppendix() {
     bullet("sidebar.tsx — Navigation sidebar + MobileNav"),
     bullet("task-list.tsx — Task list component"),
     bullet("theme-provider.tsx — Theme management"),
+    bullet("transactions-table.tsx — Transactions data table with FICA status"),
+    bullet("new-transaction-sheet.tsx — New transaction form with commission preview"),
+    bullet("edit-transaction-sheet.tsx — Edit transaction form with stage management"),
     emptyPara(),
 
     h3("UI Primitives (src/components/ui/)"),
@@ -1191,13 +1262,13 @@ function sectionAppendix() {
     bullet("firebase.ts — Client Firebase initialisation"),
     bullet("firebase-admin.ts — Server Firebase Admin initialisation"),
     bullet("firestore.ts — All CRUD operations and batch utilities"),
-    bullet("scoring.ts — Lead scoring algorithm and pipeline forecasting"),
+    bullet("scoring.ts — Lead scoring algorithm, pipeline forecasting, commission calculator, transaction forecasting"),
     bullet("utils.ts — cn() class name merge utility"),
     bullet("hooks/use-auth.ts — Authentication React hook"),
     emptyPara(),
 
     h3("Tests (src/lib/__tests__/)"),
-    bullet("scoring.test.ts — Lead scoring, score labels, pipeline forecasting tests (21 tests)"),
+    bullet("scoring.test.ts — Lead scoring, score labels, pipeline forecasting, commission calculator, transaction forecasting tests (33 tests)"),
     bullet("utils.test.ts — cn() class merge utility tests (6 tests)"),
     bullet("smoke.test.ts — Infrastructure, config, security rules, data model smoke tests (12 tests)"),
     emptyPara(),

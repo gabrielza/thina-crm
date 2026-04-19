@@ -6,7 +6,7 @@ import { Command } from "cmdk";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3,
-  Plus, Search, Settings, Moon, Sun, Monitor,
+  Plus, Search, Settings, Moon, Sun, Monitor, Receipt,
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
@@ -15,6 +15,8 @@ const NAV_ITEMS = [
   { label: "Leads", href: "/leads", icon: Users, keywords: "deals sales pipeline" },
   { label: "Contacts", href: "/contacts", icon: Contact, keywords: "people customers" },
   { label: "Tasks", href: "/tasks", icon: CheckSquare, keywords: "todos follow-up" },
+  { label: "Transactions", href: "/transactions", icon: Receipt, keywords: "deals commission property sales" },
+  { label: "Transaction Pipeline", href: "/transactions/pipeline", icon: Kanban, keywords: "transaction board stages otp" },
   { label: "Pipeline", href: "/pipeline", icon: Kanban, keywords: "kanban board stages" },
   { label: "Reports", href: "/reports", icon: BarChart3, keywords: "analytics charts export" },
 ];
@@ -23,6 +25,7 @@ const ACTIONS = [
   { label: "Add Lead", href: "/leads?action=new", icon: Plus, keywords: "create new lead" },
   { label: "Add Contact", href: "/contacts?action=new", icon: Plus, keywords: "create new contact" },
   { label: "Add Task", href: "/tasks?action=new", icon: Plus, keywords: "create new task" },
+  { label: "New Transaction", href: "/transactions?action=new", icon: Plus, keywords: "create new transaction deal" },
   { label: "Seed Sample Data", href: "/seed", icon: Settings, keywords: "demo test data" },
 ];
 

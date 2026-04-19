@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
     const action = body.action as string;
 
     if (action === "clear") {
-      const collections = ["leads", "contacts", "activities", "tasks"];
+      const collections = ["leads", "contacts", "activities", "tasks", "transactions"];
       let total = 0;
       // Clear in parallel
       const results = await Promise.all(collections.map(c => adminClearCollection(c)));
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "seed") {
-      const counts = { contacts: 200, leads: 500, activities: 300, tasks: 200 };
+      const counts = { contacts: 200, leads: 500, activities: 300, tasks: 200, transactions: 150 };
 
       // 1. Generate and write contacts
       const contactDocs = Array.from({ length: counts.contacts }, (_, i) => {
@@ -241,7 +241,93 @@ export async function POST(req: NextRequest) {
         adminBatchWrite("tasks", taskDocs),
       ]);
 
-      return NextResponse.json({ seeded: counts.contacts + counts.leads + counts.activities + counts.tasks, counts });
+      // 5. Generate and write transactions
+      const transactionStages = ["otp_signed","fica_submitted","fica_verified","bond_applied","bond_approved","transfer_lodged","transfer_registered","commission_paid","fallen_through"] as const;
+      const SA_STREETS = ["Sandton Drive","Jan Smuts Avenue","Rivonia Road","Main Road","Beach Road","Kloof Street","Long Street","Church Street","Voortrekker Road","Victoria Road","Nelson Mandela Boulevard","Oxford Road","Commissioner Street","Berea Road","Marine Parade","Umhlanga Rocks Drive","Lynnwood Road","Meiring Naudé Road","Hendrik Verwoerd Drive","Waterfall Drive"];
+      const SA_SUBURBS = ["Sandton","Rosebank","Camps Bay","Constantia","Umhlanga","Ballito","Stellenbosch","Newlands","Houghton","Waterfall","Bryanston","Bedfordview","Centurion","Durbanville","Somerset West","Hermanus","Franschhoek","Paarl","Zimbali","Simbithi"];
+      const SA_CITIES = ["Johannesburg","Cape Town","Durban","Pretoria","Port Elizabeth","Bloemfontein","East London","Nelspruit","Polokwane","Kimberley"];
+      const CONVEYANCERS = ["Smith & Associates","Van der Merwe Attorneys","Pillay Legal","Adams & Partners","Botha Conveyancers","Naidoo & Sons Legal","Joubert Attorneys","Moyo Legal Group","De Klerk & Associates","Patel Conveyancers"];
+      const BOND_ORIGINATORS = ["BetterBond","ooba","MortgageSA","HomeLoan Junction","BondExpert","FNB Home Loans Direct","Standard Bank Home","Nedbank Bond","ABSA Home Loans","SA HomeLoan"];
+
+      const transactionDocs = Array.from({ length: counts.transactions }, (_, i) => {
+        const street = `${randInt(1, 200)} ${rand(SA_STREETS)}`;
+        const suburb = rand(SA_SUBURBS);
+        const city = rand(SA_CITIES);
+        const address = `${street}, ${suburb}, ${city}`;
+        const salePrice = randInt(8, 80) * 100000; // R800K to R8M
+        const commissionRate = [3, 3.5, 4, 5, 5.5, 6, 7.5][randInt(0, 6)];
+        const grossCommission = Math.round(salePrice * (commissionRate / 100));
+        const vatIncluded = Math.random() > 0.3;
+        const vatAmount = vatIncluded ? Math.round(grossCommission * 0.15) : 0;
+
+        // Random stage (weighted towards active)
+        const stageWeights = [15, 12, 10, 12, 10, 8, 8, 15, 10]; // % distribution
+        let r = randInt(1, 100), cumulative = 0, stageIdx = 0;
+        for (let s = 0; s < stageWeights.length; s++) {
+          cumulative += stageWeights[s];
+          if (r <= cumulative) { stageIdx = s; break; }
+        }
+        const stage = transactionStages[stageIdx];
+
+        // Build stage history
+        const allPriorStages = transactionStages.slice(0, stageIdx + 1).filter(s => s !== "fallen_through");
+        const stageHistory: { stage: string; date: string }[] = allPriorStages.map((s, j) => ({
+          stage: s,
+          date: formatDate(daysAgo(randInt((allPriorStages.length - j) * 5, (allPriorStages.length - j) * 15))),
+        }));
+        if (stage === "fallen_through") {
+          stageHistory.push({ stage: "fallen_through", date: formatDate(daysAgo(randInt(1, 30))) });
+        }
+
+        const ficaBuyer = stageIdx >= 2 || Math.random() > 0.5;
+        const ficaSeller = stageIdx >= 2 || Math.random() > 0.5;
+
+        const buyerPerson = generatePerson(i + 2000);
+        const sellerPerson = generatePerson(i + 3000);
+
+        const dates: Record<string, string> = {};
+        if (stageIdx >= 0) dates.otpSigned = stageHistory[0]?.date || formatDate(daysAgo(randInt(30, 90)));
+        if (stageIdx >= 3) dates.bondApplied = stageHistory[3]?.date || "";
+        if (stageIdx >= 4) dates.bondApproved = stageHistory[4]?.date || "";
+        if (stageIdx >= 5) dates.transferLodged = stageHistory[5]?.date || "";
+        if (stageIdx >= 6) dates.transferRegistered = stageHistory[6]?.date || "";
+        if (stageIdx >= 7) dates.commissionPaid = stageHistory[7]?.date || "";
+
+        // Associate some transactions with leads
+        const leadId = i < leadIds.length ? leadIds[i] : leadIds[randInt(0, leadIds.length - 1)];
+        const contactId = i < contactIds.length ? contactIds[i] : contactIds[randInt(0, contactIds.length - 1)];
+
+        return {
+          propertyAddress: address,
+          salePrice,
+          commissionRate,
+          commissionAmount: grossCommission,
+          vatIncluded,
+          vatAmount,
+          splits: [] as { party: string; percentage: number; amount: number }[],
+          agentNetCommission: grossCommission,
+          stage,
+          stageHistory,
+          ficaBuyer,
+          ficaSeller,
+          conveyancer: rand(CONVEYANCERS),
+          bondOriginator: rand(BOND_ORIGINATORS),
+          buyerName: buyerPerson.name,
+          sellerName: sellerPerson.name,
+          leadId,
+          contactId,
+          notes: `${address}. Sale: R${salePrice.toLocaleString()}. Commission: ${commissionRate}%.`,
+          dates,
+          ownerId: uid,
+        };
+      });
+
+      await adminBatchWrite("transactions", transactionDocs);
+
+      return NextResponse.json({
+        seeded: counts.contacts + counts.leads + counts.activities + counts.tasks + counts.transactions,
+        counts,
+      });
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });

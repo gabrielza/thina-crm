@@ -8,10 +8,10 @@ import { DashboardCards } from "@/components/dashboard-cards";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { getLeads, getTasks, getActivities, getCollectionCount, type Lead, type Task, type Activity } from "@/lib/firestore";
-import { calculateForecast } from "@/lib/scoring";
+import { getLeads, getTasks, getActivities, getTransactions, getCollectionCount, type Lead, type Task, type Activity, type Transaction } from "@/lib/firestore";
+import { calculateForecast, calculateTransactionForecast } from "@/lib/scoring";
 import { format, isPast, isToday, parseISO } from "date-fns";
-import { Users, Contact as ContactIcon, CheckSquare, AlertTriangle, TrendingUp, DollarSign, Activity as ActivityIcon, Phone, Mail, Calendar, StickyNote } from "lucide-react";
+import { Users, Contact as ContactIcon, CheckSquare, AlertTriangle, TrendingUp, DollarSign, Activity as ActivityIcon, Phone, Mail, Calendar, StickyNote, Receipt, Home } from "lucide-react";
 
 const DashboardCharts = dynamic(() => import("@/components/dashboard-charts").then((m) => m.DashboardCharts), {
   loading: () => <div className="flex items-center justify-center py-16"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>,
@@ -37,23 +37,26 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [activityCount, setActivityCount] = useState(0);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [l, cc, t, a, ac] = await Promise.all([
+        const [l, cc, t, a, ac, tx] = await Promise.all([
           getLeads(),
           getCollectionCount("contacts"),
           getTasks(),
           getActivities(10),
           getCollectionCount("activities"),
+          getTransactions(),
         ]);
         setLeads(l);
         setContactCount(cc);
         setTasks(t);
         setActivities(a);
         setActivityCount(ac);
+        setTransactions(tx);
       } catch (error) {
         console.error("Failed to fetch data:", error);
       } finally {
@@ -100,6 +103,27 @@ export default function DashboardPage() {
                 <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Activities</p><p className="text-2xl font-semibold tabular-nums mt-1">{activityCount}</p></div><ActivityIcon className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
               </Card>
             </div>
+
+            {/* Transaction KPIs */}
+            {transactions.length > 0 && (() => {
+              const txForecast = calculateTransactionForecast(transactions);
+              return (
+                <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+                  <Card className="cursor-pointer" onClick={() => router.push("/transactions")}>
+                    <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Active Transactions</p><p className="text-2xl font-semibold tabular-nums mt-1">{txForecast.activeTransactions}</p></div><Receipt className="h-5 w-5 text-muted-foreground/50" /></div></CardContent>
+                  </Card>
+                  <Card className="cursor-pointer" onClick={() => router.push("/transactions/pipeline")}>
+                    <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Pending Commission</p><p className="text-2xl font-semibold tabular-nums mt-1">{formatCurrency(txForecast.totalPendingCommission)}</p></div><DollarSign className="h-5 w-5 text-amber-500/70" /></div></CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Expected Income</p><p className="text-2xl font-semibold tabular-nums mt-1">{formatCurrency(txForecast.weightedPendingCommission)}</p></div><TrendingUp className="h-5 w-5 text-blue-500/70" /></div></CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-5"><div className="flex items-center justify-between"><div><p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Earned Commission</p><p className="text-2xl font-semibold tabular-nums mt-1 text-green-600">{formatCurrency(txForecast.earnedCommission)}</p></div><DollarSign className="h-5 w-5 text-green-500/70" /></div></CardContent>
+                  </Card>
+                </div>
+              );
+            })()}
 
             {/* Forecast Card */}
             <Card>

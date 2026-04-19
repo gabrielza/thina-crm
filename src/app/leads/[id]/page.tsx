@@ -6,7 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, Trash2, Mail, Phone, Building2, Calendar, DollarSign, Tag } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Mail, Phone, Building2, Calendar, DollarSign, Tag, Receipt } from "lucide-react";
 import { getLeadById, deleteLead, getActivitiesByLead, getTasksByLead, type Lead, type Activity, type Task } from "@/lib/firestore";
 import { EditLeadSheet } from "@/components/edit-lead-sheet";
 import { ActivityTimeline } from "@/components/activity-timeline";
@@ -80,6 +80,9 @@ export default function LeadDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 ml-11 sm:ml-0 shrink-0">
+          {lead.status === "won" && (
+            <Button size="sm" onClick={() => router.push(`/transactions?newFromLead=${lead.id}&buyerName=${encodeURIComponent(lead.name)}`)}><Receipt className="mr-1.5 h-3.5 w-3.5" /> Create Transaction</Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}><Pencil className="mr-1.5 h-3.5 w-3.5" /> Edit</Button>
           <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={handleDelete}><Trash2 className="mr-1.5 h-3.5 w-3.5" /> Delete</Button>
         </div>
