@@ -108,7 +108,7 @@ export default function PipelinePage() {
               return (
                 <div
                   key={stage.key}
-                  className={`flex flex-col rounded-xl border p-3 transition-all bg-muted/20 min-w-[150px] flex-1 ${isOver ? "ring-2 ring-primary" : "border-border/50"}`}
+                  className={`flex flex-col rounded-xl border p-3 transition-all min-w-[150px] flex-1 ${stage.bg} ${isOver ? "ring-2 ring-primary" : ""}`}
                   onDragOver={(e) => handleDragOver(e, stage.key)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, stage.key)}
@@ -116,10 +116,10 @@ export default function PipelinePage() {
                   {/* Column Header */}
                   <div className="mb-3 px-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{stage.label}</h3>
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{stageLeads.length}</span>
+                      <h3 className={`text-[11px] font-semibold uppercase tracking-wider ${stage.color}`}>{stage.label}</h3>
+                      <span className={`text-[11px] font-semibold tabular-nums ${stage.color}`}>{stageLeads.length}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 font-mono">{formatCurrency(stageValue)}</p>
+                    <p className={`text-xs mt-0.5 font-mono ${stage.color} opacity-75`}>{formatCurrency(stageValue)}</p>
                   </div>
 
                   {/* Cards */}
