@@ -2,10 +2,47 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Leads: only authenticated users can read/write their own leads
-    match /leads/{leadId} {
-      allow read, write: if request.auth != null && request.auth.uid == resource.data.ownerId;
-      allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+    // Helper: user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Helper: user owns the document
+    function isOwner() {
+      return isAuth() && request.auth.uid == resource.data.ownerId;
+    }
+
+    // Helper: user is setting themselves as owner on create
+    function isCreatingOwn() {
+      return isAuth() && request.auth.uid == request.resource.data.ownerId;
+    }
+
+    // Leads
+    match /leads/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Contacts
+    match /contacts/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Activities
+    match /activities/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
+    }
+
+    // Tasks
+    match /tasks/{docId} {
+      allow read: if isAuth();
+      allow create: if isCreatingOwn();
+      allow update, delete: if isOwner();
     }
   }
 }
