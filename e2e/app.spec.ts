@@ -166,6 +166,80 @@ test.describe("Reports", () => {
   });
 });
 
+test.describe("Transactions", () => {
+  test.beforeEach(async ({ page }) => {
+    await signIn(page);
+  });
+
+  test("transactions list page loads with table", async ({ page }) => {
+    await page.goto("/transactions");
+    await expect(page.locator("h1")).toContainText("Transactions");
+    await expect(
+      page.locator("table").or(page.getByText("No transactions yet"))
+    ).toBeVisible({ timeout: 10000 });
+  });
+
+  test("can navigate to a transaction detail page", async ({ page }) => {
+    await page.goto("/transactions");
+    const firstRow = page.locator("table tbody tr").first();
+    const hasRows = await firstRow.isVisible({ timeout: 10000 }).catch(() => false);
+
+    if (hasRows) {
+      await firstRow.click();
+      await page.waitForURL(/\/transactions\//, { timeout: 10000 });
+      const notFound = page.locator("text=Transaction not found");
+      await expect(notFound).not.toBeVisible({ timeout: 10000 });
+      // Detail page should show commission calculator and FICA compliance cards
+      await expect(page.locator("text=Commission Calculator")).toBeVisible({ timeout: 10000 });
+      await expect(page.locator("text=FICA Compliance")).toBeVisible();
+    }
+  });
+
+  test("transaction detail shows stage timeline and parties", async ({ page }) => {
+    await page.goto("/transactions");
+    const firstRow = page.locator("table tbody tr").first();
+    const hasRows = await firstRow.isVisible({ timeout: 10000 }).catch(() => false);
+
+    if (hasRows) {
+      await firstRow.click();
+      await page.waitForURL(/\/transactions\//, { timeout: 10000 });
+      // Should show parties card with buyer/seller sections
+      await expect(page.locator("text=Parties")).toBeVisible({ timeout: 10000 });
+      await expect(page.locator("text=Buyer FICA")).toBeVisible();
+      await expect(page.locator("text=Seller FICA")).toBeVisible();
+      // Should show sale price and commission rate
+      await expect(page.locator("text=Sale Price")).toBeVisible();
+      await expect(page.locator("text=Agent Net Commission")).toBeVisible();
+    }
+  });
+
+  test("transaction pipeline board loads with stage columns", async ({ page }) => {
+    await page.goto("/transactions/pipeline");
+    await expect(page.locator("h1")).toContainText("Transaction Pipeline");
+    // Check for key stage column headers
+    await expect(page.getByRole("heading", { name: "OTP Signed" })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("heading", { name: "Bond Applied" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Commission Paid" })).toBeVisible();
+  });
+});
+
+test.describe("Dashboard — Transaction KPIs", () => {
+  test.beforeEach(async ({ page }) => {
+    await signIn(page);
+  });
+
+  test("dashboard shows transaction KPI cards when transactions exist", async ({ page }) => {
+    await expect(page.locator("text=Welcome back")).toBeVisible({ timeout: 15000 });
+    // If transactions are seeded, these KPI cards should be visible
+    const hasTxKPIs = await page.locator("text=ACTIVE TRANSACTIONS").isVisible({ timeout: 5000 }).catch(() => false);
+    if (hasTxKPIs) {
+      await expect(page.locator("text=PENDING COMMISSION")).toBeVisible();
+      await expect(page.locator("text=EXPECTED INCOME")).toBeVisible();
+      await expect(page.locator("text=EARNED COMMISSION")).toBeVisible();
+    }
+  });
+});
+
 test.describe("Health Check API", () => {
   test("GET /api/health returns healthy status", async ({ request }) => {
     const res = await request.get("/api/health");

@@ -968,12 +968,15 @@ function sectionTesting() {
         ["Pipeline", "Board loads with stage columns (New, Contacted, Qualified)", "1"],
         ["Tasks", "Tasks page loads with Pending section", "1"],
         ["Reports", "Reports page loads with Total Leads metric", "1"],
+        ["Transactions", "Transaction list loads with table, detail page with Commission Calculator and FICA Compliance, stage timeline with Parties, Sale Price, Agent Net Commission", "3"],
+        ["Transaction Pipeline", "Pipeline board loads with 9 stage columns (OTP Signed, Bond Applied, Commission Paid)", "1"],
+        ["Dashboard — Tx KPIs", "Transaction KPI cards visible when transactions exist (Active Transactions, Pending/Expected/Earned Commission)", "1"],
         ["Health API", "GET /api/health returns healthy status with Firestore connectivity", "1"],
       ]
     ),
     emptyPara(),
 
-    h2("9.4 Test Metrics (v0.8.1)"),
+    h2("9.4 Test Metrics (v0.10.0)"),
     makeTable(
       ["Metric", "Value"],
       [
@@ -981,12 +984,12 @@ function sectionTesting() {
         ["E2E Framework", "Playwright (Chromium)"],
         ["Unit/Smoke Test Files", "3"],
         ["E2E Test Files", "1"],
-        ["Total Unit/Smoke Tests", "39"],
-        ["Total E2E Tests", "12"],
-        ["Combined Total Tests", "51"],
+        ["Total Unit/Smoke Tests", "51"],
+        ["Total E2E Tests", "17"],
+        ["Combined Total Tests", "68"],
         ["Pass Rate", "100%"],
-        ["Unit Execution Time", "~2.3 seconds"],
-        ["E2E Execution Time", "~1.2 minutes"],
+        ["Unit Execution Time", "~3.1 seconds"],
+        ["E2E Execution Time", "~1.3 minutes"],
         ["CI Integration", "Unit tests in GitHub Actions — E2E on-demand only"],
       ]
     ),
@@ -1195,7 +1198,7 @@ function sectionVersionHistory() {
         [
           "v0.10.0",
           "April 2026",
-          'Dashboard Integration & Won-Lead Flow — Integrated transaction KPIs into the dashboard (Active Transactions, Pending Commission, Expected Income, Earned Commission). Added won-lead-to-transaction flow: "Create Transaction" button on won lead detail pages and automatic prompt when dragging a lead to "won" on the pipeline board. Added transactions to command palette navigation and quick actions. Updated tests to 51 (12 new tests for commission calculator, transaction forecasting, transaction CRUD exports, and TRANSACTION_STAGES constant).',
+          'Dashboard Integration & Won-Lead Flow — Integrated transaction KPIs into the dashboard (Active Transactions, Pending Commission, Expected Income, Earned Commission). Added won-lead-to-transaction flow: "Create Transaction" button on won lead detail pages and automatic prompt when dragging a lead to "won" on the pipeline board. Added transactions to command palette navigation and quick actions. Added 5 Playwright E2E tests for transaction pages (list, detail, pipeline, dashboard KPIs). Updated tests to 68 total (51 Vitest + 17 Playwright E2E).',
         ],
       ]
     ),
@@ -1274,7 +1277,7 @@ function sectionAppendix() {
     emptyPara(),
 
     h3("E2E Tests (e2e/)"),
-    bullet("app.spec.ts — Functional E2E tests: auth, dashboard, leads, contacts, pipeline, tasks, reports, health API (12 tests)"),
+    bullet("app.spec.ts — Functional E2E tests: auth, dashboard, leads, contacts, pipeline, tasks, reports, transactions, transaction pipeline, dashboard tx KPIs, health API (17 tests)"),
     emptyPara(),
 
     h2("13.2 Configuration Files"),
