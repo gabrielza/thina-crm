@@ -11,25 +11,55 @@ import {
 } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard, keywords: "home overview" },
-  { label: "Leads", href: "/leads", icon: Users, keywords: "deals sales pipeline" },
-  { label: "Contacts", href: "/contacts", icon: Contact, keywords: "people customers" },
-  { label: "Tasks", href: "/tasks", icon: CheckSquare, keywords: "todos follow-up" },
-  { label: "Transactions", href: "/transactions", icon: Receipt, keywords: "deals commission property sales" },
-  { label: "Transaction Pipeline", href: "/transactions/pipeline", icon: Kanban, keywords: "transaction board stages otp" },
-  { label: "Pipeline", href: "/pipeline", icon: Kanban, keywords: "kanban board stages" },
-  { label: "Properties", href: "/properties", icon: Building2, keywords: "listings mandates property" },
-  { label: "Show Days", href: "/showdays", icon: Home, keywords: "open house qr code registration" },
-  { label: "Inbound Leads", href: "/inbound", icon: Inbox, keywords: "portal property24 private property import" },
-  { label: "Messaging", href: "/messaging", icon: MessageSquare, keywords: "sms text message bulksms" },
-  { label: "Sequences", href: "/sequences", icon: Zap, keywords: "follow-up drip campaign automation" },
-  { label: "Speed-to-Lead", href: "/speed-to-lead", icon: Timer, keywords: "auto response instant reply sms" },
-  { label: "Buyer Match", href: "/buyer-match", icon: UserSearch, keywords: "buyer property matching profile" },
-  { label: "Documents", href: "/documents", icon: FileText, keywords: "files upload fica otp mandate" },
-  { label: "Lead ROI", href: "/lead-roi", icon: TrendingUp, keywords: "roi cost per lead source" },
-  { label: "Reports", href: "/reports", icon: BarChart3, keywords: "analytics charts export" },
-  { label: "Compliance", href: "/compliance", icon: ShieldCheck, keywords: "popia fica vat cpd consent" },
+const NAV_GROUPS = [
+  {
+    label: "Overview",
+    items: [
+      { label: "Dashboard", href: "/", icon: LayoutDashboard, keywords: "home overview" },
+    ],
+  },
+  {
+    label: "Prospecting",
+    items: [
+      { label: "Inbound Leads", href: "/inbound", icon: Inbox, keywords: "portal property24 private property import" },
+      { label: "Show Days", href: "/showdays", icon: Home, keywords: "open house qr code registration" },
+      { label: "Speed-to-Lead", href: "/speed-to-lead", icon: Timer, keywords: "auto response instant reply sms" },
+      { label: "Lead ROI", href: "/lead-roi", icon: TrendingUp, keywords: "roi cost per lead source" },
+    ],
+  },
+  {
+    label: "Pipeline",
+    items: [
+      { label: "Leads", href: "/leads", icon: Users, keywords: "deals sales pipeline" },
+      { label: "Pipeline Board", href: "/pipeline", icon: Kanban, keywords: "kanban board stages" },
+      { label: "Contacts", href: "/contacts", icon: Contact, keywords: "people customers" },
+      { label: "Buyer Match", href: "/buyer-match", icon: UserSearch, keywords: "buyer property matching profile" },
+      { label: "Sequences", href: "/sequences", icon: Zap, keywords: "follow-up drip campaign automation" },
+      { label: "Messaging", href: "/messaging", icon: MessageSquare, keywords: "sms text message bulksms" },
+    ],
+  },
+  {
+    label: "Listings",
+    items: [
+      { label: "Properties", href: "/properties", icon: Building2, keywords: "listings mandates property" },
+    ],
+  },
+  {
+    label: "Transactions",
+    items: [
+      { label: "Deals", href: "/transactions", icon: Receipt, keywords: "deals commission property sales" },
+      { label: "Transaction Pipeline", href: "/transactions/pipeline", icon: Kanban, keywords: "transaction board stages otp" },
+      { label: "Documents", href: "/documents", icon: FileText, keywords: "files upload fica otp mandate" },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { label: "Tasks", href: "/tasks", icon: CheckSquare, keywords: "todos follow-up" },
+      { label: "Reports", href: "/reports", icon: BarChart3, keywords: "analytics charts export" },
+      { label: "Compliance", href: "/compliance", icon: ShieldCheck, keywords: "popia fica vat cpd consent" },
+    ],
+  },
 ];
 
 const ACTIONS = [
@@ -104,7 +134,7 @@ export function CommandPalette() {
                 </Command.Empty>
 
                 <Command.Group heading="Navigation" className="px-1 pb-1 [&_[cmdk-group-heading]]:mb-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground">
-                  {NAV_ITEMS.map((item) => (
+                  {NAV_GROUPS.flatMap((group) => group.items).map((item) => (
                     <Command.Item
                       key={item.href}
                       value={`${item.label} ${item.keywords}`}

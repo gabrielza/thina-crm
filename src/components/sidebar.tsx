@@ -10,25 +10,69 @@ import { useAuth } from "@/lib/hooks/use-auth";
 import { CommandTrigger } from "@/components/command-palette";
 import { useTheme } from "@/components/theme-provider";
 
-const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Leads", href: "/leads", icon: Users },
-  { name: "Contacts", href: "/contacts", icon: Contact },
-  { name: "Transactions", href: "/transactions", icon: Receipt },
-  { name: "Properties", href: "/properties", icon: Building2 },
-  { name: "Tasks", href: "/tasks", icon: CheckSquare },
-  { name: "Pipeline", href: "/pipeline", icon: Kanban },
-  { name: "Show Days", href: "/showdays", icon: Home },
-  { name: "Inbound", href: "/inbound", icon: Inbox },
-  { name: "Messaging", href: "/messaging", icon: MessageSquare },
-  { name: "Sequences", href: "/sequences", icon: Zap },
-  { name: "Speed-to-Lead", href: "/speed-to-lead", icon: Timer },
-  { name: "Buyer Match", href: "/buyer-match", icon: UserSearch },
-  { name: "Documents", href: "/documents", icon: FileText },
-  { name: "Lead ROI", href: "/lead-roi", icon: TrendingUp },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Compliance", href: "/compliance", icon: ShieldCheck },
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
+  {
+    label: "Overview",
+    items: [
+      { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: "Prospecting",
+    items: [
+      { name: "Inbound Leads", href: "/inbound", icon: Inbox },
+      { name: "Show Days", href: "/showdays", icon: Home },
+      { name: "Speed-to-Lead", href: "/speed-to-lead", icon: Timer },
+      { name: "Lead ROI", href: "/lead-roi", icon: TrendingUp },
+    ],
+  },
+  {
+    label: "Pipeline",
+    items: [
+      { name: "Leads", href: "/leads", icon: Users },
+      { name: "Pipeline Board", href: "/pipeline", icon: Kanban },
+      { name: "Contacts", href: "/contacts", icon: Contact },
+      { name: "Buyer Match", href: "/buyer-match", icon: UserSearch },
+      { name: "Sequences", href: "/sequences", icon: Zap },
+      { name: "Messaging", href: "/messaging", icon: MessageSquare },
+    ],
+  },
+  {
+    label: "Listings",
+    items: [
+      { name: "Properties", href: "/properties", icon: Building2 },
+    ],
+  },
+  {
+    label: "Transactions",
+    items: [
+      { name: "Deals", href: "/transactions", icon: Receipt },
+      { name: "Documents", href: "/documents", icon: FileText },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { name: "Tasks", href: "/tasks", icon: CheckSquare },
+      { name: "Reports", href: "/reports", icon: BarChart3 },
+      { name: "Compliance", href: "/compliance", icon: ShieldCheck },
+    ],
+  },
 ];
+
+// Flat list for mobile nav and other consumers
+const navigation = navGroups.flatMap((g) => g.items);
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -54,25 +98,39 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 sidebar-scroll overflow-y-auto px-3 py-1 space-y-0.5">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={cn(
-                "group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150",
-                isActive
-                  ? "bg-sidebar-accent/15 text-sidebar-fg-active"
-                  : "text-sidebar-fg hover:bg-sidebar-hover hover:text-sidebar-fg-active"
-              )}
-            >
-              <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-sidebar-accent" : "text-sidebar-fg group-hover:text-sidebar-fg-active")} />
-              {item.name}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 sidebar-scroll overflow-y-auto px-3 py-1 space-y-3">
+        {navGroups.map((group) => (
+          <div key={group.label}>
+            {/* Group heading — hidden for "Overview" since it's just Dashboard */}
+            {group.label !== "Overview" && (
+              <div className="px-3 pb-1 pt-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-sidebar-fg/60">
+                  {group.label}
+                </span>
+              </div>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      "group flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150",
+                      isActive
+                        ? "bg-sidebar-accent/15 text-sidebar-fg-active"
+                        : "text-sidebar-fg hover:bg-sidebar-hover hover:text-sidebar-fg-active"
+                    )}
+                  >
+                    <item.icon className={cn("h-4 w-4 shrink-0", isActive ? "text-sidebar-accent" : "text-sidebar-fg group-hover:text-sidebar-fg-active")} />
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}
@@ -144,26 +202,37 @@ export function MobileNav() {
                 </div>
               </div>
 
-              {/* All nav items */}
-              {navigation.map((item) => {
-                const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMenuOpen(false)}
-                    className={cn(
-                      "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-foreground hover:bg-muted"
-                    )}
-                  >
-                    <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")} />
-                    {item.name}
-                  </Link>
-                );
-              })}
+              {/* All nav items — grouped */}
+              {navGroups.map((group) => (
+                <div key={group.label}>
+                  {group.label !== "Overview" && (
+                    <div className="px-3 pt-3 pb-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {group.label}
+                      </span>
+                    </div>
+                  )}
+                  {group.items.map((item) => {
+                    const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => setMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition-colors",
+                          isActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-foreground hover:bg-muted"
+                        )}
+                      >
+                        <item.icon className={cn("h-5 w-5", isActive ? "text-primary" : "text-muted-foreground")} />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              ))}
 
               <div className="border-t border-border my-2" />
 
