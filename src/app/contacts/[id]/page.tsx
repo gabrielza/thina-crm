@@ -30,19 +30,22 @@ export default function ContactDetailPage() {
   const fetchData = useCallback(async () => {
     const id = params.id as string;
     try {
-      const [c, l, a] = await Promise.all([
-        getContactById(id),
-        getLeadsByContact(id),
-        getActivitiesByContact(id),
-      ]);
+      const c = await getContactById(id);
       setContact(c);
+
+      // Fetch related data separately so failures don't hide the contact
+      const [l, a] = await Promise.all([
+        getLeadsByContact(id).catch((err) => { console.error("Failed to fetch leads:", err); return [] as Lead[]; }),
+        getActivitiesByContact(id).catch((err) => { console.error("Failed to fetch activities:", err); return [] as Activity[]; }),
+      ]);
       setLeads(l);
       setActivities(a);
+
       // Fetch tasks for all associated leads
       const allTasks: Task[] = [];
       for (const lead of l) {
         if (lead.id) {
-          const lt = await getTasksByLead(lead.id);
+          const lt = await getTasksByLead(lead.id).catch(() => [] as Task[]);
           allTasks.push(...lt);
         }
       }
