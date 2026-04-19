@@ -1032,80 +1032,92 @@ function sectionTesting() {
 
 function sectionIntegration() {
   return [
-    heading("10. System Integration"),
+    heading("10. System Integration & Configuration"),
 
-    h2("10.1 Firebase Integration"),
-    h3("10.1.1 Firebase Authentication"),
-    bullet("Provider: Google OAuth 2.0 and Email/Password"),
-    bullet("Client SDK: firebase/auth with onAuthStateChanged listener"),
-    bullet("Auth state managed by custom useAuth() hook"),
-    bullet("AuthGuard component protects all routes except /login"),
-    bullet("User ownerId field links all data to the authenticated user"),
-    emptyPara(),
-
-    h3("10.1.2 Cloud Firestore"),
-    bullet("NoSQL document database with 4 root collections: leads, contacts, activities, tasks"),
-    bullet("Client SDK with real-time read operations"),
-    bullet("Server-side access via Firebase Admin SDK for privileged operations"),
-    bullet("Firestore security rules defined in firestore.rules"),
-    bullet("Batch write support (writeBatch) for seed data operations"),
-    emptyPara(),
-
-    h3("10.1.3 Firebase App Hosting"),
-    bullet("Automatic build and deployment from GitHub repository"),
-    bullet("Region: europe-west4"),
-    bullet("Configuration via apphosting.yaml"),
-    bullet("Environment variables injected at build time"),
-    bullet("Auto-scaling: 0–2 instances, 512 MiB memory"),
-    emptyPara(),
-
-    h2("10.2 GitHub Integration"),
-    bulletBold("Repository", "https://github.com/gabrielza/thina-crm"),
-    bulletBold("Branch", "master"),
-    bullet("Git tags for each version (v0.1.0 through v0.5.0)"),
-    bullet("Firebase App Hosting auto-deploys on push to master"),
-    bullet("Commit history tracks all feature additions and design changes"),
-    emptyPara(),
-
-    h2("10.3 External Services"),
-    makeTable(
-      ["Service", "Purpose", "Integration Method"],
-      [
-        ["Google OAuth", "User authentication", "Firebase Auth SDK → Google Identity Platform"],
-        ["Cloud Firestore", "Database", "Firebase Client SDK (web) + Admin SDK (server)"],
-        ["Firebase App Hosting", "Deployment", "GitHub webhook → auto-build → deploy"],
-        ["Google Fonts (Geist)", "Typography", "npm package, self-hosted via next/font"],
-      ]
-    ),
-
-    new Paragraph({ children: [new PageBreak()] }),
-  ];
-}
-
-function sectionDeployment() {
-  return [
-    heading("11. Deployment"),
-
-    h2("11.1 Deployment Architecture"),
-    para(
-      "Thina CRM uses Firebase App Hosting with automatic deployments triggered by pushes to the master branch on GitHub. The deployment pipeline builds the Next.js application, optimises assets, and deploys to Google Cloud infrastructure."
-    ),
-    emptyPara(),
-
-    h2("11.2 Deployment Configuration"),
-    h3("11.2.1 apphosting.yaml"),
+    h2("10.1 Git & GitHub Configuration"),
+    h3("10.1.1 Repository"),
     makeTable(
       ["Setting", "Value"],
       [
-        ["Min Instances", "0 (scales to zero when idle)"],
-        ["Max Instances", "2"],
-        ["Memory", "512 MiB"],
-        ["Region", "europe-west4"],
+        ["Repository URL", "https://github.com/gabrielza/thina-crm.git"],
+        ["Branch", "master"],
+        ["Committer", "Gabriel d'Oliveira (gadolive@microsoft.com)"],
+        ["Commit Convention", "Conventional commits (feat:, test:, fix:, etc.)"],
+        ["Tagging Strategy", "Semantic version tags (v0.1.0 through v0.10.0)"],
+        ["Push Command", "git push origin master --tags"],
+        [".gitignore", "node_modules/, .next/, .env.local, tmp-e2e-user.json, build artifacts"],
       ]
     ),
     emptyPara(),
 
-    h3("11.2.2 Environment Variables"),
+    h3("10.1.2 GitHub Actions CI/CD"),
+    bullet("Unit and smoke tests run automatically on every push to master"),
+    bullet("Test failure blocks deployment — broken code never reaches production"),
+    bullet("E2E tests are on-demand only (not in CI pipeline) — run via npm run test:e2e"),
+    bullet("Pipeline: Push → GitHub Actions (Vitest) → Firebase App Hosting auto-deploy"),
+    emptyPara(),
+
+    h2("10.2 Firebase Configuration"),
+    h3("10.2.1 Project Setup"),
+    makeTable(
+      ["Setting", "Value"],
+      [
+        ["Project ID", "thina-crm"],
+        ["Firebase Plan", "Blaze (pay as you go)"],
+        ["Web App Names", "thina-crm, Thina_Web_App"],
+        ["Active App ID", "1:758961001539:web:5ae4e45100fc5220e870f6"],
+        ["Firebase CLI", "Installed globally via npm install -g firebase-tools"],
+      ]
+    ),
+    emptyPara(),
+
+    h3("10.2.2 Firebase Authentication"),
+    makeTable(
+      ["Setting", "Value"],
+      [
+        ["Providers Enabled", "Google OAuth 2.0, Email/Password"],
+        ["Client Integration", "firebase/auth with onAuthStateChanged listener"],
+        ["Auth State Management", "Custom useAuth() hook in shared AuthProvider context"],
+        ["Route Protection", "AuthGuard component wraps all routes except /login"],
+        ["Data Ownership", "ownerId field on every document links data to authenticated user"],
+        ["E2E Test User", "e2e-test2@thina-crm.test (created via Firebase REST API)"],
+      ]
+    ),
+    emptyPara(),
+
+    h3("10.2.3 Cloud Firestore"),
+    makeTable(
+      ["Setting", "Value"],
+      [
+        ["Database", "(default)"],
+        ["Region", "africa-south1 (Johannesburg)"],
+        ["Edition", "Standard (free tier eligible)"],
+        ["Collections", "leads, contacts, activities, tasks, transactions (5 total)"],
+        ["Client SDK", "firebase/firestore — real-time reads, write operations"],
+        ["Admin SDK", "firebase-admin — server-side seed API, health check"],
+        ["Batch Operations", "writeBatch for seed data (batches of 450)"],
+      ]
+    ),
+    emptyPara(),
+
+    h3("10.2.4 Firestore Security Rules"),
+    para(
+      "All 5 collections follow a consistent security pattern defined in firestore.rules:"
+    ),
+    bullet("isAuth() — Checks request.auth != null for any authenticated user"),
+    bullet("isCreatingOwn() — Validates incoming ownerId matches the authenticated user's UID"),
+    bullet("isOwner() — Validates existing document ownerId matches authenticated user's UID"),
+    bullet("allow read: if isAuth() — Any authenticated user can read documents"),
+    bullet("allow create: if isCreatingOwn() — Must set ownerId to own UID when creating"),
+    bullet("allow update, delete: if isOwner() — Only the document owner can modify or delete"),
+    bullet("No open access patterns — no 'allow read, write: if true' anywhere in the rules"),
+    bullet("Rules deployed via: npx firebase-tools deploy --only firestore:rules --project thina-crm"),
+    emptyPara(),
+
+    h3("10.2.5 Firebase Client SDK (src/lib/firebase.ts)"),
+    para(
+      "Client-side Firebase initialisation using 7 environment variables from .env.local:"
+    ),
     makeTable(
       ["Variable", "Purpose"],
       [
@@ -1120,14 +1132,109 @@ function sectionDeployment() {
     ),
     emptyPara(),
 
-    h2("11.3 Deployment Process"),
+    h3("10.2.6 Firebase Admin SDK (src/lib/firebase-admin.ts)"),
+    bullet("Server-side initialisation for API routes (seed endpoint, health check)"),
+    bullet("Uses Application Default Credentials in production (Firebase App Hosting auto-provisions)"),
+    bullet("Enables privileged operations: batch writes, collection counts, user management"),
+    emptyPara(),
+
+    h3("10.2.7 Firebase App Hosting"),
+    makeTable(
+      ["Setting", "Value"],
+      [
+        ["Hosting Region", "europe-west4"],
+        ["Production URL", "https://thina-crm--thina-crm.europe-west4.hosted.app"],
+        ["Config File", "apphosting.yaml"],
+        ["Auto-Deploy Trigger", "Push to master branch on GitHub"],
+        ["Min Instances", "0 (scales to zero when idle)"],
+        ["Max Instances", "2"],
+        ["Memory", "512 MiB"],
+      ]
+    ),
+    emptyPara(),
+
+    h3("10.2.8 Firebase Configuration Files"),
+    makeTable(
+      ["File", "Purpose"],
+      [
+        ["firebase.json", "Project services configuration, region settings"],
+        ["firestore.rules", "Security rules for all 5 collections"],
+        ["firestore.indexes.json", "Composite index definitions"],
+        ["apphosting.yaml", "App Hosting deployment configuration (instances, memory, region)"],
+      ]
+    ),
+    emptyPara(),
+
+    h2("10.3 TypeScript Configuration (tsconfig.json)"),
+    makeTable(
+      ["Setting", "Value"],
+      [
+        ["Strict Mode", "true"],
+        ["Path Alias", "@/* → ./src/*"],
+        ["Module Resolution", "Bundler"],
+        ["Target", "ES2017"],
+        ["JSX", "preserve (handled by Next.js)"],
+      ]
+    ),
+    emptyPara(),
+
+    h2("10.4 Tailwind & PostCSS"),
+    bullet("tailwind.config.js — Extended theme with Zinc/Indigo palette, custom animations, dark mode"),
+    bullet("postcss.config.mjs — Tailwind CSS + Autoprefixer plugins"),
+    bullet("globals.css — CSS custom properties for theme colours (HSL-based, light/dark)"),
+    emptyPara(),
+
+    h2("10.5 Playwright Configuration (playwright.config.ts)"),
+    makeTable(
+      ["Setting", "Value"],
+      [
+        ["Browser", "Chromium only"],
+        ["Base URL", "Live deployment (overridable via DEPLOY_URL env var)"],
+        ["Execution", "Sequential (not parallel — tests share auth state)"],
+        ["Test Timeout", "30 seconds per test"],
+        ["Expect Timeout", "10 seconds for assertions"],
+        ["Screenshots", "Only on failure"],
+        ["Trace", "On first retry"],
+        ["Reporter", "List + HTML (open: never)"],
+      ]
+    ),
+    emptyPara(),
+
+    h2("10.6 External Services"),
+    makeTable(
+      ["Service", "Purpose", "Integration Method"],
+      [
+        ["Google OAuth", "User authentication", "Firebase Auth SDK → Google Identity Platform"],
+        ["Cloud Firestore", "Database", "Firebase Client SDK (web) + Admin SDK (server)"],
+        ["Firebase App Hosting", "Deployment", "GitHub webhook → auto-build → deploy"],
+        ["GitHub Actions", "CI/CD", "Automated test runs on push, blocks deploy on failure"],
+        ["Google Fonts (Geist)", "Typography", "npm package, self-hosted via next/font"],
+      ]
+    ),
+
+    new Paragraph({ children: [new PageBreak()] }),
+  ];
+}
+
+function sectionDeployment() {
+  return [
+    heading("11. Deployment"),
+
+    h2("11.1 Deployment Architecture"),
+    para(
+      "Thina CRM uses Firebase App Hosting with automatic deployments triggered by pushes to the master branch on GitHub. The deployment pipeline runs automated tests via GitHub Actions, then builds the Next.js application, optimises assets, and deploys to Google Cloud infrastructure."
+    ),
+    emptyPara(),
+
+    h2("11.2 CI/CD Pipeline"),
+    para("The complete deployment pipeline from code change to production:"),
     new Paragraph({
       spacing: { after: 40 },
-      children: [bold("Step 1: "), normal("Code changes committed to local repository")],
+      children: [bold("Step 1: "), normal("Developer commits code changes to local Git repository")],
     }),
     new Paragraph({
       spacing: { after: 40 },
-      children: [bold("Step 2: "), normal("Git tag created for version (e.g., v0.5.0)")],
+      children: [bold("Step 2: "), normal("Git tag created for version (e.g., v0.10.0)")],
     }),
     new Paragraph({
       spacing: { after: 40 },
@@ -1135,19 +1242,47 @@ function sectionDeployment() {
     }),
     new Paragraph({
       spacing: { after: 40 },
-      children: [bold("Step 4: "), normal("Firebase App Hosting detects push and triggers build")],
+      children: [bold("Step 4: "), normal("GitHub Actions triggers — runs Vitest unit and smoke tests")],
     }),
     new Paragraph({
       spacing: { after: 40 },
-      children: [bold("Step 5: "), normal("Next.js production build runs in cloud environment")],
+      children: [bold("Step 5: "), normal("If tests pass, Firebase App Hosting detects push and triggers build")],
     }),
     new Paragraph({
       spacing: { after: 40 },
-      children: [bold("Step 6: "), normal("Application deployed to https://thina-crm--thina-crm.europe-west4.hosted.app")],
+      children: [bold("Step 6: "), normal("Next.js production build runs in cloud (TypeScript compilation, bundling, static generation)")],
+    }),
+    new Paragraph({
+      spacing: { after: 40 },
+      children: [bold("Step 7: "), normal("Application deployed to https://thina-crm--thina-crm.europe-west4.hosted.app")],
+    }),
+    new Paragraph({
+      spacing: { after: 40 },
+      children: [bold("Step 8: "), normal("(Optional) Developer runs E2E tests against live deployment: npm run test:e2e")],
     }),
     emptyPara(),
 
-    h2("11.4 Production URL"),
+    h2("11.3 Deployment Configuration"),
+    h3("11.3.1 apphosting.yaml"),
+    makeTable(
+      ["Setting", "Value"],
+      [
+        ["Min Instances", "0 (scales to zero when idle)"],
+        ["Max Instances", "2"],
+        ["Memory", "512 MiB"],
+        ["Region", "europe-west4"],
+      ]
+    ),
+    emptyPara(),
+
+    h2("11.4 Firestore Rules Deployment"),
+    para("Security rules are deployed separately from the application code:"),
+    bullet("Command: npx firebase-tools deploy --only firestore:rules --project thina-crm"),
+    bullet("Rules are compiled and validated before deployment"),
+    bullet("Deployed whenever collection security patterns change"),
+    emptyPara(),
+
+    h2("11.5 Production URL"),
     para("https://thina-crm--thina-crm.europe-west4.hosted.app"),
 
     new Paragraph({ children: [new PageBreak()] }),
@@ -1156,7 +1291,127 @@ function sectionDeployment() {
 
 function sectionVersionHistory() {
   return [
-    heading("12. Version History"),
+    heading("12. AI-Assisted Development"),
+
+    para(
+      "Thina CRM was developed with the assistance of GitHub Copilot (Claude Opus 4.6), an AI programming assistant integrated into VS Code. This section documents Copilot's role in the development process and the scope of its contributions."
+    ),
+    emptyPara(),
+
+    h2("12.1 Development Methodology"),
+    para(
+      "The development followed an iterative version-based approach. The human developer defined requirements, prioritised features, and directed the overall architecture. GitHub Copilot acted as an expert implementation partner — writing code, configuring infrastructure, running tests, deploying, and generating documentation."
+    ),
+    emptyPara(),
+    para(
+      "At each version milestone, Copilot was instructed to: implement the feature, build and verify, run all tests, deploy to production, update the specification document, and commit/push to Git. This ensured every version was production-ready before moving to the next."
+    ),
+    emptyPara(),
+
+    h2("12.2 Copilot Contributions by Version"),
+    makeTable(
+      ["Version", "Copilot Contributions"],
+      [
+        ["v0.1.0", "Project scaffolding (Next.js 15, TypeScript strict, Firebase integration), authentication implementation, folder structure"],
+        ["v0.2.0", "Firestore data layer with typed interfaces, Lead and Contact CRUD functions, shadcn/ui component setup"],
+        ["v0.3.0", "Pipeline Kanban board, task management system, activity logging, detail page layouts"],
+        ["v0.4.0", "Lead scoring algorithm (5-dimension, 0–100 scale), pipeline forecasting, Recharts integration, reports page"],
+        ["v0.5.0", "Full UI redesign (\"Linear Aesthetic\"), command palette, dark mode, page transitions, data seeder (1,200 records)"],
+        ["v0.6.0", "Performance optimisations: query limits, getCountFromServer, shared AuthProvider, lazy-loading"],
+        ["v0.7.0", "Mobile navigation redesign, responsive layouts, server-side seed API with Firebase Admin SDK"],
+        ["v0.8.0", "Vitest test framework setup, 39 tests across 3 layers, GitHub Actions CI integration"],
+        ["v0.8.1", "Playwright E2E test suite (12 tests), test user creation script, Playwright configuration"],
+        ["v0.9.0", "Transaction data model (9 stages), commission calculator, FICA compliance tracking, transaction CRUD, pipeline board, seed data"],
+        ["v0.10.0", "Dashboard transaction KPIs, won-lead-to-transaction flow, command palette updates, 5 new E2E tests"],
+      ]
+    ),
+    emptyPara(),
+
+    h2("12.3 Infrastructure & Configuration by Copilot"),
+    para("Beyond code, Copilot performed the following infrastructure and configuration tasks:"),
+    emptyPara(),
+
+    h3("12.3.1 Git & GitHub"),
+    bullet("Initialised Git repository and configured remote origin"),
+    bullet("Created semantic version tags (v0.1.0 through v0.10.0) at each milestone"),
+    bullet("Wrote conventional commit messages with multi-line descriptions"),
+    bullet("Pushed code and tags to GitHub after every version"),
+    bullet("Configured .gitignore for Node.js/Next.js/Firebase projects"),
+    emptyPara(),
+
+    h3("12.3.2 Firebase"),
+    bullet("Configured Firestore security rules for all 5 collections (authentication + ownership pattern)"),
+    bullet("Deployed security rules via Firebase CLI (firebase-tools)"),
+    bullet("Set up Firebase Client SDK initialisation with environment variables"),
+    bullet("Set up Firebase Admin SDK for server-side API routes"),
+    bullet("Created E2E test users via Firebase Auth REST API"),
+    bullet("Configured Firebase App Hosting (apphosting.yaml)"),
+    bullet("Configured Firestore composite indexes (firestore.indexes.json)"),
+    emptyPara(),
+
+    h3("12.3.3 Testing Infrastructure"),
+    bullet("Installed and configured Vitest 4.x with TypeScript path alias support"),
+    bullet("Installed and configured Playwright with Chromium for E2E testing"),
+    bullet("Created test user accounts in Firebase Auth"),
+    bullet("Wrote 51 unit/smoke tests and 17 E2E tests (68 total)"),
+    bullet("Configured GitHub Actions CI pipeline to block deploys on test failure"),
+    emptyPara(),
+
+    h3("12.3.4 Build & Deploy"),
+    bullet("Ran npm run build to verify production builds at each version"),
+    bullet("Diagnosed and fixed build errors (TypeScript type issues, Suspense boundaries, Lucide icon props)"),
+    bullet("Deployed Firestore security rules after collection changes"),
+    bullet("Pushed to GitHub to trigger Firebase App Hosting auto-deploy"),
+    bullet("Verified deployment health via /api/health endpoint"),
+    emptyPara(),
+
+    h3("12.3.5 Documentation"),
+    bullet("Created the specification document generator (scripts/generate-spec.mjs)"),
+    bullet("Generated .docx specification document at each version milestone"),
+    bullet("Maintained 13+ sections covering all aspects of the system"),
+    bullet("Updated version history with detailed descriptions for each release"),
+    emptyPara(),
+
+    h2("12.4 Human vs Copilot Responsibilities"),
+    makeTable(
+      ["Responsibility", "Human Developer", "GitHub Copilot"],
+      [
+        ["Requirements & Vision", "✓ Defined features, priorities, and SA real estate domain requirements", ""],
+        ["Architecture Decisions", "✓ Approved tech stack and patterns", "✓ Proposed and implemented patterns"],
+        ["Code Implementation", "", "✓ Wrote all application code, components, and tests"],
+        ["Infrastructure Config", "", "✓ Configured Git, Firebase, CI/CD, Playwright"],
+        ["Security Rules", "", "✓ Designed and deployed Firestore security rules"],
+        ["Testing", "✓ Directed test strategy", "✓ Wrote and ran all 68 tests"],
+        ["Deployment", "✓ Approved releases", "✓ Built, tested, deployed each version"],
+        ["Documentation", "✓ Requested spec document", "✓ Created generator and content"],
+        ["Code Review", "✓ Reviewed outputs and directed corrections", ""],
+        ["Quality Assurance", "✓ Validated live deployment", "✓ Ran E2E tests against production"],
+      ]
+    ),
+    emptyPara(),
+
+    h2("12.5 Tools & Environment"),
+    makeTable(
+      ["Tool", "Purpose"],
+      [
+        ["VS Code (Insiders)", "Primary IDE — all development performed within VS Code"],
+        ["GitHub Copilot (Claude Opus 4.6)", "AI assistant — code generation, terminal commands, file editing"],
+        ["PowerShell", "Terminal — all commands executed via VS Code integrated terminal"],
+        ["Windows 11", "Development OS"],
+        ["Git", "Version control — commits, tags, push"],
+        ["npm", "Package management — dependency installation, script execution"],
+        ["Firebase CLI", "firebase-tools — security rules deployment, project management"],
+        ["Playwright", "E2E browser testing against live deployment"],
+      ]
+    ),
+
+    new Paragraph({ children: [new PageBreak()] }),
+  ];
+}
+
+function sectionVersionHistoryContent() {
+  return [
+    heading("13. Version History"),
 
     makeTable(
       ["Version", "Date", "Description"],
@@ -1209,9 +1464,9 @@ function sectionVersionHistory() {
 
 function sectionAppendix() {
   return [
-    heading("13. Appendix"),
+    heading("14. Appendix"),
 
-    h2("13.1 File Inventory"),
+    h2("14.1 File Inventory"),
     para("Complete list of source files in the project:"),
     emptyPara(),
     h3("Pages (src/app/)"),
@@ -1280,7 +1535,7 @@ function sectionAppendix() {
     bullet("app.spec.ts — Functional E2E tests: auth, dashboard, leads, contacts, pipeline, tasks, reports, transactions, transaction pipeline, dashboard tx KPIs, health API (17 tests)"),
     emptyPara(),
 
-    h2("13.2 Configuration Files"),
+    h2("14.2 Configuration Files"),
     bullet("package.json — Project metadata, dependencies, scripts"),
     bullet("tsconfig.json — TypeScript compiler options (strict, bundler resolution)"),
     bullet("tailwind.config.js — Tailwind theme extensions, colours, animations"),
@@ -1292,7 +1547,7 @@ function sectionAppendix() {
     bullet("firestore.indexes.json — Firestore composite indexes"),
     emptyPara(),
 
-    h2("13.3 npm Scripts"),
+    h2("14.3 npm Scripts"),
     makeTable(
       ["Script", "Command", "Description"],
       [
@@ -1438,6 +1693,7 @@ async function buildDocument() {
           ...sectionIntegration(),
           ...sectionDeployment(),
           ...sectionVersionHistory(),
+          ...sectionVersionHistoryContent(),
           ...sectionAppendix(),
         ],
       },
