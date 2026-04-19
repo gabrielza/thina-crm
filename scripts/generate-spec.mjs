@@ -33,7 +33,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "0.8.0";
+const VERSION = "0.8.1";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -850,12 +850,13 @@ function sectionTesting() {
 
     h2("9.1 Test Framework"),
     para(
-      "Thina CRM uses Vitest as its test runner with the following configuration:"
+      "Thina CRM uses a two-tier test strategy: Vitest for unit/smoke tests (runs in CI) and Playwright for on-demand E2E functional tests."
     ),
-    bullet("Framework: Vitest 4.x with @vitejs/plugin-react"),
-    bullet("Config: vitest.config.ts with path aliases (@/* → ./src/*)"),
-    bullet("Scripts: npm test (single run), npm run test:watch (dev), npm run test:ci (verbose CI output)"),
-    bullet("CI Integration: Tests run in GitHub Actions before every build — a failing test blocks deployment"),
+    bullet("Unit/Smoke: Vitest 4.x with @vitejs/plugin-react — runs in CI, blocks deployment on failure"),
+    bullet("E2E: Playwright with Chromium — on-demand functional tests against the live deployment"),
+    bullet("Config: vitest.config.ts (unit), playwright.config.ts (E2E)"),
+    bullet("Scripts: npm test (unit), npm run test:ci (CI), npm run test:e2e (on-demand E2E)"),
+    bullet("CI Integration: Unit tests run in GitHub Actions before every build — E2E tests are manual only"),
     emptyPara(),
 
     h2("9.2 Test Strategy (3 Layers)"),
@@ -898,28 +899,52 @@ function sectionTesting() {
     ),
     emptyPara(),
 
-    h2("9.3 Test Metrics (v0.8.0)"),
+    h2("9.3 End-to-End Functional Tests (Playwright)"),
+    para(
+      "On-demand E2E tests validate all application screens against the live deployment. These run only when manually triggered (npm run test:e2e) and require a test user account."
+    ),
     makeTable(
-      ["Metric", "Value"],
+      ["Test Group", "What It Validates", "Tests"],
       [
-        ["Test Framework", "Vitest 4.x"],
-        ["Test Files", "3"],
-        ["Total Tests", "39"],
-        ["Pass Rate", "100%"],
-        ["Execution Time", "~1.9 seconds"],
-        ["CI Integration", "GitHub Actions — blocks deploy on failure"],
+        ["Authentication", "Login page renders, email/password sign-in works, redirect to dashboard", "2"],
+        ["Dashboard", "KPI cards (Total Leads, Won Deals, Pipeline Value), Pipeline Forecast section", "2"],
+        ["Leads", "Leads table loads, lead detail page does not show 'not found'", "2"],
+        ["Contacts", "Contacts table loads, contact detail page does not show 'not found'", "2"],
+        ["Pipeline", "Board loads with stage columns (New, Contacted, Qualified)", "1"],
+        ["Tasks", "Tasks page loads with Pending section", "1"],
+        ["Reports", "Reports page loads with Total Leads metric", "1"],
+        ["Health API", "GET /api/health returns healthy status with Firestore connectivity", "1"],
       ]
     ),
     emptyPara(),
 
-    h2("9.4 Type Safety"),
+    h2("9.4 Test Metrics (v0.8.1)"),
+    makeTable(
+      ["Metric", "Value"],
+      [
+        ["Unit/Smoke Framework", "Vitest 4.x"],
+        ["E2E Framework", "Playwright (Chromium)"],
+        ["Unit/Smoke Test Files", "3"],
+        ["E2E Test Files", "1"],
+        ["Total Unit/Smoke Tests", "39"],
+        ["Total E2E Tests", "12"],
+        ["Combined Total Tests", "51"],
+        ["Pass Rate", "100%"],
+        ["Unit Execution Time", "~2.3 seconds"],
+        ["E2E Execution Time", "~1.2 minutes"],
+        ["CI Integration", "Unit tests in GitHub Actions — E2E on-demand only"],
+      ]
+    ),
+    emptyPara(),
+
+    h2("9.5 Type Safety"),
     bullet("TypeScript strict mode enabled (strict: true in tsconfig.json)"),
     bullet("All Firestore data models are typed with explicit interfaces"),
     bullet("Component props are typed via TypeScript generics and Radix UI prop types"),
     bullet("Path alias (@/*) mapped to ./src/* for clean imports"),
     emptyPara(),
 
-    h2("9.5 Manual Testing Performed"),
+    h2("9.6 Manual Testing Performed"),
     makeTable(
       ["Area", "Test Scope"],
       [
@@ -937,8 +962,8 @@ function sectionTesting() {
     ),
     emptyPara(),
 
-    h2("9.6 Future Testing Roadmap"),
-    bullet("End-to-end tests with Playwright (login flow, CRUD operations, pipeline drag-and-drop)"),
+    h2("9.7 Future Testing Roadmap"),
+    bullet("Extend E2E tests: CRUD operations (create/edit/delete leads, contacts), pipeline drag-and-drop"),
     bullet("Firebase Emulator integration tests (Firestore rules, Admin SDK operations)"),
     bullet("Accessibility audit (WCAG compliance via axe-core)"),
     bullet("Performance benchmarking (Lighthouse CI)"),
@@ -1102,6 +1127,11 @@ function sectionVersionHistory() {
           "April 2026",
           'Testing & Quality Assurance — Introduced Vitest test framework with 39 automated tests across 3 layers: (1) Unit tests for lead scoring algorithm, pipeline forecasting, score labels, and utility functions; (2) Infrastructure smoke tests validating environment variables, Firebase configuration, Firestore security rules coverage, authentication requirements, and data model exports; (3) Build verification. Added CI integration: tests run in GitHub Actions before every deployment, blocking deploys on failure. Fixed sidebar to respect light/dark theme. Standardised colour-coded pipeline stages.',
         ],
+        [
+          "v0.8.1",
+          "April 2026",
+          'Playwright E2E Functional Tests — Added 12 on-demand end-to-end tests using Playwright (Chromium) that validate all application screens against the live deployment: authentication flow, dashboard KPIs, leads/contacts tables and detail pages, pipeline board columns, tasks page, reports page, and health API endpoint. Tests run only when manually triggered (npm run test:e2e), not in CI. Includes test user creation script. Total test count: 51 (39 unit/smoke + 12 E2E).',
+        ],
       ]
     ),
 
@@ -1172,6 +1202,10 @@ function sectionAppendix() {
     bullet("smoke.test.ts — Infrastructure, config, security rules, data model smoke tests (12 tests)"),
     emptyPara(),
 
+    h3("E2E Tests (e2e/)"),
+    bullet("app.spec.ts — Functional E2E tests: auth, dashboard, leads, contacts, pipeline, tasks, reports, health API (12 tests)"),
+    emptyPara(),
+
     h2("13.2 Configuration Files"),
     bullet("package.json — Project metadata, dependencies, scripts"),
     bullet("tsconfig.json — TypeScript compiler options (strict, bundler resolution)"),
@@ -1195,6 +1229,8 @@ function sectionAppendix() {
         ["test", "vitest run", "Run all tests once"],
         ["test:watch", "vitest", "Run tests in watch mode during development"],
         ["test:ci", "vitest run --reporter=verbose", "Run tests with verbose output for CI"],
+        ["test:deploy", "node scripts/test-deploy.mjs", "Post-deploy smoke test against live URL"],
+        ["test:e2e", "npx playwright test", "On-demand E2E functional tests (requires E2E_EMAIL/E2E_PASSWORD)"],
       ]
     ),
 
