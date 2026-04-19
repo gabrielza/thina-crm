@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo } from "react";
 import { Users, UserCheck, TrendingUp, DollarSign } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/utils";
 import type { Lead } from "@/lib/firestore";
 
 interface DashboardCardsProps {
@@ -9,27 +11,25 @@ interface DashboardCardsProps {
 }
 
 export function DashboardCards({ leads }: DashboardCardsProps) {
-  const totalLeads = leads.length;
-  const activeLeads = leads.filter((l) => !["won", "lost"].includes(l.status)).length;
-  const wonLeads = leads.filter((l) => l.status === "won").length;
-  const conversionRate = totalLeads > 0 ? ((wonLeads / totalLeads) * 100).toFixed(1) : "0";
-  const totalPipelineValue = leads
-    .filter((l) => !["won", "lost"].includes(l.status))
-    .reduce((sum, l) => sum + (l.value || 0), 0);
-  const wonRevenue = leads
-    .filter((l) => l.status === "won")
-    .reduce((sum, l) => sum + (l.value || 0), 0);
+  const stats = useMemo(() => {
+    const totalLeads = leads.length;
+    const activeLeads = leads.filter((l) => !["won", "lost"].includes(l.status)).length;
+    const wonLeads = leads.filter((l) => l.status === "won").length;
+    const conversionRate = totalLeads > 0 ? ((wonLeads / totalLeads) * 100).toFixed(1) : "0";
+    const totalPipelineValue = leads
+      .filter((l) => !["won", "lost"].includes(l.status))
+      .reduce((sum, l) => sum + (l.value || 0), 0);
+    const wonRevenue = leads
+      .filter((l) => l.status === "won")
+      .reduce((sum, l) => sum + (l.value || 0), 0);
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
-
-  const stats = [
-    {
-      title: "Total Leads",
-      value: totalLeads.toString(),
-      description: `${activeLeads} active in pipeline`,
-      icon: Users,
-      color: "text-blue-600",
+    return [
+      {
+        title: "Total Leads",
+        value: totalLeads.toString(),
+        description: `${activeLeads} active in pipeline`,
+        icon: Users,
+        color: "text-blue-600",
       bg: "bg-blue-50",
     },
     {
@@ -57,6 +57,7 @@ export function DashboardCards({ leads }: DashboardCardsProps) {
       bg: "bg-orange-50",
     },
   ];
+  }, [leads]);
 
   return (
     <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">

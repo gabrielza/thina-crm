@@ -13,6 +13,7 @@ import {
 import { Plus } from "lucide-react";
 import { addTransaction, type TransactionStage, TRANSACTION_STAGES } from "@/lib/firestore";
 import { calculateCommission } from "@/lib/scoring";
+import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/lib/hooks/use-auth";
 
 interface NewTransactionSheetProps {
@@ -58,9 +59,6 @@ export function NewTransactionSheet({ onTransactionAdded, defaultLeadId, default
   };
 
   const commission = calculateCommission(form.salePrice, form.commissionRate, form.vatIncluded, []);
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

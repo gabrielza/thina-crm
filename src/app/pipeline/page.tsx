@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,9 +19,6 @@ const STAGES: { key: Lead["status"]; label: string; color: string; bg: string }[
   { key: "won", label: "Won", color: "text-green-700", bg: "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800" },
   { key: "lost", label: "Lost", color: "text-red-700", bg: "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800" },
 ];
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
 export default function PipelinePage() {
   const router = useRouter();

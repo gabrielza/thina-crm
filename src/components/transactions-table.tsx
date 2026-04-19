@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, Search, Pencil, Home, FileCheck } from "lucide-react";
 import { getTransactions, deleteTransaction, type Transaction, type TransactionStage, TRANSACTION_STAGES } from "@/lib/firestore";
+import { formatCurrency } from "@/lib/utils";
 
 const stageColors: Record<TransactionStage, "default" | "secondary" | "success" | "warning" | "destructive" | "outline"> = {
   otp_signed: "default",
@@ -36,6 +37,7 @@ export function TransactionsTable({ refreshKey }: TransactionsTableProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [stageFilter, setStageFilter] = useState<TransactionStage | "all">("all");
 
   const fetchTransactions = useCallback(async () => {
@@ -64,15 +66,12 @@ export function TransactionsTable({ refreshKey }: TransactionsTableProps) {
 
   const filtered = transactions.filter((t) => {
     const matchesSearch =
-      t.propertyAddress.toLowerCase().includes(search.toLowerCase()) ||
-      t.buyerName.toLowerCase().includes(search.toLowerCase()) ||
-      t.sellerName.toLowerCase().includes(search.toLowerCase());
+      t.propertyAddress.toLowerCase().includes(deferredSearch.toLowerCase()) ||
+      t.buyerName.toLowerCase().includes(deferredSearch.toLowerCase()) ||
+      t.sellerName.toLowerCase().includes(deferredSearch.toLowerCase());
     const matchesStage = stageFilter === "all" || t.stage === stageFilter;
     return matchesSearch && matchesStage;
   });
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
   const filterStages: (TransactionStage | "all")[] = ["all", "otp_signed", "fica_submitted", "fica_verified", "bond_applied", "bond_approved", "transfer_lodged", "transfer_registered", "commission_paid", "fallen_through"];
 

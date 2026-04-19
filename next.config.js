@@ -8,6 +8,9 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts", "date-fns", "framer-motion"],
+  },
 };
 
 module.exports = nextConfig;

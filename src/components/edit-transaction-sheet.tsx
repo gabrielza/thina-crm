@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { updateTransaction, type Transaction, type TransactionStage, TRANSACTION_STAGES } from "@/lib/firestore";
 import { calculateCommission } from "@/lib/scoring";
+import { formatCurrency } from "@/lib/utils";
 
 interface EditTransactionSheetProps {
   transaction: Transaction | null;
@@ -57,9 +58,6 @@ export function EditTransactionSheet({ transaction, open, onOpenChange, onTransa
   }, [transaction]);
 
   const commission = calculateCommission(form.salePrice, form.commissionRate, form.vatIncluded, transaction?.splits || []);
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

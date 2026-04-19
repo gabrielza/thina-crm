@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ export function ContactsTable({ refreshKey }: ContactsTableProps) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [editContact, setEditContact] = useState<Contact | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -51,9 +52,9 @@ export function ContactsTable({ refreshKey }: ContactsTableProps) {
   };
 
   const filtered = contacts.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.email.toLowerCase().includes(search.toLowerCase()) ||
-    c.company.toLowerCase().includes(search.toLowerCase())
+    c.name.toLowerCase().includes(deferredSearch.toLowerCase()) ||
+    c.email.toLowerCase().includes(deferredSearch.toLowerCase()) ||
+    c.company.toLowerCase().includes(deferredSearch.toLowerCase())
   );
 
   if (loading) {

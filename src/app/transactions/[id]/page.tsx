@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,9 +46,6 @@ const badgeVariants: Record<TransactionStage, "default" | "secondary" | "success
 function stageLabel(stage: TransactionStage): string {
   return TRANSACTION_STAGES.find((s) => s.key === stage)?.label || stage;
 }
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
 export default function TransactionDetailPage() {
   const params = useParams();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AppShell } from "@/components/app-shell";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { getLeads, getTasks, getActivities, getTransactions, getCollectionCount, type Lead, type Task, type Activity, type Transaction } from "@/lib/firestore";
 import { calculateForecast, calculateTransactionForecast } from "@/lib/scoring";
+import { formatCurrency } from "@/lib/utils";
 import { format, isPast, isToday, parseISO } from "date-fns";
 import { Users, Contact as ContactIcon, CheckSquare, AlertTriangle, TrendingUp, DollarSign, Activity as ActivityIcon, Phone, Mail, Calendar, StickyNote, Receipt, Home } from "lucide-react";
 
@@ -18,16 +19,16 @@ const DashboardCharts = dynamic(() => import("@/components/dashboard-charts").th
   ssr: false,
 });
 
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+const ForecastChart = dynamic(() => import("@/components/forecast-chart").then((m) => m.ForecastChart), {
+  loading: () => <div className="flex items-center justify-center py-16"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>,
+  ssr: false,
+});
 
 const statusColors: Record<Lead["status"], "default" | "secondary" | "success" | "warning" | "destructive" | "outline"> = {
   new: "default", contacted: "secondary", qualified: "success", proposal: "warning", won: "success", lost: "destructive",
 };
 
 const ACTIVITY_ICONS: Record<string, typeof Phone> = { call: Phone, email: Mail, meeting: Calendar, note: StickyNote };
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -132,36 +133,7 @@ export default function DashboardPage() {
                 <CardDescription>Weighted pipeline value by probability of close</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-6 md:grid-cols-2">
-                  <div>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={forecast.stages}>
-                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                        <XAxis dataKey="stage" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 10 }} width={55} tickFormatter={(v) => `R${(v / 1000).toFixed(0)}k`} />
-                        <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                        <Bar dataKey="totalValue" fill="#93c5fd" name="Total Value" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="weightedValue" fill="#3b82f6" name="Weighted Value" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="space-y-3">
-                    {forecast.stages.map((s) => (
-                      <div key={s.stage} className="flex items-center justify-between text-sm">
-                        <div>
-                          <span className="font-medium">{s.stage}</span>
-                          <span className="text-muted-foreground ml-2">({s.count} deals, {(s.probability * 100).toFixed(0)}%)</span>
-                        </div>
-                        <span className="font-mono">{formatCurrency(s.weightedValue)}</span>
-                      </div>
-                    ))}
-                    <div className="border-t pt-3 space-y-2">
-                      <div className="flex justify-between text-sm"><span>Won Revenue</span><span className="font-mono font-semibold text-green-600">{formatCurrency(forecast.wonRevenue)}</span></div>
-                      <div className="flex justify-between text-sm"><span>Weighted Pipeline</span><span className="font-mono font-semibold text-blue-600">{formatCurrency(forecast.weightedPipeline)}</span></div>
-                      <div className="flex justify-between text-sm font-bold"><span>Expected Total</span><span className="font-mono">{formatCurrency(forecast.expectedClose)}</span></div>
-                    </div>
-                  </div>
-                </div>
+                <ForecastChart stages={forecast.stages} wonRevenue={forecast.wonRevenue} weightedPipeline={forecast.weightedPipeline} expectedClose={forecast.expectedClose} />
               </CardContent>
             </Card>
 

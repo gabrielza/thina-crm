@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { AppShell } from "@/components/app-shell";
+import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,9 +12,6 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { format, subDays, startOfMonth, isAfter } from "date-fns";
 
 const COLORS = ["#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#10b981", "#6366f1", "#ec4899", "#14b8a6"];
-
-const formatCurrency = (value: number) =>
-  new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
 export default function ReportsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -38,60 +36,63 @@ export default function ReportsPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // --- Computed Metrics ---
-  const totalLeads = leads.length;
-  const wonDeals = leads.filter((l) => l.status === "won");
-  const lostDeals = leads.filter((l) => l.status === "lost");
-  const openDeals = leads.filter((l) => !["won", "lost"].includes(l.status));
-  const wonRevenue = wonDeals.reduce((s, l) => s + (l.value || 0), 0);
-  const pipelineValue = openDeals.reduce((s, l) => s + (l.value || 0), 0);
-  const avgDealSize = wonDeals.length > 0 ? wonRevenue / wonDeals.length : 0;
-  const winRate = totalLeads > 0 ? ((wonDeals.length / (wonDeals.length + lostDeals.length)) * 100) || 0 : 0;
+  // --- Computed Metrics (memoised) ---
+  const { totalLeads, wonDeals, lostDeals, openDeals, wonRevenue, pipelineValue, avgDealSize, winRate, statusData, sourceData, pipelineData, topDeals } = useMemo(() => {
+    const totalLeads = leads.length;
+    const wonDeals = leads.filter((l) => l.status === "won");
+    const lostDeals = leads.filter((l) => l.status === "lost");
+    const openDeals = leads.filter((l) => !["won", "lost"].includes(l.status));
+    const wonRevenue = wonDeals.reduce((s, l) => s + (l.value || 0), 0);
+    const pipelineValue = openDeals.reduce((s, l) => s + (l.value || 0), 0);
+    const avgDealSize = wonDeals.length > 0 ? wonRevenue / wonDeals.length : 0;
+    const winRate = totalLeads > 0 ? ((wonDeals.length / (wonDeals.length + lostDeals.length)) * 100) || 0 : 0;
 
-  // Leads by status
-  const statusData = ["new", "contacted", "qualified", "proposal", "won", "lost"].map((status) => ({
-    name: status.charAt(0).toUpperCase() + status.slice(1),
-    value: leads.filter((l) => l.status === status).length,
-  }));
+    const statusData = ["new", "contacted", "qualified", "proposal", "won", "lost"].map((status) => ({
+      name: status.charAt(0).toUpperCase() + status.slice(1),
+      value: leads.filter((l) => l.status === status).length,
+    }));
 
-  // Revenue by source
-  const sourceMap = new Map<string, number>();
-  wonDeals.forEach((l) => {
-    const src = l.source || "Unknown";
-    sourceMap.set(src, (sourceMap.get(src) || 0) + (l.value || 0));
-  });
-  const sourceData = Array.from(sourceMap.entries())
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
+    const sourceMap = new Map<string, number>();
+    wonDeals.forEach((l) => {
+      const src = l.source || "Unknown";
+      sourceMap.set(src, (sourceMap.get(src) || 0) + (l.value || 0));
+    });
+    const sourceData = Array.from(sourceMap.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
 
-  // Pipeline by stage (value)
-  const pipelineData = ["new", "contacted", "qualified", "proposal"].map((status) => ({
-    name: status.charAt(0).toUpperCase() + status.slice(1),
-    value: leads.filter((l) => l.status === status).reduce((s, l) => s + (l.value || 0), 0),
-    count: leads.filter((l) => l.status === status).length,
-  }));
+    const pipelineData = ["new", "contacted", "qualified", "proposal"].map((status) => ({
+      name: status.charAt(0).toUpperCase() + status.slice(1),
+      value: leads.filter((l) => l.status === status).reduce((s, l) => s + (l.value || 0), 0),
+      count: leads.filter((l) => l.status === status).length,
+    }));
 
-  // Activity by type
-  const activityTypeData = ["call", "email", "meeting", "note"].map((type) => ({
-    name: type.charAt(0).toUpperCase() + type.slice(1),
-    value: activities.filter((a) => a.type === type).length,
-  }));
+    const topDeals = [...leads].filter((l) => l.value > 0).sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 10);
 
-  // Tasks summary
-  const tasksPending = tasks.filter((t) => t.status === "pending").length;
-  const tasksCompleted = tasks.filter((t) => t.status === "completed").length;
-  const tasksOverdue = tasks.filter((t) => t.status !== "completed" && t.dueDate && isAfter(new Date(), new Date(t.dueDate))).length;
+    return { totalLeads, wonDeals, lostDeals, openDeals, wonRevenue, pipelineValue, avgDealSize, winRate, statusData, sourceData, pipelineData, topDeals };
+  }, [leads]);
 
-  // Activity trend (last 30 days)
-  const activityTrend = Array.from({ length: 30 }, (_, i) => {
-    const date = subDays(new Date(), 29 - i);
-    const dateStr = format(date, "yyyy-MM-dd");
-    const count = activities.filter((a) => a.createdAt && format(a.createdAt.toDate(), "yyyy-MM-dd") === dateStr).length;
-    return { date: format(date, "dd MMM"), count };
-  });
+  const { activityTypeData, activityTrend } = useMemo(() => {
+    const activityTypeData = ["call", "email", "meeting", "note"].map((type) => ({
+      name: type.charAt(0).toUpperCase() + type.slice(1),
+      value: activities.filter((a) => a.type === type).length,
+    }));
 
-  // Top performers (leads with highest value)
-  const topDeals = [...leads].filter((l) => l.value > 0).sort((a, b) => (b.value || 0) - (a.value || 0)).slice(0, 10);
+    const activityTrend = Array.from({ length: 30 }, (_, i) => {
+      const date = subDays(new Date(), 29 - i);
+      const dateStr = format(date, "yyyy-MM-dd");
+      const count = activities.filter((a) => a.createdAt && format(a.createdAt.toDate(), "yyyy-MM-dd") === dateStr).length;
+      return { date: format(date, "dd MMM"), count };
+    });
+
+    return { activityTypeData, activityTrend };
+  }, [activities]);
+
+  const { tasksPending, tasksCompleted, tasksOverdue } = useMemo(() => ({
+    tasksPending: tasks.filter((t) => t.status === "pending").length,
+    tasksCompleted: tasks.filter((t) => t.status === "completed").length,
+    tasksOverdue: tasks.filter((t) => t.status !== "completed" && t.dueDate && isAfter(new Date(), new Date(t.dueDate))).length,
+  }), [tasks]);
 
   // --- CSV Export ---
   const exportCSV = (data: Record<string, unknown>[], filename: string) => {

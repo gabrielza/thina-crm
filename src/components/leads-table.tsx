@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, Search, Pencil, Phone, Mail } from "lucide-react";
 import { getLeads, deleteLead, type Lead } from "@/lib/firestore";
+import { formatCurrency } from "@/lib/utils";
 import { EditLeadSheet } from "@/components/edit-lead-sheet";
 
 const statusColors: Record<Lead["status"], "default" | "secondary" | "success" | "warning" | "destructive" | "outline"> = {
@@ -32,6 +33,7 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [statusFilter, setStatusFilter] = useState<Lead["status"] | "all">("all");
   const [editLead, setEditLead] = useState<Lead | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -67,15 +69,12 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
 
   const filtered = leads.filter((lead) => {
     const matchesSearch =
-      lead.name.toLowerCase().includes(search.toLowerCase()) ||
-      lead.email.toLowerCase().includes(search.toLowerCase()) ||
-      lead.company.toLowerCase().includes(search.toLowerCase());
+      lead.name.toLowerCase().includes(deferredSearch.toLowerCase()) ||
+      lead.email.toLowerCase().includes(deferredSearch.toLowerCase()) ||
+      lead.company.toLowerCase().includes(deferredSearch.toLowerCase());
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
   if (loading) {
     return (

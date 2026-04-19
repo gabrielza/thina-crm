@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/utils";
 import {
   BarChart,
   Bar,
@@ -44,58 +46,54 @@ const PIPELINE_COLORS: Record<string, string> = {
 
 const SOURCE_COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
-const formatCurrency = (value: number) =>
+const formatCompact = (value: number) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0, notation: "compact" }).format(value);
 
 export function DashboardCharts({ leads }: DashboardChartsProps) {
-  // Pipeline funnel data
-  const pipelineData = STATUS_ORDER.filter((s) => s !== "lost").map((status) => {
-    const count = leads.filter((l) => l.status === status).length;
-    const value = leads.filter((l) => l.status === status).reduce((sum, l) => sum + (l.value || 0), 0);
-    return {
+  const { pipelineData, statusData, sourceData, valueByStatus, topDeals } = useMemo(() => {
+    const pipelineData = STATUS_ORDER.filter((s) => s !== "lost").map((status) => {
+      const count = leads.filter((l) => l.status === status).length;
+      const value = leads.filter((l) => l.status === status).reduce((sum, l) => sum + (l.value || 0), 0);
+      return {
+        name: STATUS_LABELS[status],
+        count,
+        value,
+        fill: PIPELINE_COLORS[STATUS_LABELS[status]],
+      };
+    });
+
+    const statusData = STATUS_ORDER.map((status) => ({
       name: STATUS_LABELS[status],
-      count,
-      value,
+      value: leads.filter((l) => l.status === status).length,
       fill: PIPELINE_COLORS[STATUS_LABELS[status]],
-    };
-  });
+    })).filter((d) => d.value > 0);
 
-  // Status distribution for donut
-  const statusData = STATUS_ORDER.map((status) => ({
-    name: STATUS_LABELS[status],
-    value: leads.filter((l) => l.status === status).length,
-    fill: PIPELINE_COLORS[STATUS_LABELS[status]],
-  })).filter((d) => d.value > 0);
+    const sourceMap = new Map<string, { total: number; won: number; count: number }>();
+    leads.forEach((lead) => {
+      const source = lead.source || "Unknown";
+      const current = sourceMap.get(source) || { total: 0, won: 0, count: 0 };
+      current.total += lead.value || 0;
+      current.count += 1;
+      if (lead.status === "won") current.won += lead.value || 0;
+      sourceMap.set(source, current);
+    });
+    const sourceData = Array.from(sourceMap.entries())
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.total - a.total);
 
-  // Revenue by source
-  const sourceMap = new Map<string, { total: number; won: number; count: number }>();
-  leads.forEach((lead) => {
-    const source = lead.source || "Unknown";
-    const current = sourceMap.get(source) || { total: 0, won: 0, count: 0 };
-    current.total += lead.value || 0;
-    current.count += 1;
-    if (lead.status === "won") current.won += lead.value || 0;
-    sourceMap.set(source, current);
-  });
-  const sourceData = Array.from(sourceMap.entries())
-    .map(([name, data]) => ({ name, ...data }))
-    .sort((a, b) => b.total - a.total);
+    const valueByStatus = STATUS_ORDER.map((status) => ({
+      name: STATUS_LABELS[status],
+      value: leads.filter((l) => l.status === status).reduce((sum, l) => sum + (l.value || 0), 0),
+      fill: PIPELINE_COLORS[STATUS_LABELS[status]],
+    }));
 
-  // Value by status (bar chart)
-  const valueByStatus = STATUS_ORDER.map((status) => ({
-    name: STATUS_LABELS[status],
-    value: leads.filter((l) => l.status === status).reduce((sum, l) => sum + (l.value || 0), 0),
-    fill: PIPELINE_COLORS[STATUS_LABELS[status]],
-  }));
+    const topDeals = [...leads]
+      .filter((l) => l.status !== "lost")
+      .sort((a, b) => (b.value || 0) - (a.value || 0))
+      .slice(0, 5);
 
-  // Top deals
-  const topDeals = [...leads]
-    .filter((l) => l.status !== "lost")
-    .sort((a, b) => (b.value || 0) - (a.value || 0))
-    .slice(0, 5);
-
-  const fullFormatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
+    return { pipelineData, statusData, sourceData, valueByStatus, topDeals };
+  }, [leads]);
 
   return (
     <>
@@ -164,8 +162,8 @@ export function DashboardCharts({ leads }: DashboardChartsProps) {
               <BarChart data={valueByStatus}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value) => [fullFormatCurrency(Number(value)), "Value"]} />
+                <YAxis tickFormatter={formatCompact} tick={{ fontSize: 12 }} />
+                <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Value"]} />
                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                   {valueByStatus.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -186,11 +184,11 @@ export function DashboardCharts({ leads }: DashboardChartsProps) {
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={sourceData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis type="number" tickFormatter={formatCurrency} tick={{ fontSize: 12 }} />
+                <XAxis type="number" tickFormatter={formatCompact} tick={{ fontSize: 12 }} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 12 }} width={80} />
                 <Tooltip
                   formatter={(value, name) => [
-                    fullFormatCurrency(Number(value)),
+                    formatCurrency(Number(value)),
                     name === "total" ? "Total Value" : "Won Revenue",
                   ]}
                 />
@@ -225,7 +223,7 @@ export function DashboardCharts({ leads }: DashboardChartsProps) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-mono text-sm font-semibold">{fullFormatCurrency(lead.value || 0)}</p>
+                    <p className="font-mono text-sm font-semibold">{formatCurrency(lead.value || 0)}</p>
                     <p className="text-xs text-muted-foreground capitalize">{lead.status}</p>
                   </div>
                 </div>
@@ -260,8 +258,8 @@ export function DashboardCharts({ leads }: DashboardChartsProps) {
 
                 const metrics = [
                   { label: "Win Rate", value: `${winRate}%`, sub: `${won} won / ${won + lost} decided` },
-                  { label: "Avg Won Deal", value: fullFormatCurrency(avgDealSize), sub: `From ${won} closed deals` },
-                  { label: "Avg Pipeline Deal", value: fullFormatCurrency(avgPipelineDeal), sub: `From ${active} active leads` },
+                  { label: "Avg Won Deal", value: formatCurrency(avgDealSize), sub: `From ${won} closed deals` },
+                  { label: "Avg Pipeline Deal", value: formatCurrency(avgPipelineDeal), sub: `From ${active} active leads` },
                   { label: "Active Pipeline", value: active.toString(), sub: `${total} total / ${lost} lost` },
                 ];
 

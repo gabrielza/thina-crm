@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
+import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -42,14 +43,10 @@ export default function ContactDetailPage() {
       setActivities(a);
 
       // Fetch tasks for all associated leads
-      const allTasks: Task[] = [];
-      for (const lead of l) {
-        if (lead.id) {
-          const lt = await getTasksByLead(lead.id).catch(() => [] as Task[]);
-          allTasks.push(...lt);
-        }
-      }
-      setTasks(allTasks);
+      const taskArrays = await Promise.all(
+        l.filter((lead) => lead.id).map((lead) => getTasksByLead(lead.id!).catch(() => [] as Task[]))
+      );
+      setTasks(taskArrays.flat());
     } catch (error) {
       console.error("Failed to fetch contact:", error);
     } finally {
@@ -64,9 +61,6 @@ export default function ContactDetailPage() {
     await deleteContact(contact.id);
     router.push("/contacts");
   };
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(value);
 
   if (loading) {
     return <AppShell><div className="flex items-center justify-center py-24"><div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div></AppShell>;
