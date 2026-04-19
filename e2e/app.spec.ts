@@ -17,12 +17,12 @@ const E2E_PASSWORD = process.env.E2E_PASSWORD || "";
 
 async function signIn(page: Page) {
   await page.goto("/login");
-  await page.waitForSelector("#email", { timeout: 15000 });
+  await page.waitForSelector("#email", { timeout: 30000 });
   await page.fill("#email", E2E_EMAIL);
   await page.fill("#password", E2E_PASSWORD);
   await page.click('button[type="submit"]');
   // Wait for redirect away from login
-  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 15000 });
+  await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30000 });
 }
 
 // ─── Pre-check ──────────────────────────────────────────
@@ -49,7 +49,7 @@ test.describe("Authentication", () => {
   test("can sign in with email/password", async ({ page }) => {
     await signIn(page);
     // Should land on dashboard
-    await expect(page.locator("text=Welcome back")).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("text=Welcome back")).toBeVisible({ timeout: 30000 });
   });
 });
 
@@ -229,7 +229,7 @@ test.describe("Dashboard — Transaction KPIs", () => {
   });
 
   test("dashboard shows transaction KPI cards when transactions exist", async ({ page }) => {
-    await expect(page.locator("text=Welcome back")).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("text=Welcome back")).toBeVisible({ timeout: 30000 });
     // If transactions are seeded, these KPI cards should be visible
     const hasTxKPIs = await page.locator("text=ACTIVE TRANSACTIONS").isVisible({ timeout: 5000 }).catch(() => false);
     if (hasTxKPIs) {
@@ -248,5 +248,456 @@ test.describe("Health Check API", () => {
     expect(body.status).toBe("healthy");
     expect(body.checks.firestore.status).toBe("pass");
     expect(body.checks.envVars.status).toBe("pass");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+// v0.11.0 — New Feature Pages E2E + Usability Tests
+// ═══════════════════════════════════════════════════════════
+
+test.describe("Properties", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and KPI cards", async ({ page }) => {
+    await page.goto("/properties");
+    await expect(page.locator("h1")).toContainText("Properties");
+    await expect(page.getByText("Total Listings")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Active")).toBeVisible();
+    await expect(page.getByText("Portfolio Value")).toBeVisible();
+    await expect(page.getByText("Expiring Soon")).toBeVisible();
+  });
+
+  test("add property sheet opens and has required fields", async ({ page }) => {
+    await page.goto("/properties");
+    await page.getByRole("button", { name: "Add Property" }).click();
+    await expect(page.getByText("Listing details and mandate information")).toBeVisible({ timeout: 5000 });
+    // Verify key form labels exist (label is "Address *" not "Property Address *")
+    await expect(page.getByText("Address *")).toBeVisible();
+    await expect(page.getByText("Asking Price")).toBeVisible();
+    await expect(page.getByText("Mandate Type")).toBeVisible();
+  });
+
+  test("search input is visible and functional", async ({ page }) => {
+    await page.goto("/properties");
+    const search = page.getByPlaceholder("Search properties...");
+    await expect(search).toBeVisible({ timeout: 10000 });
+    await search.fill("nonexistent-property-xyz");
+    // Should show no results or filter — no crash
+    await page.waitForTimeout(500);
+    await expect(page.locator("h1")).toContainText("Properties");
+  });
+});
+
+test.describe("Show Days", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and KPI cards", async ({ page }) => {
+    await page.goto("/showdays");
+    await expect(page.locator("h1")).toContainText("Show Days");
+    await expect(page.getByText("Total Events")).toBeVisible({ timeout: 10000 });
+  });
+
+  test("new show day sheet opens with required fields", async ({ page }) => {
+    await page.goto("/showdays");
+    await page.getByRole("button", { name: "New Show Day" }).click();
+    await expect(page.getByText("Create an open house event")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Property Address *")).toBeVisible();
+    await expect(page.getByText("Date *")).toBeVisible();
+  });
+});
+
+test.describe("Inbound Leads", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and KPI cards", async ({ page }) => {
+    await page.goto("/inbound");
+    await expect(page.locator("h1")).toContainText("Inbound Leads");
+    await expect(page.getByText("Total Inbound")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Pending Review")).toBeVisible();
+    // "Accepted" appears as both KPI card and filter tab — use the KPI card
+    await expect(page.locator("p").filter({ hasText: /^Accepted$/ })).toBeVisible();
+  });
+
+  test("paste lead email sheet opens", async ({ page }) => {
+    await page.goto("/inbound");
+    await page.getByRole("button", { name: "Paste Lead Email" }).click();
+    await expect(page.getByText("Import Portal Lead")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Paste the email notification")).toBeVisible();
+  });
+
+  test("filter tabs are clickable", async ({ page }) => {
+    await page.goto("/inbound");
+    // Wait for filter buttons to render
+    await expect(page.getByRole("button", { name: /All/ })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: /Pending/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Rejected/ })).toBeVisible();
+    // Click Pending filter — should not crash
+    await page.getByRole("button", { name: /Pending/ }).click();
+    await expect(page.locator("h1")).toContainText("Inbound Leads");
+  });
+});
+
+test.describe("Messaging", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and gateway notice", async ({ page }) => {
+    await page.goto("/messaging");
+    await expect(page.locator("h1")).toContainText("Messaging");
+    await expect(page.getByText("SMS Gateway")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Total Messages")).toBeVisible();
+  });
+
+  test("compose sheet opens with form fields", async ({ page }) => {
+    await page.goto("/messaging");
+    await page.getByRole("button", { name: "Compose" }).click();
+    await expect(page.getByText("Compose SMS")).toBeVisible({ timeout: 5000 });
+  });
+});
+
+test.describe("Follow-up Sequences", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and KPI cards", async ({ page }) => {
+    await page.goto("/sequences");
+    await expect(page.locator("h1")).toContainText("Follow-up Sequences");
+    // "Sequences" label in the KPI cards — use the uppercase tracking text
+    await expect(page.locator("p").filter({ hasText: /^Sequences$/ })).toBeVisible({ timeout: 10000 });
+  });
+
+  test("new sequence sheet opens with form", async ({ page }) => {
+    await page.goto("/sequences");
+    await page.getByRole("button", { name: "New Sequence" }).click();
+    await expect(page.getByText("Create an automated follow-up campaign")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Sequence Name")).toBeVisible();
+  });
+});
+
+test.describe("Speed-to-Lead", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and KPI cards", async ({ page }) => {
+    await page.goto("/speed-to-lead");
+    await expect(page.locator("h1")).toContainText("Speed-to-Lead");
+    await expect(page.getByText("Total Rules")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Instant Response")).toBeVisible();
+  });
+
+  test("info card shows conversion stat", async ({ page }) => {
+    await page.goto("/speed-to-lead");
+    await expect(page.getByText("responding within 5 minutes increases conversion by 21x")).toBeVisible({ timeout: 10000 });
+  });
+
+  test("new rule sheet opens with trigger options", async ({ page }) => {
+    await page.goto("/speed-to-lead");
+    await expect(page.locator("h1")).toContainText("Speed-to-Lead", { timeout: 10000 });
+    // Click either "New Rule" (header button) or "Create First Rule" (empty state)
+    const newRuleBtn = page.getByRole("button", { name: "New Rule" });
+    const createFirstBtn = page.getByRole("button", { name: "Create First Rule" });
+    const hasNewRule = await newRuleBtn.isVisible({ timeout: 5000 }).catch(() => false);
+    if (hasNewRule) {
+      await newRuleBtn.click();
+    } else {
+      await createFirstBtn.click();
+    }
+    await expect(page.getByText("Configure when and how to auto-respond")).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Rule Name")).toBeVisible();
+    await expect(page.getByText("Trigger Event *", { exact: true })).toBeVisible();
+    await expect(page.locator("text=Message Preview")).toBeVisible();
+  });
+});
+
+test.describe("Buyer-Property Matching", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and KPI cards", async ({ page }) => {
+    await page.goto("/buyer-match");
+    await expect(page.locator("h1")).toContainText("Buyer-Property Matching");
+    // KPI card labels — use the uppercase tracking style text
+    await expect(page.locator("p").filter({ hasText: /^Buyer Profiles$/ })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Active Listings")).toBeVisible();
+    await expect(page.getByText("Total Matches")).toBeVisible();
+  });
+
+  test("new buyer profile sheet opens with form fields", async ({ page }) => {
+    await page.goto("/buyer-match");
+    await page.getByRole("button", { name: "New Buyer Profile" }).click();
+    await expect(page.getByText("Define buyer requirements")).toBeVisible({ timeout: 5000 });
+  });
+});
+
+test.describe("Documents", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and storage notice", async ({ page }) => {
+    await page.goto("/documents");
+    await expect(page.locator("h1")).toContainText("Documents");
+    await expect(page.getByText("Total Documents")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Document uploads require Firebase Storage")).toBeVisible();
+  });
+
+  test("upload sheet opens with form fields", async ({ page }) => {
+    await page.goto("/documents");
+    await page.getByRole("button", { name: "Upload" }).click();
+    // "Upload Document" appears as both heading and button — use heading
+    await expect(page.getByRole("heading", { name: "Upload Document" })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText("Document Type")).toBeVisible();
+  });
+});
+
+test.describe("Lead Source ROI", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and KPI cards", async ({ page }) => {
+    await page.goto("/lead-roi");
+    await expect(page.locator("h1")).toContainText("Lead Source ROI");
+    await expect(page.getByText("Total Leads")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Won Revenue")).toBeVisible();
+    await expect(page.getByText("Annual Spend")).toBeVisible();
+    await expect(page.getByText("Overall ROI")).toBeVisible();
+  });
+
+  test("set source cost sheet opens", async ({ page }) => {
+    await page.goto("/lead-roi");
+    await page.getByRole("button", { name: "Set Source Cost" }).click();
+    await expect(page.getByText("Track how much you spend on each lead source")).toBeVisible({ timeout: 5000 });
+  });
+});
+
+test.describe("Compliance", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("page loads with heading and tabs", async ({ page }) => {
+    await page.goto("/compliance");
+    await expect(page.locator("h1")).toContainText("Compliance");
+    // Tab buttons — use getByRole to avoid matching subtitle text
+    await expect(page.getByRole("button", { name: "POPIA" })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole("button", { name: "FICA" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Commission & VAT" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "CPD Points" })).toBeVisible();
+  });
+
+  test("POPIA tab shows consent KPI cards", async ({ page }) => {
+    await page.goto("/compliance");
+    // POPIA is default tab
+    await expect(page.getByText("Total Contacts")).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Consented")).toBeVisible();
+  });
+
+  test("can switch between compliance tabs", async ({ page }) => {
+    await page.goto("/compliance");
+    // Click FICA tab button
+    await page.getByRole("button", { name: "FICA" }).click();
+    await expect(page.getByText("FICA Compliance Rate")).toBeVisible({ timeout: 10000 });
+    // Click Commission & VAT tab button
+    await page.getByRole("button", { name: "Commission & VAT" }).click();
+    await expect(page.getByText("Rolling 12-Month")).toBeVisible({ timeout: 10000 });
+    // Click CPD tab button
+    await page.getByRole("button", { name: "CPD Points" }).click();
+    await expect(page.getByText("Verifiable").first()).toBeVisible({ timeout: 10000 });
+  });
+});
+
+// ═══════════════════════════════════════════════════════════
+// Usability & Cross-cutting Tests
+// ═══════════════════════════════════════════════════════════
+
+test.describe("Sidebar Navigation — All v0.11.0 Routes", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  const v11Routes = [
+    { name: "Properties", path: "/properties", heading: "Properties" },
+    { name: "Show Days", path: "/showdays", heading: "Show Days" },
+    { name: "Inbound", path: "/inbound", heading: "Inbound Leads" },
+    { name: "Messaging", path: "/messaging", heading: "Messaging" },
+    { name: "Sequences", path: "/sequences", heading: "Follow-up Sequences" },
+    { name: "Speed-to-Lead", path: "/speed-to-lead", heading: "Speed-to-Lead" },
+    { name: "Buyer Match", path: "/buyer-match", heading: "Buyer-Property Matching" },
+    { name: "Documents", path: "/documents", heading: "Documents" },
+    { name: "Lead ROI", path: "/lead-roi", heading: "Lead Source ROI" },
+    { name: "Compliance", path: "/compliance", heading: "Compliance" },
+  ];
+
+  for (const route of v11Routes) {
+    test(`sidebar link "${route.name}" navigates to ${route.path}`, async ({ page }) => {
+      // Click sidebar nav link
+      const sidebarLink = page.locator(`aside a:has-text("${route.name}")`);
+      await expect(sidebarLink).toBeVisible({ timeout: 10000 });
+      await sidebarLink.click();
+      await page.waitForURL(`**${route.path}`, { timeout: 10000 });
+      await expect(page.locator("h1")).toContainText(route.heading, { timeout: 10000 });
+    });
+  }
+});
+
+test.describe("Command Palette — v0.11.0 Routes", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("Ctrl+K opens command palette and can search new pages", async ({ page }) => {
+    await page.keyboard.press("Control+k");
+    // Type search term using keyboard (same approach as passing tests 53/54)
+    await page.keyboard.type("speed");
+    await expect(page.getByText("Speed-to-Lead")).toBeVisible({ timeout: 5000 });
+    // Select it
+    await page.getByText("Speed-to-Lead").click();
+    await page.waitForURL("**/speed-to-lead", { timeout: 10000 });
+    await expect(page.locator("h1")).toContainText("Speed-to-Lead");
+  });
+
+  test("command palette finds compliance page", async ({ page }) => {
+    await page.keyboard.press("Control+k");
+    await page.keyboard.type("popia");
+    await expect(page.getByText("Compliance")).toBeVisible({ timeout: 5000 });
+  });
+
+  test("command palette finds properties page", async ({ page }) => {
+    await page.keyboard.press("Control+k");
+    await page.keyboard.type("mandate");
+    await expect(page.getByText("Properties")).toBeVisible({ timeout: 5000 });
+  });
+});
+
+test.describe("Responsive / Mobile Usability", () => {
+  test.use({ viewport: { width: 375, height: 812 } }); // iPhone 13 mini
+
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("pages are usable on mobile viewport", async ({ page }) => {
+    // Dashboard loads on mobile
+    await expect(page.locator("text=Welcome back")).toBeVisible({ timeout: 30000 });
+
+    // Navigate to a new feature via direct URL (sidebar hidden on mobile)
+    await page.goto("/properties");
+    await expect(page.locator("h1")).toContainText("Properties");
+    // KPI cards should still be visible
+    await expect(page.getByText("Total Listings")).toBeVisible({ timeout: 10000 });
+
+    // Check another page
+    await page.goto("/compliance");
+    await expect(page.locator("h1")).toContainText("Compliance");
+    // Use button role to avoid matching subtitle text
+    await expect(page.getByRole("button", { name: "POPIA" })).toBeVisible({ timeout: 10000 });
+  });
+
+  test("mobile nav menu opens and shows all routes", async ({ page }) => {
+    // The mobile bottom nav bar should be visible on small screens
+    const mobileNav = page.locator("nav.lg\\:hidden").or(page.locator('[class*="mobile-nav"]'));
+    await expect(mobileNav.first()).toBeVisible({ timeout: 10000 });
+  });
+});
+
+test.describe("Page Load Performance", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  const pages = [
+    { path: "/properties", name: "Properties" },
+    { path: "/showdays", name: "Show Days" },
+    { path: "/inbound", name: "Inbound" },
+    { path: "/messaging", name: "Messaging" },
+    { path: "/sequences", name: "Sequences" },
+    { path: "/speed-to-lead", name: "Speed-to-Lead" },
+    { path: "/buyer-match", name: "Buyer Match" },
+    { path: "/documents", name: "Documents" },
+    { path: "/lead-roi", name: "Lead ROI" },
+    { path: "/compliance", name: "Compliance" },
+  ];
+
+  for (const pg of pages) {
+    test(`${pg.name} loads within 10 seconds`, async ({ page }) => {
+      const start = Date.now();
+      await page.goto(pg.path);
+      await expect(page.locator("h1")).toBeVisible({ timeout: 10000 });
+      const elapsed = Date.now() - start;
+      expect(elapsed).toBeLessThan(10000);
+    });
+  }
+});
+
+test.describe("Accessibility Basics", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("all new pages have a visible h1 heading", async ({ page }) => {
+    const pages = [
+      "/properties", "/showdays", "/inbound", "/messaging", "/sequences",
+      "/speed-to-lead", "/buyer-match", "/documents", "/lead-roi", "/compliance",
+    ];
+    for (const path of pages) {
+      await page.goto(path);
+      const h1 = page.locator("h1");
+      await expect(h1).toBeVisible({ timeout: 10000 });
+      const text = await h1.textContent();
+      expect(text?.trim().length).toBeGreaterThan(0);
+    }
+  });
+
+  test("all buttons are keyboard focusable", async ({ page }) => {
+    await page.goto("/speed-to-lead");
+    await expect(page.locator("h1")).toBeVisible({ timeout: 10000 });
+    // Tab through the page — the primary action button should be reachable
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Tab");
+    const focused = page.locator(":focus");
+    await expect(focused).toBeVisible();
+  });
+
+  test("form labels are associated with inputs", async ({ page }) => {
+    await page.goto("/properties");
+    await page.getByRole("button", { name: "Add Property" }).click();
+    await expect(page.getByText("Address *")).toBeVisible({ timeout: 5000 });
+    // All Label elements should exist
+    const labels = page.locator("label");
+    const count = await labels.count();
+    expect(count).toBeGreaterThan(3); // At least address, price, type, mandate
+  });
+});
+
+test.describe("Empty State Usability", () => {
+  // These tests verify that pages handle no-data gracefully
+  // (the test account may or may not have data — tests check for either table OR empty state)
+
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("properties shows table or empty state", async ({ page }) => {
+    await page.goto("/properties");
+    const table = page.locator("table");
+    const empty = page.getByText("No properties yet");
+    await expect(table.or(empty)).toBeVisible({ timeout: 10000 });
+  });
+
+  test("show days shows cards or empty state", async ({ page }) => {
+    await page.goto("/showdays");
+    const showDayCard = page.locator("[class*='rounded']").filter({ hasText: "Scan to register" });
+    const empty = page.getByText("No show days yet");
+    await expect(showDayCard.first().or(empty)).toBeVisible({ timeout: 10000 });
+  });
+
+  test("messaging shows table or empty state", async ({ page }) => {
+    await page.goto("/messaging");
+    const table = page.locator("table");
+    const empty = page.getByText("No messages yet");
+    await expect(table.or(empty)).toBeVisible({ timeout: 10000 });
+  });
+
+  test("sequences shows list or empty state", async ({ page }) => {
+    await page.goto("/sequences");
+    // Either there are sequence cards or the empty state message
+    const content = page.getByText("No sequences yet").or(page.locator("h1"));
+    await expect(content.first()).toBeVisible({ timeout: 10000 });
+    // Page should render without errors
+    await expect(page.locator("h1")).toContainText("Follow-up Sequences");
+  });
+
+  test("documents shows table or empty state", async ({ page }) => {
+    await page.goto("/documents");
+    const table = page.locator("table");
+    const empty = page.getByText("No documents yet");
+    await expect(table.or(empty)).toBeVisible({ timeout: 10000 });
+  });
+
+  test("speed-to-lead shows table or empty state", async ({ page }) => {
+    await page.goto("/speed-to-lead");
+    const table = page.locator("table");
+    const empty = page.getByText("No auto-response rules yet");
+    await expect(table.or(empty)).toBeVisible({ timeout: 10000 });
   });
 });

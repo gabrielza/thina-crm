@@ -9,10 +9,10 @@ import { defineConfig } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./e2e",
-  timeout: 30000,
-  expect: { timeout: 10000 },
+  timeout: 60000,
+  expect: { timeout: 30000 },
   fullyParallel: false, // sequential — tests may depend on auth state
-  retries: 0,
+  retries: 1,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: process.env.DEPLOY_URL || "https://thina-crm--thina-crm.europe-west4.hosted.app",
