@@ -22,6 +22,40 @@ Our mission: **Give every estate agent in South Africa professional-grade tools 
 
 ---
 
+## System Overview & Workflow
+
+Thina CRM's navigation is structured around the **end-to-end real estate sales process** — not a random list of features. Every screen lives in a logical workflow group so agents always know where they are and what to do next.
+
+### The Workflow at a Glance
+
+```
+┌─────────────┐    ┌──────────────┐    ┌──────────┐    ┌──────────────┐    ┌────────────┐
+│ PROSPECTING │ ─→ │   PIPELINE   │ ─→ │ LISTINGS │ ─→ │ TRANSACTIONS │ ─→ │ OPERATIONS │
+│             │    │              │    │          │    │              │    │            │
+│ Capture     │    │ Nurture      │    │ Manage   │    │ Close        │    │ Run the    │
+│ leads       │    │ & qualify    │    │ mandates │    │ deals        │    │ business   │
+└─────────────┘    └──────────────┘    └──────────┘    └──────────────┘    └────────────┘
+```
+
+### Navigation Groups
+
+| Group | What It Covers | Pages |
+|-------|---------------|-------|
+| **Overview** | Your command centre — daily KPIs, pipeline health, revenue forecast | Dashboard |
+| **Prospecting** | Where leads come from — capture portal enquiries, run show days, auto-respond, measure ROI | Inbound Leads, Show Days, Speed-to-Lead, Lead ROI |
+| **Pipeline** | Working the deal — manage leads, nurture contacts, match buyers, automate follow-ups, communicate | Leads, Pipeline Board, Contacts, Buyer Match, Sequences, Messaging |
+| **Listings** | What you're selling — property mandates, specs, pricing, status tracking | Properties |
+| **Transactions** | Closing the deal — 9-stage OTP-to-commission pipeline, FICA, documents | Deals, Documents |
+| **Operations** | Running the business — tasks, reports, POPIA/FICA compliance | Tasks, Reports, Compliance |
+
+### Why This Matters
+
+- **For new agents**: The menu teaches the workflow — follow it from left to right and you're doing the job correctly
+- **For experienced agents**: Every tool is where you'd expect it — no hunting through a flat list of 17+ items
+- **For management**: The structure mirrors your agency's KPIs — prospecting activity, pipeline health, listings under management, deals closing, operational compliance
+
+---
+
 ## Table of Contents
 
 1. [For Agency Principals & Management](#1-for-agency-principals--management)
@@ -35,9 +69,9 @@ Our mission: **Give every estate agent in South Africa professional-grade tools 
 
 > *"See everything. Control everything. Grow everything."*
 
-## 1.1 Features & Benefits
+Thina CRM's six workflow groups give you visibility across the entire sales process — from prospecting to compliance.
 
-### Pipeline Visibility Across Your Entire Agency
+## 1.1 Overview — Agency Health at a Glance
 
 | Feature | What It Does | Benefit to Management |
 |---------|-------------|----------------------|
@@ -46,40 +80,41 @@ Our mission: **Give every estate agent in South Africa professional-grade tools 
 | **Transaction Forecast** | Stage-weighted commission forecast across all active transactions (OTP Signed 30% → Commission Paid 100%) | Know exactly how much commission is in the pipeline and when it's likely to land |
 | **Revenue Charts** | Visual pipeline waterfall, lead source distribution, status breakdown, and trend analysis | Spot patterns — which lead sources convert, which stages stall, where to invest |
 
-### Lead & Deal Management at Scale
+## 1.2 Prospecting — Lead Generation Performance
+
+| Feature | What It Does | Benefit to Management |
+|---------|-------------|----------------------|
+| **Inbound Lead Capture** | Leads from Property24 and Private Property portals captured, parsed, and queued for agent review | Never lose a portal lead again — every enquiry is tracked from the moment it arrives |
+| **Speed-to-Lead Rules** | Auto-response SMS triggered when a new lead arrives, a portal enquiry comes in, or a show day visitor registers | Respond in seconds, not hours — the agent who responds first wins the mandate |
+| **Lead Source ROI** | Track cost per lead source, cost per deal, and ROI by channel (Property24, Private Property, referrals, walk-ins) | Stop spending money on lead sources that don't convert |
+| **Show Day Management** | Create show day events, generate QR codes for visitor registration, capture attendee details | Turn every show day into a lead generation machine with zero manual data entry |
+
+## 1.3 Pipeline — Deal Flow & Agent Activity
 
 | Feature | What It Does | Benefit to Management |
 |---------|-------------|----------------------|
 | **Lead Scoring (0–100)** | Automated 5-dimension scoring: Deal Value, Pipeline Stage, Activity Engagement, Task Completion, Data Completeness | Objectively identify your hottest leads — no more gut-feel prioritisation |
-| **Lead Source ROI** | Track cost per lead source, cost per deal, and ROI by channel (Property24, Private Property, referrals, walk-ins) | Stop spending money on lead sources that don't convert |
-| **Inbound Lead Capture** | Leads from Property24 and Private Property portals captured, parsed, and queued for agent review | Never lose a portal lead again — every enquiry is tracked from the moment it arrives |
-| **Speed-to-Lead Rules** | Auto-response SMS triggered when a new lead arrives, a portal enquiry comes in, or a show day visitor registers | Respond in seconds, not hours — the agent who responds first wins the mandate |
+| **Activity Timeline** | Every call, email, meeting, and note logged chronologically per lead and contact | Full visibility into agent activity — know who's working their leads |
+| **Follow-up Sequences** | Multi-step automated drip campaigns (SMS/email) triggered by events (new lead, show day, proposal) | Systematise follow-up — no lead falls through the cracks even when agents are busy |
+| **Buyer-Property Matching** | Match buyer profiles to available listings based on budget, area, and property preferences | Faster deal flow — listings matched to qualified buyers within hours, not weeks |
 
-### Compliance & Risk Management
+## 1.4 Transactions — Commission & Compliance
 
 | Feature | What It Does | Benefit to Management |
 |---------|-------------|----------------------|
-| **POPIA Consent Tracking** | Record when, how, and for what each contact gave consent; revocation tracking; audit trail | Demonstrate compliance during a POPIA audit — every consent decision is logged |
+| **Transaction Pipeline Board** | Visual Kanban board showing all active transactions across 9 stages (OTP Signed → Commission Paid) | See every active deal at a glance — identify bottlenecks before they cost you money |
+| **Commission & VAT Calculator** | Automated gross commission, 15% VAT, splits (agency/referral/franchise), and agent net calculation | Eliminate commission disputes — every rand is calculated transparently |
 | **FICA Status per Transaction** | Track buyer and seller FICA verification status on every transaction | Ensure no transaction proceeds without proper FICA — protect the agency's licence |
 | **Document Vault** | Categorised document storage (FICA, OTP, Mandate, Bond, Transfer) per transaction and contact | Every document in one place — no more hunting through emails and filing cabinets |
-| **Commission & VAT Calculator** | Automated gross commission, 15% VAT, splits (agency/referral/franchise), and agent net calculation | Eliminate commission disputes — every rand is calculated transparently |
 
-### Agent Productivity Tools
+## 1.5 Operations — Compliance, Reporting & Productivity
 
 | Feature | What It Does | Benefit to Management |
 |---------|-------------|----------------------|
 | **Task Management** | Create, assign, and track tasks with priorities (Low/Medium/High) and overdue detection | Ensure follow-ups happen — see which agents are on top of their pipeline |
-| **Activity Timeline** | Every call, email, meeting, and note logged chronologically per lead and contact | Full visibility into agent activity — know who's working their leads |
-| **Follow-up Sequences** | Multi-step automated drip campaigns (SMS/email) triggered by events (new lead, show day, proposal) | Systematise follow-up — no lead falls through the cracks even when agents are busy |
-| **Show Day Management** | Create show day events, generate QR codes for visitor registration, capture attendee details | Turn every show day into a lead generation machine with zero manual data entry |
-
-### Reports & Analytics
-
-| Feature | What It Does | Benefit to Management |
-|---------|-------------|----------------------|
 | **Business Reports** | Status distribution, source analysis, pipeline trends, top deals, win rates, conversion funnels | Data-driven decisions about where to focus the agency's resources |
 | **Lead ROI Analytics** | Cost-per-lead and cost-per-deal by source with visual comparison charts | Prove marketing ROI — know the exact cost of acquiring each deal |
-| **Transaction Pipeline Board** | Visual Kanban board showing all active transactions across 9 stages (OTP Signed → Commission Paid) | See every active deal at a glance — identify bottlenecks before they cost you money |
+| **POPIA Consent Tracking** | Record when, how, and for what each contact gave consent; revocation tracking; audit trail | Demonstrate compliance during a POPIA audit — every consent decision is logged |
 
 ---
 
@@ -87,28 +122,49 @@ Our mission: **Give every estate agent in South Africa professional-grade tools 
 
 > *"Close more deals. Follow up faster. Never drop a lead."*
 
-## 2.1 Features & Benefits
+The menu is organised to match your workflow — from finding leads to closing deals to running your business.
 
-### Your Daily Command Centre
+## 2.1 Overview — Your Daily Command Centre
 
 | Feature | What It Does | Benefit to You |
 |---------|-------------|----------------|
 | **Dashboard** | Your personal KPIs at a glance: leads, won deals, revenue, pipeline value, overdue tasks, recent activity | Start every day knowing exactly where you stand — no spreadsheets needed |
 | **Command Palette (Cmd+K)** | Quick-search and jump to any lead, contact, page, or action instantly | Find anything in seconds — type a name, jump straight there |
 | **Dark & Light Mode** | Toggle between dark and light themes | Work comfortably at any time of day — late-night deal tracking without eye strain |
-| **Mobile-Responsive Design** | Full functionality on phone, tablet, and desktop with adaptive navigation | Manage your pipeline from a show day, from your car, from anywhere |
+| **Mobile-Responsive Design** | Full functionality on phone, tablet, and desktop with grouped navigation | Manage your pipeline from a show day, from your car, from anywhere |
 
-### Lead Management That Works Like You Do
+## 2.2 Prospecting — Where Your Leads Come From
+
+| Feature | What It Does | Benefit to You |
+|---------|-------------|----------------|
+| **Inbound Lead Capture** | Portal leads from Property24 and Private Property parsed and ready for your review | Leads arrive pre-parsed with name, email, phone, and property reference — just click Accept |
+| **Show Day Events** | Create a show day, generate a QR code, and visitors register themselves on their phones | No more clipboards and illegible handwriting — every visitor captured digitally with budget and bedroom preferences |
+| **Show Day Lead Registration** | Visitors enter their details via a public form (no login required) — name, email, phone, budget, bedrooms, marketing consent | Every show day visitor becomes a lead in your pipeline automatically |
+| **Speed-to-Lead Auto-Response** | Automatic SMS sent the moment a new lead arrives, with your name and contact details | Be the first agent to respond — research shows the first responder wins 78% of the time |
+| **Lead ROI Analytics** | Track cost per lead source, compare which channels actually deliver deals | Stop wasting money on lead sources that don't convert — invest in what works |
+
+## 2.3 Pipeline — Working the Deal
 
 | Feature | What It Does | Benefit to You |
 |---------|-------------|----------------|
 | **Lead Pipeline Board** | Drag-and-drop Kanban: New → Contacted → Qualified → Proposal → Won/Lost | See your entire pipeline at a glance — drag a lead to "Won" and create a transaction in one click |
 | **Lead Scoring** | Automatic score (0–100) based on deal value, engagement, task completion, and data quality | Know which leads to call first — Hot (80+), Warm (60+), Interested (40+), Cool (20+), Cold (0+) |
-| **Inbound Lead Capture** | Portal leads from Property24 and Private Property parsed and ready for your review | Leads arrive pre-parsed with name, email, phone, and property reference — just click Accept |
-| **Speed-to-Lead Auto-Response** | Automatic SMS sent the moment a new lead arrives, with your name and contact details | Be the first agent to respond — research shows the first responder wins 78% of the time |
+| **Contacts** | Full contact management with company, title, linked leads, and activity history | Every person you deal with in one place — linked to their leads and deals |
+| **Buyer-Property Matching** | Create buyer profiles with budget, area, and bedroom preferences; see which properties match | When a new listing comes in, instantly know which buyers to call |
+| **Follow-up Sequences** | Set up multi-step drip campaigns: "Day 1: SMS intro → Day 3: Follow-up → Day 7: Check-in" | Systematic follow-up that runs even when you're at a show day or on leave |
+| **SMS Messaging Hub** | Compose and send SMS messages; view full conversation history per contact | Quick client communication without leaving the CRM |
+| **Activity Timeline** | Log calls, emails, meetings, and notes against any lead or contact | Never forget what was discussed — every interaction is recorded with timestamps |
 | **Won-Lead-to-Transaction Flow** | When you mark a lead as "Won", Thina prompts you to create a transaction immediately | Seamless pipeline flow — go from lead to deal without re-entering any information |
 
-### Transaction & Commission Tracking
+## 2.4 Listings — What You're Selling
+
+| Feature | What It Does | Benefit to You |
+|---------|-------------|----------------|
+| **Property Listings** | Manage all your mandates: address, specs, asking price, mandate type (sole/open/dual/auction), expiry tracking | One place for all your listings — know when mandates expire before they do |
+| **Property Details** | Bedrooms, bathrooms, garages, erf size, floor size, suburb, province | Complete property specs at your fingertips for any buyer enquiry |
+| **Mandate Status** | Track active, under offer, sold, withdrawn, and expired mandates | Always know the status of every listing you manage |
+
+## 2.5 Transactions — Closing the Deal
 
 | Feature | What It Does | Benefit to You |
 |---------|-------------|----------------|
@@ -116,31 +172,15 @@ Our mission: **Give every estate agent in South Africa professional-grade tools 
 | **Commission Calculator** | Enter sale price + rate → get gross commission, VAT (15%), splits, and your net amount instantly | Know exactly what you'll earn on every deal before it closes |
 | **FICA Tracking** | Buyer and seller FICA status on every transaction with checklist | Stay on top of compliance — no deal stalls because you forgot to verify FICA |
 | **Stage History** | Full timeline of when each transaction moved between stages | Prove your track record — show exactly how long each deal took from OTP to commission |
+| **Document Vault** | Upload and categorise documents: FICA, OTP, Mandate, Bond, Transfer, linked to transactions and contacts | Every document for every deal in one searchable place — pull up any document instantly, even months later |
 
-### Property & Show Day Management
-
-| Feature | What It Does | Benefit to You |
-|---------|-------------|----------------|
-| **Property Listings** | Manage all your mandates: address, specs, asking price, mandate type (sole/open/dual/auction), expiry tracking | One place for all your listings — know when mandates expire before they do |
-| **Show Day Events** | Create a show day, generate a QR code, and visitors register themselves on their phones | No more clipboards and illegible handwriting — every visitor captured digitally with budget and bedroom preferences |
-| **Show Day Lead Registration** | Visitors enter their details via a public form (no login required) — name, email, phone, budget, bedrooms, marketing consent | Every show day visitor becomes a lead in your pipeline automatically |
-| **Buyer-Property Matching** | Create buyer profiles with budget, area, and bedroom preferences; see which properties match | When a new listing comes in, instantly know which buyers to call |
-
-### Communication & Follow-Up
+## 2.6 Operations — Running Your Business
 
 | Feature | What It Does | Benefit to You |
 |---------|-------------|----------------|
-| **SMS Messaging Hub** | Compose and send SMS messages; view full conversation history per contact | Quick client communication without leaving the CRM |
-| **Follow-up Sequences** | Set up multi-step drip campaigns: "Day 1: SMS intro → Day 3: Follow-up → Day 7: Check-in" | Systematic follow-up that runs even when you're at a show day or on leave |
-| **Activity Timeline** | Log calls, emails, meetings, and notes against any lead or contact | Never forget what was discussed — every interaction is recorded with timestamps |
-| **Task Management** | Create tasks with due dates and priorities; overdue alerts | Your to-do list lives with your leads — no more sticky notes |
-
-### Document Management
-
-| Feature | What It Does | Benefit to You |
-|---------|-------------|----------------|
-| **Document Vault** | Upload and categorise documents: FICA, OTP, Mandate, Bond, Transfer | Every document for every deal in one searchable place |
-| **Per-Transaction Filing** | Documents linked to specific transactions and contacts | Pull up all documents for a deal instantly — even months later |
+| **Task Management** | Create tasks with due dates and priorities; overdue alerts linked to leads and contacts | Your to-do list lives with your leads — no more sticky notes |
+| **Business Reports** | Pipeline analytics, source analysis, conversion metrics, and trend charts | See where you're winning and where you need to improve |
+| **Compliance** | POPIA consent tracking, FICA status dashboard, regulatory management | Stay compliant without thinking about it — the system tracks everything for you |
 
 ---
 

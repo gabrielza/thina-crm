@@ -455,8 +455,8 @@ function sectionComponents() {
       ["Component", "File", "Description"],
       [
         ["AppShell", "app-shell.tsx", "Main layout wrapper — sidebar + mobile header + content area + PageTransition + MobileNav + CommandPalette"],
-        ["Sidebar", "sidebar.tsx", "Dark achromatic 240px sidebar (hidden on mobile, lg:flex) with CommandTrigger search bar, navigation links with indigo active indicator, and theme toggle"],
-        ["MobileNav", "sidebar.tsx", "Fixed bottom navigation bar (5 items) with backdrop blur, visible on screens < lg"],
+        ["Sidebar", "sidebar.tsx", "240px sidebar with grouped navigation (6 workflow groups: Overview, Prospecting, Pipeline, Listings, Transactions, Operations), CommandTrigger search bar, indigo active indicator, theme toggle, user profile"],
+        ["MobileNav", "sidebar.tsx", "Fixed bottom tab bar (4 items + More) with slide-up menu showing all grouped navigation, visible on screens < lg"],
         ["CommandPalette", "command-palette.tsx", "⌘+K command palette using cmdk library with Navigation, Actions, and Theme command groups. Framer Motion backdrop animation"],
         ["PageTransition", "page-transition.tsx", "Framer Motion wrapper that provides opacity + translateY animation on route changes"],
         ["ThemeProvider", "theme-provider.tsx", "Light/dark/system theme management via localStorage('thina-theme') with .dark class toggle on <html>"],
@@ -483,39 +483,100 @@ function sectionPages() {
   return [
     heading("5. Page Routes & Features"),
 
-    h2("5.1 Route Map"),
+    h2("5.1 Navigation & Workflow Architecture"),
+    para(
+      "The application's navigation is organised into six workflow-based groups that follow the end-to-end real estate sales process. This structure guides agents through a natural progression: generate leads → work the pipeline → manage listings → close transactions → run the business."
+    ),
+    emptyPara(),
     makeTable(
-      ["Route", "File", "Auth Required", "Description"],
+      ["Group", "Purpose", "Pages"],
       [
-        ["/", "app/page.tsx", "Yes", "Dashboard with KPIs, pipeline summary, forecast, recent activities, and top leads"],
-        ["/leads", "app/leads/page.tsx", "Yes", "Leads list with search, status filters, sorting, and create/edit/delete actions"],
-        ["/leads/[id]", "app/leads/[id]/page.tsx", "Yes", "Lead detail with 3-column layout — contact info, deal info, notes, activity timeline, task list"],
-        ["/contacts", "app/contacts/page.tsx", "Yes", "Contacts list with search, create/edit/delete actions"],
-        ["/contacts/[id]", "app/contacts/[id]/page.tsx", "Yes", "Contact detail with linked leads, activities, and tasks"],
-        ["/pipeline", "app/pipeline/page.tsx", "Yes", "Visual pipeline board with 6 stages (New → Won/Lost), responsive grid layout"],
-        ["/transactions", "app/transactions/page.tsx", "Yes", "Transaction list with search, stage filters, commission tracking, and FICA status"],
-        ["/transactions/[id]", "app/transactions/[id]/page.tsx", "Yes", "Transaction detail with stage timeline, commission calculator, FICA compliance, parties, dates, and stage history"],
-        ["/transactions/pipeline", "app/transactions/pipeline/page.tsx", "Yes", "Transaction Kanban board with 9 stages (OTP Signed → Commission Paid), drag-and-drop"],
-        ["/tasks", "app/tasks/page.tsx", "Yes", "Task management with KPIs, status filters, priority indicators, and completion toggling"],
-        ["/reports", "app/reports/page.tsx", "Yes", "Business reports with pipeline analytics, source analysis, and conversion metrics"],
-        ["/login", "app/login/page.tsx", "No", "Authentication page with Google OAuth and email/password sign-in"],
-        ["/seed", "app/seed/page.tsx", "Yes", "Data seeding utility to generate 1,350 test records with progress tracking"],
-        ["/properties", "app/properties/page.tsx", "Yes", "Property/mandate management with KPI cards, search, add/edit/delete"],
-        ["/showdays", "app/showdays/page.tsx", "Yes", "Show day event management with KPI cards, scheduling, and lead capture"],
-        ["/showday", "app/showday/page.tsx", "Yes", "Individual show day detail/registration view"],
-        ["/inbound", "app/inbound/page.tsx", "Yes", "Inbound lead portal injection with email paste, filter tabs, and KPI cards"],
-        ["/messaging", "app/messaging/page.tsx", "Yes", "SMS messaging hub with compose sheet, gateway notice, and message history"],
-        ["/sequences", "app/sequences/page.tsx", "Yes", "Follow-up sequence builder with KPI cards, automated step configuration"],
-        ["/speed-to-lead", "app/speed-to-lead/page.tsx", "Yes", "Auto-response rule management with trigger configuration and conversion stats"],
-        ["/buyer-match", "app/buyer-match/page.tsx", "Yes", "Buyer-property matching engine with buyer profile management and KPI cards"],
-        ["/documents", "app/documents/page.tsx", "Yes", "Document management with upload sheet, storage notice, and KPI cards"],
-        ["/lead-roi", "app/lead-roi/page.tsx", "Yes", "Lead source ROI analytics with source cost tracking and KPI cards"],
-        ["/compliance", "app/compliance/page.tsx", "Yes", "POPIA compliance and regulatory management with consent tracking and tabbed views"],
+        ["Overview", "Command centre — daily snapshot of KPIs and agency health", "Dashboard"],
+        ["Prospecting", "Lead generation — capture, automate first response, measure source ROI", "Inbound Leads, Show Days, Speed-to-Lead, Lead ROI"],
+        ["Pipeline", "Working the deal — nurture, qualify, communicate, match buyers", "Leads, Pipeline Board, Contacts, Buyer Match, Sequences, Messaging"],
+        ["Listings", "Property inventory — manage mandates, specs, and listing status", "Properties"],
+        ["Transactions", "Closing the deal — OTP through commission, paperwork, FICA", "Deals, Documents"],
+        ["Operations", "Running the business — tasks, analytics, POPIA/FICA compliance", "Tasks, Reports, Compliance"],
       ]
     ),
     emptyPara(),
 
-    h2("5.2 Dashboard Features"),
+    h2("5.2 Route Map"),
+    h3("Overview"),
+    makeTable(
+      ["Route", "File", "Description"],
+      [
+        ["/", "app/page.tsx", "Dashboard with KPIs, pipeline summary, forecast, recent activities, and top leads"],
+      ]
+    ),
+    emptyPara(),
+    h3("Prospecting"),
+    makeTable(
+      ["Route", "File", "Description"],
+      [
+        ["/inbound", "app/inbound/page.tsx", "Inbound lead portal injection with email paste, filter tabs, and KPI cards"],
+        ["/showdays", "app/showdays/page.tsx", "Show day event management with KPI cards, scheduling, and lead capture"],
+        ["/showday/[id]", "app/showday/[id]/page.tsx", "Public show day registration form (QR code compatible, no auth required)"],
+        ["/speed-to-lead", "app/speed-to-lead/page.tsx", "Auto-response rule management with trigger configuration and conversion stats"],
+        ["/lead-roi", "app/lead-roi/page.tsx", "Lead source ROI analytics with source cost tracking and KPI cards"],
+      ]
+    ),
+    emptyPara(),
+    h3("Pipeline"),
+    makeTable(
+      ["Route", "File", "Description"],
+      [
+        ["/leads", "app/leads/page.tsx", "Leads list with search, status filters, sorting, and create/edit/delete actions"],
+        ["/leads/[id]", "app/leads/[id]/page.tsx", "Lead detail with 3-column layout — contact info, deal info, notes, activity timeline, task list"],
+        ["/pipeline", "app/pipeline/page.tsx", "Visual pipeline board with 6 stages (New → Won/Lost), responsive grid layout"],
+        ["/contacts", "app/contacts/page.tsx", "Contacts list with search, create/edit/delete actions"],
+        ["/contacts/[id]", "app/contacts/[id]/page.tsx", "Contact detail with linked leads, activities, and tasks"],
+        ["/buyer-match", "app/buyer-match/page.tsx", "Buyer-property matching engine with buyer profile management and KPI cards"],
+        ["/sequences", "app/sequences/page.tsx", "Follow-up sequence builder with KPI cards, automated step configuration"],
+        ["/messaging", "app/messaging/page.tsx", "SMS messaging hub with compose sheet, gateway notice, and message history"],
+      ]
+    ),
+    emptyPara(),
+    h3("Listings"),
+    makeTable(
+      ["Route", "File", "Description"],
+      [
+        ["/properties", "app/properties/page.tsx", "Property/mandate management with KPI cards, search, add/edit/delete"],
+      ]
+    ),
+    emptyPara(),
+    h3("Transactions"),
+    makeTable(
+      ["Route", "File", "Description"],
+      [
+        ["/transactions", "app/transactions/page.tsx", "Transaction list with search, stage filters, commission tracking, and FICA status"],
+        ["/transactions/[id]", "app/transactions/[id]/page.tsx", "Transaction detail with stage timeline, commission calculator, FICA compliance, parties, dates, and stage history"],
+        ["/transactions/pipeline", "app/transactions/pipeline/page.tsx", "Transaction Kanban board with 9 stages (OTP Signed → Commission Paid), drag-and-drop"],
+        ["/documents", "app/documents/page.tsx", "Document management with upload sheet, storage notice, and KPI cards"],
+      ]
+    ),
+    emptyPara(),
+    h3("Operations"),
+    makeTable(
+      ["Route", "File", "Description"],
+      [
+        ["/tasks", "app/tasks/page.tsx", "Task management with KPIs, status filters, priority indicators, and completion toggling"],
+        ["/reports", "app/reports/page.tsx", "Business reports with pipeline analytics, source analysis, and conversion metrics"],
+        ["/compliance", "app/compliance/page.tsx", "POPIA compliance and regulatory management with consent tracking and tabbed views"],
+      ]
+    ),
+    emptyPara(),
+    h3("System"),
+    makeTable(
+      ["Route", "File", "Description"],
+      [
+        ["/login", "app/login/page.tsx", "Authentication page with Google OAuth and email/password sign-in"],
+        ["/seed", "app/seed/page.tsx", "Data seeding utility to generate 1,350 test records with progress tracking"],
+      ]
+    ),
+    emptyPara(),
+
+    h2("5.3 Dashboard Features"),
     bullet("4 KPI cards: Total Leads, Active Pipeline Value, Won Revenue, Conversion Rate"),
     bullet("Pipeline summary with stage counts and weighted values"),
     bullet("Revenue forecast (weighted pipeline + won revenue)"),
@@ -523,7 +584,7 @@ function sectionPages() {
     bullet("Top leads by score"),
     emptyPara(),
 
-    h2("5.3 Lead Management"),
+    h2("5.4 Lead Management"),
     bullet("Full CRUD operations (Create, Read, Update, Delete)"),
     bullet("Status tracking: New → Contacted → Qualified → Proposal → Won / Lost"),
     bullet("Deal value tracking with currency formatting (ZAR)"),
@@ -533,21 +594,21 @@ function sectionPages() {
     bullet("Notes and activity history"),
     emptyPara(),
 
-    h2("5.4 Contact Management"),
+    h2("5.5 Contact Management"),
     bullet("Full CRUD operations"),
     bullet("Company and title tracking"),
     bullet("Linked leads display on contact detail page"),
     bullet("Activity history per contact"),
     emptyPara(),
 
-    h2("5.5 Pipeline Visualisation"),
+    h2("5.6 Pipeline Visualisation"),
     bullet("6-stage visual board: New, Contacted, Qualified, Proposal, Won, Lost"),
     bullet("Responsive grid layout (2 columns mobile, 3 tablet, 6 desktop)"),
     bullet("Deal cards within each stage showing value and company"),
     bullet("Stage count and total value summaries"),
     emptyPara(),
 
-    h2("5.6 Task Management"),
+    h2("5.7 Task Management"),
     bullet("KPI summary: Total, Pending, Completed, Overdue"),
     bullet("Pill-style status filter tabs"),
     bullet("Priority levels: Low, Medium, High"),
@@ -555,71 +616,71 @@ function sectionPages() {
     bullet("Linked to leads or contacts"),
     emptyPara(),
 
-    h2("5.7 Reports & Analytics"),
+    h2("5.8 Reports & Analytics"),
     bullet("Pipeline funnel chart"),
     bullet("Revenue by source breakdown"),
     bullet("Lead conversion metrics"),
     bullet("Export-ready layout with compact action buttons"),
     emptyPara(),
 
-    h2("5.8 Property Management"),
+    h2("5.9 Property Management"),
     bullet("Property/mandate CRUD with listing details"),
     bullet("Mandate types: Sole, Open, Dual, Auction"),
     bullet("KPI cards: Total Properties, Active Mandates, Avg Listing Price"),
     bullet("Search and filter functionality"),
     emptyPara(),
 
-    h2("5.9 Show Day Management"),
+    h2("5.10 Show Day Management"),
     bullet("Show day event scheduling with property linking"),
     bullet("Lead capture/registration per show day"),
     bullet("KPI cards: Total Show Days, Upcoming, Leads Captured"),
     bullet("Public registration form flow (QR code compatible)"),
     emptyPara(),
 
-    h2("5.10 Inbound Lead Portal"),
+    h2("5.11 Inbound Lead Portal"),
     bullet("Email paste-and-parse for portal-injected leads"),
     bullet("Filter tabs for lead status/source"),
     bullet("KPI cards: Total Inbound, Unprocessed, Conversion Rate"),
     emptyPara(),
 
-    h2("5.11 Messaging Hub"),
+    h2("5.12 Messaging Hub"),
     bullet("SMS compose sheet with recipient selection"),
     bullet("Message history per contact"),
     bullet("Gateway integration notice (placeholder for SA SMS providers)"),
     emptyPara(),
 
-    h2("5.12 Follow-up Sequences"),
+    h2("5.13 Follow-up Sequences"),
     bullet("Automated follow-up sequence builder"),
     bullet("Step configuration with delay and channel"),
     bullet("Enrollment management for contacts/leads"),
     bullet("KPI cards: Active Sequences, Enrolled Contacts, Completion Rate"),
     emptyPara(),
 
-    h2("5.13 Speed-to-Lead"),
+    h2("5.14 Speed-to-Lead"),
     bullet("Auto-response rule creation with trigger event selection"),
     bullet("Conversion statistics and info cards"),
     bullet("KPI cards: Active Rules, Avg Response Time, Conversion Uplift"),
     emptyPara(),
 
-    h2("5.14 Buyer-Property Matching"),
+    h2("5.15 Buyer-Property Matching"),
     bullet("Buyer profile management with preference criteria"),
     bullet("Property matching engine"),
     bullet("KPI cards: Active Buyers, Matched Properties, Match Rate"),
     emptyPara(),
 
-    h2("5.15 Document Management"),
+    h2("5.16 Document Management"),
     bullet("Document upload with metadata and tagging"),
     bullet("Documents linked to transactions and contacts"),
     bullet("Storage notice with usage tracking"),
     emptyPara(),
 
-    h2("5.16 Lead Source ROI"),
+    h2("5.17 Lead Source ROI"),
     bullet("Source cost tracking per lead channel"),
     bullet("ROI calculation: revenue vs cost per source"),
     bullet("KPI cards: Total Sources, Best ROI, Worst ROI"),
     emptyPara(),
 
-    h2("5.17 Compliance"),
+    h2("5.18 Compliance"),
     bullet("POPIA consent tracking with opt-in/opt-out management"),
     bullet("Tabbed views: POPIA, FICA, Rolling 12-Month income"),
     bullet("KPI cards: Consent Rate, Overdue Reviews, Compliance Score"),
