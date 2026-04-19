@@ -25,13 +25,13 @@
     --ring: 226 70% 55.5%;
     --radius: 0.625rem;
 
-    /* Sidebar — dark always */
-    --sidebar-bg: 240 6% 10%;
-    --sidebar-fg: 240 5% 65%;
-    --sidebar-fg-active: 0 0% 98%;
+    /* Sidebar — light theme */
+    --sidebar-bg: 0 0% 97%;
+    --sidebar-fg: 240 5% 46%;
+    --sidebar-fg-active: 240 10% 3.9%;
     --sidebar-accent: 226 70% 55.5%;
-    --sidebar-border: 240 4% 16%;
-    --sidebar-hover: 240 4% 16%;
+    --sidebar-border: 240 5.9% 90%;
+    --sidebar-hover: 240 4.8% 93%;
   }
 
   .dark {
