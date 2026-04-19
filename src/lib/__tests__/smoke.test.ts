@@ -88,12 +88,17 @@ describe("Firebase Configuration Files", () => {
     }
   });
 
-  it("firestore.rules covers all 5 collections", async () => {
+  it("firestore.rules covers all collections", async () => {
     const { readFileSync } = await import("fs");
     const { resolve } = await import("path");
     const rules = readFileSync(resolve(process.cwd(), "firestore.rules"), "utf-8");
 
-    const collections = ["leads", "contacts", "activities", "tasks", "transactions"];
+    const collections = [
+      "leads", "contacts", "activities", "tasks", "transactions",
+      "showDays", "showDayLeads", "properties", "inboundLeads",
+      "smsMessages", "followUpSequences", "sequenceEnrollments",
+      "buyerProfiles", "documents", "autoResponseRules",
+    ];
     for (const col of collections) {
       expect(rules, `Missing security rule for collection: ${col}`).toContain(
         `match /${col}/{docId}`
@@ -160,6 +165,62 @@ describe("Data Model Consistency", () => {
     expect(firestore.updateTransaction).toBeTypeOf("function");
     expect(firestore.deleteTransaction).toBeTypeOf("function");
     expect(firestore.getTransactionsByLead).toBeTypeOf("function");
+
+    // Show Days
+    expect(firestore.addShowDay).toBeTypeOf("function");
+    expect(firestore.getShowDays).toBeTypeOf("function");
+    expect(firestore.getShowDayById).toBeTypeOf("function");
+    expect(firestore.deleteShowDay).toBeTypeOf("function");
+
+    // Show Day Leads
+    expect(firestore.addShowDayLead).toBeTypeOf("function");
+    expect(firestore.getShowDayLeads).toBeTypeOf("function");
+
+    // Properties
+    expect(firestore.addProperty).toBeTypeOf("function");
+    expect(firestore.getProperties).toBeTypeOf("function");
+    expect(firestore.getPropertyById).toBeTypeOf("function");
+    expect(firestore.updateProperty).toBeTypeOf("function");
+    expect(firestore.deleteProperty).toBeTypeOf("function");
+
+    // Inbound Leads
+    expect(firestore.addInboundLead).toBeTypeOf("function");
+    expect(firestore.getInboundLeads).toBeTypeOf("function");
+    expect(firestore.updateInboundLead).toBeTypeOf("function");
+
+    // SMS Messages
+    expect(firestore.addSmsMessage).toBeTypeOf("function");
+    expect(firestore.getSmsMessages).toBeTypeOf("function");
+    expect(firestore.getSmsByContact).toBeTypeOf("function");
+
+    // Follow-up Sequences
+    expect(firestore.addSequence).toBeTypeOf("function");
+    expect(firestore.getSequences).toBeTypeOf("function");
+    expect(firestore.updateSequence).toBeTypeOf("function");
+    expect(firestore.deleteSequence).toBeTypeOf("function");
+
+    // Sequence Enrollments
+    expect(firestore.addEnrollment).toBeTypeOf("function");
+    expect(firestore.getEnrollments).toBeTypeOf("function");
+    expect(firestore.updateEnrollment).toBeTypeOf("function");
+
+    // Buyer Profiles
+    expect(firestore.addBuyerProfile).toBeTypeOf("function");
+    expect(firestore.getBuyerProfiles).toBeTypeOf("function");
+    expect(firestore.updateBuyerProfile).toBeTypeOf("function");
+    expect(firestore.deleteBuyerProfile).toBeTypeOf("function");
+
+    // Documents
+    expect(firestore.addStoredDocument).toBeTypeOf("function");
+    expect(firestore.getDocumentsByTransaction).toBeTypeOf("function");
+    expect(firestore.getDocumentsByContact).toBeTypeOf("function");
+    expect(firestore.deleteStoredDocument).toBeTypeOf("function");
+
+    // Auto-Response Rules (Speed-to-Lead)
+    expect(firestore.addAutoResponseRule).toBeTypeOf("function");
+    expect(firestore.getAutoResponseRules).toBeTypeOf("function");
+    expect(firestore.updateAutoResponseRule).toBeTypeOf("function");
+    expect(firestore.deleteAutoResponseRule).toBeTypeOf("function");
   });
 
   it("firestore.ts exports TRANSACTION_STAGES constant", async () => {
