@@ -16,6 +16,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase";
+import { parseDoc, LeadSchema, ContactSchema, TransactionSchema, PropertySchema, InboundLeadSchema } from "./schemas";
 
 // ─── LEADS ───────────────────────────────────────────────
 
@@ -57,7 +58,7 @@ export async function getLeads(maxResults?: number): Promise<Lead[]> {
     ? query(collection(db, LEADS_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults))
     : query(collection(db, LEADS_COLLECTION), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Lead[];
+  return snapshot.docs.map((d) => parseDoc<Lead>(LeadSchema, { id: d.id, ...d.data() }, d.id));
 }
 
 export async function updateLead(id: string, data: Partial<Lead>) {
@@ -71,7 +72,7 @@ export async function getLeadById(id: string): Promise<Lead | null> {
   const docRef = doc(db, LEADS_COLLECTION, id);
   const snapshot = await getDoc(docRef);
   if (!snapshot.exists()) return null;
-  return { id: snapshot.id, ...snapshot.data() } as Lead;
+  return parseDoc<Lead>(LeadSchema, { id: snapshot.id, ...snapshot.data() }, snapshot.id);
 }
 
 export async function deleteLead(id: string) {
@@ -134,14 +135,14 @@ export async function getContacts(maxResults?: number): Promise<Contact[]> {
     ? query(collection(db, CONTACTS_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults))
     : query(collection(db, CONTACTS_COLLECTION), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Contact[];
+  return snapshot.docs.map((d) => parseDoc<Contact>(ContactSchema, { id: d.id, ...d.data() }, d.id));
 }
 
 export async function getContactById(id: string): Promise<Contact | null> {
   const db = getFirebaseDb();
   const snapshot = await getDoc(doc(db, CONTACTS_COLLECTION, id));
   if (!snapshot.exists()) return null;
-  return { id: snapshot.id, ...snapshot.data() } as Contact;
+  return parseDoc<Contact>(ContactSchema, { id: snapshot.id, ...snapshot.data() }, snapshot.id);
 }
 
 export async function updateContact(id: string, data: Partial<Contact>) {
@@ -364,14 +365,14 @@ export async function getTransactions(maxResults?: number): Promise<Transaction[
     ? query(collection(db, TRANSACTIONS_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults))
     : query(collection(db, TRANSACTIONS_COLLECTION), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Transaction[];
+  return snapshot.docs.map((d) => parseDoc<Transaction>(TransactionSchema, { id: d.id, ...d.data() }, d.id));
 }
 
 export async function getTransactionById(id: string): Promise<Transaction | null> {
   const db = getFirebaseDb();
   const snapshot = await getDoc(doc(db, TRANSACTIONS_COLLECTION, id));
   if (!snapshot.exists()) return null;
-  return { id: snapshot.id, ...snapshot.data() } as Transaction;
+  return parseDoc<Transaction>(TransactionSchema, { id: snapshot.id, ...snapshot.data() }, snapshot.id);
 }
 
 export async function updateTransaction(id: string, data: Partial<Transaction>) {

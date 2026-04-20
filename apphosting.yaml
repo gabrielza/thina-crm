@@ -18,3 +18,5 @@ env:
     value: "1:758961001539:web:5ae4e45100fc5220e870f6"
   - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
     value: G-TV1E3EPERE
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY

@@ -55,13 +55,15 @@ export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
 
-    // HMAC verification (if secret is configured)
+    // HMAC verification — always required
     const webhookSecret = process.env.INBOUND_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      const signature = req.headers.get("X-Webhook-Signature") || "";
-      if (!signature || !verifyHmac(rawBody, signature, webhookSecret)) {
-        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-      }
+    if (!webhookSecret) {
+      console.error("INBOUND_WEBHOOK_SECRET is not configured — rejecting request");
+      return NextResponse.json({ error: "Webhook endpoint not configured" }, { status: 503 });
+    }
+    const signature = req.headers.get("X-Webhook-Signature") || "";
+    if (!signature || !verifyHmac(rawBody, signature, webhookSecret)) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     let body: { source?: string; content?: string; ownerId?: string };

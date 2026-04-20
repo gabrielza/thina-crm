@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import {
   FileBarChart, Plus, Search, Pencil, Trash2, TrendingUp, BarChart3, Target,
-  Copy, Download,
+  Copy, Download, Sparkles, Loader2,
 } from "lucide-react";
 import {
   getCmaReports, addCmaReport, updateCmaReport, deleteCmaReport,
@@ -81,6 +81,9 @@ export default function CmaPage() {
   const [form, setForm] = useState(emptyForm);
   const [properties, setProperties] = useState<Property[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [researching, setResearching] = useState(false);
+  const [marketInsights, setMarketInsights] = useState("");
+  const [researchError, setResearchError] = useState("");
 
   const fetchData = useCallback(async () => {
     try {
@@ -252,6 +255,63 @@ export default function CmaPage() {
 
   function addComparable() {
     setForm((f) => ({ ...f, comparables: [...f.comparables, { ...emptyComparable }] }));
+  }
+
+  async function handleGeminiResearch() {
+    if (!user || !form.subjectSuburb || !form.subjectCity) return;
+    setResearching(true);
+    setResearchError("");
+    setMarketInsights("");
+    try {
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/cma/research", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({
+          suburb: form.subjectSuburb,
+          city: form.subjectCity,
+          propertyType: form.subjectType,
+          bedrooms: form.subjectBedrooms,
+          bathrooms: form.subjectBathrooms,
+          floorSize: form.subjectFloorSize,
+          erfSize: form.subjectErfSize,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setResearchError(data.error || "Research failed");
+        return;
+      }
+      // Merge AI comparables into form
+      if (data.comparables?.length > 0) {
+        setForm((f) => ({
+          ...f,
+          comparables: [
+            ...f.comparables.filter((c: CmaComparable) => c.address.trim() !== ""),
+            ...data.comparables,
+          ],
+        }));
+      }
+      if (data.marketInsights) {
+        setMarketInsights(data.marketInsights);
+        // Append market insights to notes
+        setForm((f) => ({
+          ...f,
+          notes: f.notes
+            ? `${f.notes}\n\n--- AI Market Research ---\n${data.marketInsights}`
+            : `--- AI Market Research ---\n${data.marketInsights}`,
+        }));
+      }
+      // Auto-recalculate after adding comparables
+      setTimeout(recalculate, 100);
+    } catch (err) {
+      setResearchError(err instanceof Error ? err.message : "Research failed");
+    } finally {
+      setResearching(false);
+    }
   }
 
   function removeComparable(index: number) {
@@ -496,8 +556,35 @@ export default function CmaPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Comparable Sales</h3>
-                <Button size="sm" variant="outline" onClick={addComparable}><Plus className="h-3 w-3 mr-1" /> Add</Button>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGeminiResearch}
+                    disabled={researching || !form.subjectSuburb || !form.subjectCity}
+                    className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-950"
+                  >
+                    {researching
+                      ? <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Researching...</>
+                      : <><Sparkles className="h-3 w-3 mr-1" /> Research with Gemini</>}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={addComparable}><Plus className="h-3 w-3 mr-1" /> Add</Button>
+                </div>
               </div>
+              {researchError && (
+                <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+                  {researchError}
+                </div>
+              )}
+              {marketInsights && (
+                <div className="rounded-md border border-purple-200 bg-purple-50 p-3 dark:border-purple-900 dark:bg-purple-950">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <Sparkles className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                    <span className="text-xs font-semibold uppercase tracking-wide text-purple-700 dark:text-purple-300">Gemini Market Insights</span>
+                  </div>
+                  <p className="text-sm text-purple-900 dark:text-purple-100 whitespace-pre-line">{marketInsights}</p>
+                </div>
+              )}
               {form.comparables.map((comp, idx) => (
                 <Card key={idx} className="p-3 space-y-3">
                   <div className="flex items-center justify-between">
