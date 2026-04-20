@@ -28,7 +28,7 @@ const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const DOCS_DIR = resolve(ROOT, "docs");
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -634,6 +634,229 @@ function parseMarkdown(md) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// v1.0.1 Content Updates — version strings + new feature content
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function makeBlock(type, text) {
+  return { type, text, parts: [{ text, bold: false, italic: false, code: false }] };
+}
+
+function makeBoldBlock(label, value) {
+  return {
+    type: "bullet",
+    text: `${label}: ${value}`,
+    parts: [
+      { text: `${label}: `, bold: true, italic: false, code: false },
+      { text: value, bold: false, italic: false, code: false },
+    ],
+  };
+}
+
+function findBlockIndex(blocks, textIncludes) {
+  return blocks.findIndex(b => b.text && b.text.includes(textIncludes));
+}
+
+function updateVersionStrings(blocks) {
+  return blocks.map(b => {
+    if (b.type === "table" || !b.text) return b;
+    let changed = false;
+    const replacements = [
+      [/Version:\s*0\.12\.0/g, "Version: 1.0.1"],
+      [/Version:\s*0\.11\.0/g, "Version: 1.0.1"],
+      [/Version:\s*1\.0\.0(?!\.\d)/g, "Version: 1.0.1"],
+      [/\bv0\.12\.0\b/g, "v1.0.1"],
+      [/\bv0\.11\.0\b/g, "v1.0.1"],
+      [/\bv1\.0\.0(?!\.\d)\b/g, "v1.0.1"],
+    ];
+    let newText = b.text;
+    for (const [re, rep] of replacements) {
+      const t = newText.replace(re, rep);
+      if (t !== newText) { newText = t; changed = true; }
+    }
+    if (!changed) return b;
+    const newParts = b.parts.map(p => {
+      let t = p.text;
+      for (const [re, rep] of replacements) t = t.replace(re, rep);
+      return { ...p, text: t };
+    });
+    return { ...b, text: newText, parts: newParts };
+  });
+}
+
+function updateFeaturesDoc(blocks) {
+  // Add v1.0.1 features after "Customer-Centric Architecture" section or at end
+  const v101Section = [
+    makeBlock("h2", "v1.0.1 Feature Additions"),
+    makeBlock("paragraph", "The following features were added in v1.0.1 to support agent operations, backend API integration, and document management."),
+    makeBlock("h3", "Customer-Agent Assignment"),
+    makeBlock("paragraph", "Every lead and contact is now assigned to a specific agent. When an agent creates or first interacts with a customer, they are permanently assigned via a lock-on-first-touch mechanism."),
+    makeBoldBlock("assignedAgentId", "Firebase Auth UID of the assigned agent"),
+    makeBoldBlock("assignedAgentName", "Display name of the assigned agent"),
+    makeBoldBlock("assignedAt", "ISO 8601 timestamp of the assignment"),
+    makeBlock("paragraph", "These fields are added to both the Lead and Contact data models. An agent badge is displayed on contact and lead cards throughout the UI."),
+    makeBlock("h3", "BulkSMS API Integration"),
+    makeBlock("paragraph", "Real SMS sending is now wired via the BulkSMS.co.za REST API through a server-side API route."),
+    makeBoldBlock("API Route", "/api/sms/send — POST endpoint with token-based authentication"),
+    makeBoldBlock("Auth", "BULKSMS_TOKEN_ID and BULKSMS_TOKEN_SECRET environment variables"),
+    makeBoldBlock("Features", "Send SMS, delivery status tracking, message history in Firestore"),
+    makeBlock("h3", "Inbound Webhook API Route"),
+    makeBlock("paragraph", "A secure webhook endpoint for automated lead injection from property portals such as Property24 and Private Property."),
+    makeBoldBlock("API Route", "/api/leads/inbound — POST endpoint with HMAC-SHA256 signature verification"),
+    makeBoldBlock("Auth", "INBOUND_WEBHOOK_SECRET environment variable for HMAC signing"),
+    makeBoldBlock("Flow", "Webhook → signature verification → parse payload → create InboundLead document"),
+    makeBlock("h3", "Firebase Storage for Documents"),
+    makeBlock("paragraph", "Document uploads are now stored in Firebase Storage with security rules scoped by ownerId. The upload handler supports file type validation, size limits, and automatic metadata tagging. This replaces the previous placeholder URL system."),
+    makeBlock("h3", "Pipeline UX Improvements"),
+    makeBlock("paragraph", "Pipeline cards on both the lead and transaction Kanban boards now support full click-through navigation. Clicking any card navigates to the corresponding detail page."),
+    makeBlock("h3", "Health Check API"),
+    makeBoldBlock("API Route", "/api/health — GET endpoint returning { status: 'healthy', timestamp }"),
+    makeBlock("h3", "Updated Scale Metrics"),
+    makeBlock("paragraph", "16 Firestore collections · 76+ database functions · 26 page routes · 3 API routes · 1,604 seed records · 61 unit tests · 89 E2E tests"),
+  ];
+
+  // Find the last heading/content and append
+  blocks.push(...v101Section);
+  return blocks;
+}
+
+function updateTrainingGuide(blocks) {
+  const newSections = [
+    makeBlock("h1", "v1.0.1 — New Feature Training"),
+    makeBlock("h2", "Agent Assignment"),
+    makeBlock("paragraph", "Every lead and contact in Thina CRM is now assigned to a specific agent. This ensures accountability and prevents leads from falling through the cracks."),
+    makeBlock("h3", "How It Works"),
+    makeBlock("bullet", "When you create a new lead or contact, you are automatically assigned as the owner."),
+    makeBlock("bullet", "Your name and avatar appear as an 'Agent Badge' on each lead/contact card."),
+    makeBlock("bullet", "Assignment is permanent (lock-on-first-touch) — the first agent to engage with a customer owns the relationship."),
+    makeBlock("bullet", "You can view all your assigned leads and contacts from the respective list pages."),
+    makeBlock("h2", "Document Upload with Firebase Storage"),
+    makeBlock("paragraph", "The Document Vault now supports real file uploads powered by Firebase Storage."),
+    makeBlock("h3", "How to Upload a Document"),
+    makeBlock("bullet", "Navigate to Documents from the sidebar (under Transactions)."),
+    makeBlock("bullet", "Click the 'Upload Document' button to open the upload sheet."),
+    makeBlock("bullet", "Select the document category (FICA, OTP, Mandate, Bond, or Other)."),
+    makeBlock("bullet", "Choose a file from your device. Supported types: PDF, JPEG, PNG, DOCX."),
+    makeBlock("bullet", "Click 'Upload' — the file is securely stored in Firebase Storage and linked to your account."),
+    makeBlock("bullet", "Uploaded documents appear in the Document Vault with category tags and timestamps."),
+    makeBlock("h2", "Messaging — Real SMS via BulkSMS"),
+    makeBlock("paragraph", "The Messaging page now sends real SMS messages through the BulkSMS.co.za API."),
+    makeBlock("h3", "How to Send an SMS"),
+    makeBlock("bullet", "Navigate to Messaging from the sidebar (under Pipeline)."),
+    makeBlock("bullet", "Click 'Compose Message' to open the compose sheet."),
+    makeBlock("bullet", "Select a recipient or enter a mobile number (South African format: +27...)."),
+    makeBlock("bullet", "Type your message and click 'Send'."),
+    makeBlock("bullet", "The message is sent via the BulkSMS API. Delivery status updates automatically."),
+    makeBlock("bullet", "All sent messages are saved in the SMS history with delivery status indicators."),
+    makeBlock("h2", "Inbound Lead Webhook"),
+    makeBlock("paragraph", "Leads from property portals like Property24 and Private Property can now be injected automatically via a secure webhook endpoint. Contact your system administrator to configure the webhook URL and HMAC secret for your portal account."),
+    makeBlock("h2", "Pipeline Card Navigation"),
+    makeBlock("paragraph", "You can now click on any card on the Pipeline Board or Transaction Pipeline to navigate directly to the lead or transaction detail page. Previously, cards were display-only."),
+  ];
+
+  blocks.push(...newSections);
+  return blocks;
+}
+
+function updateMarketingGuide(blocks) {
+  const newSections = [
+    makeBlock("h1", "v1.0.1 — New Capabilities"),
+    makeBlock("paragraph", "The following capabilities have been added in v1.0.1, moving from 'planned' to 'live' status."),
+    makeBlock("h2", "Now Live: BulkSMS API Integration"),
+    makeBlock("paragraph", "Thina CRM now sends real SMS messages through the BulkSMS.co.za API — South Africa's leading SMS gateway. Agents can compose and send SMS directly from the Messaging page, with delivery status tracking and full message history."),
+    makeBlock("h2", "Now Live: Automated Portal Lead Injection"),
+    makeBlock("paragraph", "Property portal leads from Property24 and Private Property are now injected automatically via a secure webhook endpoint with HMAC-SHA256 signature verification. No more manually copying leads from emails — they appear instantly in the Inbound Leads queue for review and acceptance."),
+    makeBlock("h2", "Now Live: Customer-Agent Assignment"),
+    makeBlock("paragraph", "Every lead and contact is now assigned to a specific agent with lock-on-first-touch ownership. Agent badges appear on cards throughout the system, ensuring clear accountability and preventing leads from falling through the cracks."),
+    makeBlock("h2", "Now Live: Firebase Storage Document Vault"),
+    makeBlock("paragraph", "The Document Vault now supports real file uploads to Firebase Storage with security rules scoped by agent. Upload FICA documents, OTPs, mandates, and bond applications with automatic categorisation and metadata tagging."),
+    makeBlock("h2", "Now Live: Pipeline Click-Through"),
+    makeBlock("paragraph", "Pipeline board cards are now fully interactive — click any lead or transaction card to navigate directly to its detail page for faster workflow."),
+    makeBlock("h2", "Updated Platform Summary"),
+  ];
+
+  // Add updated summary table
+  newSections.push({
+    type: "table",
+    headers: ["Metric", "Value"],
+    rows: [
+      ["Firestore Collections", "16"],
+      ["Database Functions", "76+"],
+      ["Page Routes", "26"],
+      ["API Routes", "3 (health, sms/send, leads/inbound)"],
+      ["Seed Records", "1,604"],
+      ["Unit Tests", "61"],
+      ["E2E Tests", "89"],
+      ["Total Tests", "150"],
+    ],
+  });
+
+  blocks.push(...newSections);
+  return blocks;
+}
+
+function updateDemoGuide(blocks) {
+  const newSections = [
+    makeBlock("h1", "v1.0.1 — New Demo Talking Points"),
+    makeBlock("paragraph", "The following features are new in v1.0.1. Add these to your demo flow."),
+    makeBlock("h2", "Agent Assignment Badge"),
+    makeBlock("paragraph", "Show the agent badge on any lead or contact card. Say: 'Every lead is automatically assigned to the agent who first engages. This ensures accountability — no leads fall through the cracks.'"),
+    makeBlock("h2", "Real SMS Sending"),
+    makeBlock("paragraph", "Navigate to Messaging and compose a real SMS. Say: 'Thina integrates directly with BulkSMS.co.za, South Africa's leading SMS gateway. Agents can send SMS from the CRM and track delivery status in real time.'"),
+    makeBlock("bullet", "Tip: For a live demo, send a test SMS to your own phone and show the delivery confirmation."),
+    makeBlock("h2", "Document Upload"),
+    makeBlock("paragraph", "Navigate to Documents and show the upload flow. Say: 'All transaction documents — FICA, OTPs, mandates, bond applications — can be uploaded and categorised directly in the CRM. Files are stored securely in Firebase Storage with per-agent access control.'"),
+    makeBlock("h2", "Pipeline Click-Through"),
+    makeBlock("paragraph", "On the Pipeline Board, click a lead card to navigate to the detail page. Say: 'Agents can click any card on the pipeline board to jump straight to the detail page. No more searching — one click from overview to action.'"),
+    makeBlock("h2", "Inbound Webhook"),
+    makeBlock("paragraph", "If demoing to a technical audience, mention: 'Property24 and Private Property leads can now be injected automatically via a secure webhook with HMAC-SHA256 verification. Leads appear in the Inbound queue within seconds of the portal notification.'"),
+  ];
+
+  blocks.push(...newSections);
+  return blocks;
+}
+
+function updateFeatureResearch(blocks) {
+  // Update checklist items from ❌ to ✅ for features now implemented
+  return blocks.map(b => {
+    if (!b.text) return b;
+    let newText = b.text;
+    const updates = [
+      ["❌ Open house digital sign-in (QR code → form → auto-create lead)", "✅ Open house digital sign-in (QR code → form → auto-create lead) — implemented v0.11.0"],
+      ["❌ QR code generation for signage (scan → lead form)", "✅ QR code generation for signage — Show Day QR codes implemented v0.11.0"],
+    ];
+    for (const [old, rep] of updates) {
+      if (newText.includes(old)) {
+        newText = newText.replace(old, rep);
+        b.parts = [{ text: newText, bold: false, italic: false, code: false }];
+      }
+    }
+    b.text = newText;
+    return b;
+  });
+}
+
+function applyContentUpdates(fileName, blocks) {
+  // 1. Update version strings in all docs
+  blocks = updateVersionStrings(blocks);
+
+  // 2. File-specific content additions
+  switch (fileName) {
+    case "Thina_CRM_Features_and_Data_Model":
+      return updateFeaturesDoc(blocks);
+    case "Thina_CRM_User_Training_Guide":
+      return updateTrainingGuide(blocks);
+    case "Thina_CRM_Marketing_Guide":
+      return updateMarketingGuide(blocks);
+    case "Thina_CRM_Demo_Guide":
+      return updateDemoGuide(blocks);
+    case "Thina_CRM_Feature_Research":
+      return updateFeatureResearch(blocks);
+    default:
+      return blocks;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // File Discovery & Metadata
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -703,6 +926,7 @@ async function main() {
       // Extract content from existing .docx
       let blocks = await extractContentFromDocx(docxPath);
       blocks = cleanOldTitleArtifacts(blocks, meta);
+      blocks = applyContentUpdates(fileName, blocks);
       console.log(`    → Extracted ${blocks.length} content blocks`);
 
       if (blocks.length === 0) {
