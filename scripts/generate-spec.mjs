@@ -2128,11 +2128,11 @@ async function buildDocument() {
   });
 
   const buffer = await Packer.toBuffer(doc);
-  const outputPath = resolve(ROOT, "docs", `Thina_CRM_System_Specification_v${VERSION}.docx`);
+  const outputPath = resolve(ROOT, "docs", "System Specification", `Thina_CRM_System_Specification_v${VERSION}.docx`);
 
-  // Ensure docs/ directory exists
+  // Ensure docs/System Specification/ directory exists
   const { mkdirSync } = await import("fs");
-  mkdirSync(resolve(ROOT, "docs"), { recursive: true });
+  mkdirSync(resolve(ROOT, "docs", "System Specification"), { recursive: true });
 
   writeFileSync(outputPath, buffer);
   console.log(`✅ Specification document generated: ${outputPath}`);

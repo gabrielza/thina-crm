@@ -28,7 +28,7 @@ const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const DOCS_DIR = resolve(ROOT, "docs");
-const VERSION = "1.0.1";
+const VERSION = "1.1.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -661,12 +661,14 @@ function updateVersionStrings(blocks) {
     if (b.type === "table" || !b.text) return b;
     let changed = false;
     const replacements = [
-      [/Version:\s*0\.12\.0/g, "Version: 1.0.1"],
-      [/Version:\s*0\.11\.0/g, "Version: 1.0.1"],
-      [/Version:\s*1\.0\.0(?!\.\d)/g, "Version: 1.0.1"],
-      [/\bv0\.12\.0\b/g, "v1.0.1"],
-      [/\bv0\.11\.0\b/g, "v1.0.1"],
-      [/\bv1\.0\.0(?!\.\d)\b/g, "v1.0.1"],
+      [/Version:\s*0\.12\.0/g, "Version: 1.1.0"],
+      [/Version:\s*0\.11\.0/g, "Version: 1.1.0"],
+      [/Version:\s*1\.0\.0(?!\.\d)/g, "Version: 1.1.0"],
+      [/Version:\s*1\.0\.1/g, "Version: 1.1.0"],
+      [/\bv0\.12\.0\b/g, "v1.1.0"],
+      [/\bv0\.11\.0\b/g, "v1.1.0"],
+      [/\bv1\.0\.0(?!\.\d)\b/g, "v1.1.0"],
+      [/\bv1\.0\.1\b/g, "v1.1.0"],
     ];
     let newText = b.text;
     for (const [re, rep] of replacements) {
@@ -714,8 +716,33 @@ function updateFeaturesDoc(blocks) {
     makeBlock("paragraph", "16 Firestore collections · 76+ database functions · 26 page routes · 3 API routes · 1,604 seed records · 61 unit tests · 89 E2E tests"),
   ];
 
+  const v110Section = [
+    makeBlock("h2", "v1.1.0 Feature Additions"),
+    makeBlock("paragraph", "The following features were added in v1.1.0 to deliver AI-powered analytics, advanced buyer matching, and comprehensive compliance tooling."),
+    makeBlock("h3", "Gemini AI CMA Research"),
+    makeBlock("paragraph", "Comparative Market Analysis reports are now powered by Google Gemini 2.0 Flash with Google Search grounding. The /api/cma/research endpoint accepts a property address and returns AI-generated neighbourhood insights, recent comparable sales, and pricing recommendations."),
+    makeBoldBlock("API Route", "/api/cma/research — POST endpoint using @google/genai SDK"),
+    makeBoldBlock("Model", "gemini-2.0-flash with Google Search grounding tool"),
+    makeBoldBlock("Output", "CMA PDF document with neighbourhood analysis, comparable sales, and pricing recommendation"),
+    makeBlock("h3", "Buyer-Match Engine"),
+    makeBlock("paragraph", "An algorithmic matching system that pairs buyer requirements with available property listings. Scores are computed across price range, location, bedroom count, property type, and amenity overlap."),
+    makeBlock("h3", "Compliance Dashboard"),
+    makeBlock("paragraph", "A centralised compliance view that surfaces FICA document expiry, missing mandatory documents, and regulatory checklist status for every active transaction."),
+    makeBlock("h3", "Lead ROI Analytics"),
+    makeBlock("paragraph", "Source-level ROI reporting across all lead channels. Tracks cost-per-lead, conversion rates, revenue attribution, and ROI percentage per source (Portal, Referral, Walk-in, Digital Ad, Show Day, Social)."),
+    makeBlock("h3", "Speed-to-Lead Metrics"),
+    makeBlock("paragraph", "Measures response time from lead creation to first agent contact. Dashboard shows average response times, distribution charts, and alerts for leads exceeding SLA thresholds."),
+    makeBlock("h3", "Show Day Management"),
+    makeBlock("paragraph", "Full show day lifecycle management — create events linked to properties, track attendees via QR code sign-in, capture visitor details, and convert attendees to leads."),
+    makeBlock("h3", "Zod 4 Runtime Validation"),
+    makeBlock("paragraph", "All Firestore document reads are now validated at runtime using Zod 4.3.6 schemas. Every collection has a corresponding schema ensuring type safety at the database boundary."),
+    makeBlock("h3", "Updated Scale Metrics (v1.1.0)"),
+    makeBlock("paragraph", "16 Firestore collections · 76+ database functions · 26 page routes · 4 API routes · 1,604 seed records · 83 unit tests · 89 E2E tests · 172 total tests"),
+  ];
+
   // Find the last heading/content and append
   blocks.push(...v101Section);
+  blocks.push(...v110Section);
   return blocks;
 }
 
@@ -753,7 +780,44 @@ function updateTrainingGuide(blocks) {
     makeBlock("paragraph", "You can now click on any card on the Pipeline Board or Transaction Pipeline to navigate directly to the lead or transaction detail page. Previously, cards were display-only."),
   ];
 
+  const v110Sections = [
+    makeBlock("h1", "v1.1.0 — New Feature Training"),
+    makeBlock("h2", "Gemini AI CMA Research"),
+    makeBlock("paragraph", "Thina CRM now uses Google Gemini AI to generate Comparative Market Analysis reports with live market data."),
+    makeBlock("h3", "How to Generate a CMA Report"),
+    makeBlock("bullet", "Navigate to CMA from the sidebar."),
+    makeBlock("bullet", "Enter the property address you want to analyse."),
+    makeBlock("bullet", "Click 'Generate CMA' — the AI researches comparable sales, neighbourhood data, and market trends."),
+    makeBlock("bullet", "Review the generated report with neighbourhood insights, comparable sales table, and pricing recommendation."),
+    makeBlock("bullet", "Download the CMA as a PDF to share with clients."),
+    makeBlock("h2", "Buyer-Match Engine"),
+    makeBlock("paragraph", "The Buyer Match page algorithmically pairs buyer requirements with available property listings."),
+    makeBlock("h3", "How to Use Buyer Match"),
+    makeBlock("bullet", "Navigate to Buyer Match from the sidebar."),
+    makeBlock("bullet", "The system automatically scores all buyers against all active listings."),
+    makeBlock("bullet", "Match scores are computed across price range, location, bedrooms, property type, and amenities."),
+    makeBlock("bullet", "Click any match to view the detailed breakdown and contact the buyer."),
+    makeBlock("h2", "Compliance Dashboard"),
+    makeBlock("paragraph", "The Compliance page provides a centralised view of FICA and regulatory status across all transactions."),
+    makeBlock("h3", "How to Use Compliance"),
+    makeBlock("bullet", "Navigate to Compliance from the sidebar."),
+    makeBlock("bullet", "Review FICA document expiry dates and missing mandatory documents."),
+    makeBlock("bullet", "Check regulatory checklist status for each active transaction."),
+    makeBlock("bullet", "Address any flagged items before they become compliance issues."),
+    makeBlock("h2", "Lead ROI Analytics"),
+    makeBlock("paragraph", "The Lead ROI page shows return on investment metrics for each lead source."),
+    makeBlock("bullet", "Navigate to Lead ROI from the sidebar."),
+    makeBlock("bullet", "View cost-per-lead, conversion rates, and revenue attribution per source."),
+    makeBlock("bullet", "Compare ROI across Portal, Referral, Walk-in, Digital Ad, Show Day, and Social channels."),
+    makeBlock("h2", "Speed-to-Lead Metrics"),
+    makeBlock("paragraph", "The Speed to Lead page measures how quickly agents respond to new leads."),
+    makeBlock("bullet", "Navigate to Speed to Lead from the sidebar."),
+    makeBlock("bullet", "View average response times and distribution charts."),
+    makeBlock("bullet", "Monitor SLA threshold alerts for leads awaiting first contact."),
+  ];
+
   blocks.push(...newSections);
+  blocks.push(...v110Sections);
   return blocks;
 }
 
@@ -782,15 +846,35 @@ function updateMarketingGuide(blocks) {
       ["Firestore Collections", "16"],
       ["Database Functions", "76+"],
       ["Page Routes", "26"],
-      ["API Routes", "3 (health, sms/send, leads/inbound)"],
+      ["API Routes", "4 (health, sms/send, leads/inbound, cma/research)"],
       ["Seed Records", "1,604"],
-      ["Unit Tests", "61"],
+      ["Unit Tests", "83"],
       ["E2E Tests", "89"],
-      ["Total Tests", "150"],
+      ["Total Tests", "172"],
     ],
   });
 
+  const v110Sections = [
+    makeBlock("h1", "v1.1.0 — New Capabilities"),
+    makeBlock("paragraph", "The following capabilities have been added in v1.1.0, delivering AI-powered analytics and advanced operational tooling."),
+    makeBlock("h2", "Now Live: Gemini AI CMA Research"),
+    makeBlock("paragraph", "Thina CRM now generates Comparative Market Analysis reports powered by Google Gemini 2.0 Flash with live Google Search grounding. Agents enter a property address and receive AI-researched neighbourhood insights, comparable sales data, and pricing recommendations — delivered as a downloadable PDF."),
+    makeBlock("h2", "Now Live: Buyer-Match Engine"),
+    makeBlock("paragraph", "An algorithmic matching system pairs buyer requirements with available listings. Match scores are computed across price, location, bedrooms, property type, and amenities — helping agents connect the right buyer to the right property instantly."),
+    makeBlock("h2", "Now Live: Compliance Dashboard"),
+    makeBlock("paragraph", "A centralised compliance view surfaces FICA expiry, missing mandatory documents, and regulatory checklist status. Every active transaction is monitored for compliance readiness."),
+    makeBlock("h2", "Now Live: Lead ROI Analytics"),
+    makeBlock("paragraph", "Source-level ROI reporting tracks cost-per-lead, conversion rates, and revenue attribution across Portal, Referral, Walk-in, Digital Ad, Show Day, and Social channels. Principals can instantly see which sources deliver the best return."),
+    makeBlock("h2", "Now Live: Speed-to-Lead Metrics"),
+    makeBlock("paragraph", "Response time measurement from lead creation to first agent contact, with average response times, distribution analysis, and SLA breach alerts."),
+    makeBlock("h2", "Now Live: Show Day Management"),
+    makeBlock("paragraph", "Full show day lifecycle — create events, link to properties, track attendees via QR code sign-in, and convert visitors to leads."),
+    makeBlock("h2", "Now Live: Zod 4 Runtime Validation"),
+    makeBlock("paragraph", "All Firestore document reads are validated at runtime with Zod 4.3.6 schemas, ensuring type safety at the database boundary."),
+  ];
+
   blocks.push(...newSections);
+  blocks.push(...v110Sections);
   return blocks;
 }
 
@@ -807,11 +891,28 @@ function updateDemoGuide(blocks) {
     makeBlock("paragraph", "Navigate to Documents and show the upload flow. Say: 'All transaction documents — FICA, OTPs, mandates, bond applications — can be uploaded and categorised directly in the CRM. Files are stored securely in Firebase Storage with per-agent access control.'"),
     makeBlock("h2", "Pipeline Click-Through"),
     makeBlock("paragraph", "On the Pipeline Board, click a lead card to navigate to the detail page. Say: 'Agents can click any card on the pipeline board to jump straight to the detail page. No more searching — one click from overview to action.'"),
-    makeBlock("h2", "Inbound Webhook"),
+    makeBlock("h2", "Inbound Webhook (v1.0.1)"),
     makeBlock("paragraph", "If demoing to a technical audience, mention: 'Property24 and Private Property leads can now be injected automatically via a secure webhook with HMAC-SHA256 verification. Leads appear in the Inbound queue within seconds of the portal notification.'"),
   ];
 
+  const v110Sections = [
+    makeBlock("h1", "v1.1.0 — New Demo Talking Points"),
+    makeBlock("paragraph", "The following features are new in v1.1.0. Add these to your demo flow."),
+    makeBlock("h2", "Gemini AI CMA Research"),
+    makeBlock("paragraph", "Navigate to CMA and generate a report. Say: 'Thina now uses Google Gemini AI with live search grounding to generate Comparative Market Analysis reports. Enter an address and the AI researches comparable sales, neighbourhood data, and generates a pricing recommendation — all in seconds.'"),
+    makeBlock("bullet", "Tip: Show the PDF download with AI-generated neighbourhood insights and comparable sales table."),
+    makeBlock("h2", "Buyer-Match Engine"),
+    makeBlock("paragraph", "Navigate to Buyer Match. Say: 'Our algorithmic matching engine scores buyers against listings across price, location, bedrooms, property type, and amenities. Agents instantly see which buyers match which properties.'"),
+    makeBlock("h2", "Compliance Dashboard"),
+    makeBlock("paragraph", "Navigate to Compliance. Say: 'The compliance dashboard surfaces FICA expiry, missing documents, and regulatory checklists — ensuring every transaction stays audit-ready.'"),
+    makeBlock("h2", "Lead ROI Analytics"),
+    makeBlock("paragraph", "Navigate to Lead ROI. Say: 'Principals can now see exactly which lead sources deliver the best return on investment — cost-per-lead, conversion rates, and revenue attribution broken down by source.'"),
+    makeBlock("h2", "Speed-to-Lead Metrics"),
+    makeBlock("paragraph", "Navigate to Speed to Lead. Say: 'We measure response time from lead creation to first contact. Agents and managers can see average response times and SLA breach alerts.'"),
+  ];
+
   blocks.push(...newSections);
+  blocks.push(...v110Sections);
   return blocks;
 }
 
@@ -906,9 +1007,65 @@ function findFiles(dir, ext) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function main() {
-  const mode = process.argv.includes("--reformat") ? "reformat" : "markdown";
+  const mode = process.argv.includes("--reformat") ? "reformat"
+    : process.argv.includes("--rebuild") ? "rebuild"
+    : "markdown";
 
-  if (mode === "reformat") {
+  if (mode === "rebuild") {
+    // ─── Rebuild docs from scratch using update functions ────────────────
+    // This mode does NOT read existing .docx files. It generates fresh
+    // documents containing only the v1.0.1 + v1.1.0 content sections.
+    const REBUILD_TARGETS = {
+      "Thina_CRM_Demo_Guide": {
+        dir: "Demo Documents",
+        fn: updateDemoGuide,
+      },
+      "Thina_CRM_Features_and_Data_Model": {
+        dir: "Features",
+        fn: updateFeaturesDoc,
+      },
+      "Thina_CRM_Feature_Research": {
+        dir: "Features",
+        fn: updateFeatureResearch,
+      },
+      "Thina_CRM_Marketing_Guide": {
+        dir: "Marketing Documents",
+        fn: updateMarketingGuide,
+      },
+      "Thina_CRM_User_Training_Guide": {
+        dir: "Training Documents",
+        fn: updateTrainingGuide,
+      },
+    };
+
+    console.log(`\n📄 Rebuilding ${Object.keys(REBUILD_TARGETS).length} documents from scratch:\n`);
+
+    for (const [fileName, { dir, fn }] of Object.entries(REBUILD_TARGETS)) {
+      const meta = FILE_METADATA[fileName] || {
+        title: fileName.replace(/[-_]/g, " "),
+        subtitle: "",
+      };
+
+      // Start with empty blocks and let the update function add content
+      const blocks = fn([]);
+      console.log(`  ${meta.title}: ${blocks.length} content blocks`);
+
+      const contentParagraphs = renderBlocks(blocks);
+      const doc = buildDocument(meta.title, meta.subtitle, contentParagraphs);
+
+      const outDir = resolve(DOCS_DIR, dir);
+      const { mkdirSync } = await import("fs");
+      mkdirSync(outDir, { recursive: true });
+
+      const outputPath = resolve(outDir, `${fileName}.docx`);
+      const buffer = await Packer.toBuffer(doc);
+      writeFileSync(outputPath, buffer);
+      console.log(`  ✅ Rebuilt: ${dir}/${fileName}.docx`);
+    }
+
+    console.log(`\n✅ All documents rebuilt with v${VERSION} content.\n`);
+
+  } else if (mode === "reformat") {
     // ─── Reformat existing .docx files ──────────────────────────────────
     const docxFiles = findFiles(DOCS_DIR, ".docx");
     console.log(`\n📄 Found ${docxFiles.length} .docx files to reformat:\n`);
