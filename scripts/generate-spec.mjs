@@ -31,7 +31,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "1.3.0";
+const VERSION = "1.3.1";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -1867,6 +1867,11 @@ function sectionVersionHistoryContent() {
           "v1.3.0",
           "June 2026",
           'Code Quality & Observability (v1.3.0) — Fixed 70+ lint errors across 25 files and re-enabled ESLint enforcement during builds (removed ignoreDuringBuilds). Added security headers via next.config.js: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, HSTS with preload, Permissions-Policy denying camera/mic/geolocation. Sanitized CMA prompt inputs: strip HTML/template chars, clamp numeric ranges, limit string lengths to prevent prompt injection. Integrated Sentry error tracking: client-side init via instrumentation-client.ts + sentry.client.config.ts (webpack compat), server-side via src/instrumentation.ts, global-error.tsx boundary with Sentry.captureException. Wrote comprehensive README.md with tech stack, getting started guide, environment variables, project structure. 91 unit tests, 89 E2E tests.',
+        ],
+        [
+          "v1.3.1",
+          "April 2026",
+          'Auth Fix & Copilot Customisation (v1.3.1) — Fixed critical auth bug where navigating between pages logged the user out. Root cause: race condition where login page navigated before __session cookie was set. Fix: sign-in helpers now set cookie synchronously before returning. Switched onAuthStateChanged to onIdTokenChanged so cookie stays alive on automatic token refresh (~55 min). Conditional Secure flag on cookie (only on HTTPS, fixing localhost dev). Added Copilot project customisation: 6 instruction files (api-routes, auth-patterns, component-patterns, firebase-firestore, nextjs-app-router, sa-real-estate), 3 skills (new-feature, deployment, testing), 1 prompt (new-crud-entity). 91 unit tests, 89 E2E tests.',
         ],
       ]
     ),
