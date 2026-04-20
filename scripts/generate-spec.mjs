@@ -31,7 +31,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "1.2.0";
+const VERSION = "1.3.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -1695,6 +1695,7 @@ function sectionVersionHistory() {
         ["v1.0.1", "Agent assignment, BulkSMS API, Firebase Storage, inbound webhook with HMAC-SHA256, pipeline UX improvements. 10 new unit tests, 5 new E2E tests (150 total)."],
         ["v1.1.0", "Gemini AI CMA research with Google Search grounding, security hardening (required HMAC auth, Firestore rules schema validation, Zod runtime validation, ErrorBoundary), ESLint 9 flat config, 4 new API test files (22 new tests, 172 total)."],
         ["v1.2.0", "Production hardening sprint: CI pipeline fix (main→master branch), seed endpoint production guard, Next.js middleware for server-side auth, in-memory rate limiting on SMS/CMA/seed APIs, error.tsx + not-found.tsx + loading.tsx pages, rate-limit and seed API tests. 8 new tests (180 total)."],
+        ["v1.3.0", "Code quality & observability sprint: fixed 70+ lint errors across 25 files and re-enabled ESLint during builds, added security headers (X-Frame-Options, HSTS, CSP Permissions-Policy, X-Content-Type-Options, Referrer-Policy), sanitized CMA prompt inputs against injection, integrated Sentry error tracking (client + server + global error boundary), wrote comprehensive README.md. 91 unit tests, 89 E2E tests."],
       ]
     ),
     emptyPara(),
@@ -1705,7 +1706,7 @@ function sectionVersionHistory() {
 
     h3("12.3.1 Git & GitHub"),
     bullet("Initialised Git repository and configured remote origin"),
-    bullet("Created semantic version tags (v0.1.0 through v1.1.0) at each milestone — 17 annotated tags"),
+    bullet("Created semantic version tags (v0.1.0 through v1.3.0) at each milestone — 19 annotated tags"),
     bullet("Wrote conventional commit messages with multi-line descriptions"),
     bullet("Pushed code and tags to GitHub after every version"),
     bullet("Configured .gitignore for Node.js/Next.js/Firebase projects"),
@@ -1862,6 +1863,11 @@ function sectionVersionHistoryContent() {
           "April 2026",
           'Production Hardening (v1.2.0) — CI pipeline fix: GitHub Actions workflow now triggers on master branch (was incorrectly targeting main). Seed endpoint production guard: /api/seed returns 403 in production unless ALLOW_SEED=true. Next.js middleware (middleware.ts) for server-side auth verification: lightweight cookie-based gate on all protected routes, public paths exempted (/login, /showday/*, /api/health, /api/leads/inbound). In-memory rate limiting on cost-sensitive APIs: SMS (20/min), CMA research (10/min), seed (2/min) with X-RateLimit headers. Root-level error pages: error.tsx, not-found.tsx, loading.tsx. Auth cookie sync in auth-provider.tsx. New rate-limit.ts utility. 8 new tests (rate-limit + seed API). Total: 91 unit + 89 E2E = 180 tests.',
         ],
+        [
+          "v1.3.0",
+          "June 2026",
+          'Code Quality & Observability (v1.3.0) — Fixed 70+ lint errors across 25 files and re-enabled ESLint enforcement during builds (removed ignoreDuringBuilds). Added security headers via next.config.js: X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, HSTS with preload, Permissions-Policy denying camera/mic/geolocation. Sanitized CMA prompt inputs: strip HTML/template chars, clamp numeric ranges, limit string lengths to prevent prompt injection. Integrated Sentry error tracking: client-side init via instrumentation-client.ts + sentry.client.config.ts (webpack compat), server-side via src/instrumentation.ts, global-error.tsx boundary with Sentry.captureException. Wrote comprehensive README.md with tech stack, getting started guide, environment variables, project structure. 91 unit tests, 89 E2E tests.',
+        ],
       ]
     ),
 
@@ -1938,6 +1944,19 @@ function sectionAppendix() {
     bullet("error-boundary.tsx — React error boundary with retry UI"),
     emptyPara(),
 
+    h3("Error Handling (src/app/)"),
+    bullet("error.tsx — Root error boundary with Sentry reporting"),
+    bullet("global-error.tsx — Global error boundary with Sentry.captureException"),
+    bullet("not-found.tsx — Custom 404 page"),
+    bullet("loading.tsx — Loading skeleton"),
+    emptyPara(),
+
+    h3("Instrumentation (root)"),
+    bullet("instrumentation-client.ts — Sentry client-side init (Turbopack-compatible) with onRouterTransitionStart"),
+    bullet("sentry.client.config.ts — Sentry client-side init (webpack compatibility)"),
+    bullet("src/instrumentation.ts — Sentry server/edge init via Next.js instrumentation API"),
+    emptyPara(),
+
     h3("UI Primitives (src/components/ui/)"),
     bullet("avatar.tsx, badge.tsx, button.tsx, card.tsx, input.tsx"),
     bullet("label.tsx, select.tsx, separator.tsx, sheet.tsx, table.tsx"),
@@ -1971,13 +1990,14 @@ function sectionAppendix() {
     bullet("package.json — Project metadata, dependencies, scripts"),
     bullet("tsconfig.json — TypeScript compiler options (strict, bundler resolution)"),
     bullet("tailwind.config.js — Tailwind theme extensions, colours, animations"),
-    bullet("next.config.js — Next.js configuration (image remote patterns)"),
+    bullet("next.config.js — Next.js configuration (image remote patterns, security headers, Sentry integration)"),
     bullet("postcss.config.mjs — PostCSS plugins (Tailwind, Autoprefixer)"),
     bullet("eslint.config.mjs — ESLint 9 flat config (next/core-web-vitals + typescript)"),
     bullet("apphosting.yaml — Firebase App Hosting deployment config (includes GEMINI_API_KEY secret)"),
     bullet("firebase.json — Firebase project services configuration"),
     bullet("firestore.rules — Firestore security rules"),
     bullet("firestore.indexes.json — Firestore composite indexes"),
+    bullet("README.md — Project documentation (tech stack, setup, testing, deployment)"),
     emptyPara(),
 
     h2("14.3 npm Scripts"),

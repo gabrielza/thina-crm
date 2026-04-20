@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { AppShell } from "@/components/app-shell";
@@ -12,7 +12,7 @@ import { getLeads, getTasks, getActivities, getTransactions, getCollectionCount,
 import { calculateForecast, calculateTransactionForecast } from "@/lib/scoring";
 import { formatCurrency } from "@/lib/utils";
 import { format, isPast, isToday, parseISO } from "date-fns";
-import { Users, Contact as ContactIcon, CheckSquare, AlertTriangle, TrendingUp, DollarSign, Activity as ActivityIcon, Phone, Mail, Calendar, StickyNote, Receipt, Home } from "lucide-react";
+import { Contact as ContactIcon, CheckSquare, AlertTriangle, TrendingUp, DollarSign, Activity as ActivityIcon, Phone, Mail, Calendar, StickyNote, Receipt } from "lucide-react";
 
 const DashboardCharts = dynamic(() => import("@/components/dashboard-charts").then((m) => m.DashboardCharts), {
   loading: () => <div className="flex items-center justify-center py-16"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>,

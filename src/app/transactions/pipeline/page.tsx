@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DollarSign, GripVertical, Home } from "lucide-react";
+import { DollarSign, GripVertical } from "lucide-react";
 import {
   getTransactions, updateTransaction,
-  type Transaction, type TransactionStage, TRANSACTION_STAGES,
+  type Transaction, type TransactionStage,
 } from "@/lib/firestore";
 import { NewTransactionSheet } from "@/components/new-transaction-sheet";
 

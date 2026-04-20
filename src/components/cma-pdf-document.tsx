@@ -6,9 +6,8 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
 } from "@react-pdf/renderer";
-import type { CmaReport, CmaComparable } from "@/lib/firestore";
+import type { CmaReport } from "@/lib/firestore";
 
 // ─── Styles ──────────────────────────────────────────────
 

@@ -143,7 +143,7 @@ export function calculateCommission(
 } {
   const grossCommission = Math.round(salePrice * (commissionRate / 100));
   const vatAmount = vatIncluded ? Math.round(grossCommission * SA_VAT_RATE) : 0;
-  const afterVat = grossCommission + vatAmount;
+  const _afterVat = grossCommission + vatAmount;
 
   // Calculate splits as percentages of gross commission
   const splitAmounts = splits.map((s) => ({

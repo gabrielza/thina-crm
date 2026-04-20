@@ -44,31 +44,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "suburb and city are required" }, { status: 400 });
     }
 
+    // Sanitize user inputs before interpolating into the prompt
+    const sanitize = (val: unknown, maxLen = 100): string =>
+      String(val ?? "").replace(/[\r\n]+/g, " ").replace(/[<>{}]/g, "").trim().slice(0, maxLen);
+
+    const sSuburb = sanitize(suburb);
+    const sCity = sanitize(city);
+    const sPropertyType = sanitize(propertyType || "house", 50);
+    const sBedrooms = Math.max(0, Math.min(20, Number(bedrooms) || 3));
+    const sBathrooms = Math.max(0, Math.min(20, Number(bathrooms) || 2));
+    const sFloorSize = Math.max(0, Math.min(99999, Number(floorSize) || 0));
+    const sErfSize = Math.max(0, Math.min(99999, Number(erfSize) || 0));
+
     const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
     const prompt = `You are a South African real estate market research assistant.
 
 Research recent property sales and market data for the following area and property type:
 
-- **Suburb**: ${suburb}
-- **City**: ${city}
-- **Property Type**: ${propertyType || "house"}
-- **Target Bedrooms**: ${bedrooms || 3}
-- **Target Bathrooms**: ${bathrooms || 2}
-- **Target Floor Size**: ${floorSize || 0} m²
-- **Target Erf Size**: ${erfSize || 0} m²
+- **Suburb**: ${sSuburb}
+- **City**: ${sCity}
+- **Property Type**: ${sPropertyType}
+- **Target Bedrooms**: ${sBedrooms}
+- **Target Bathrooms**: ${sBathrooms}
+- **Target Floor Size**: ${sFloorSize} m²
+- **Target Erf Size**: ${sErfSize} m²
 
 Please provide:
 
-1. **comparables**: An array of 3-5 recent comparable property sales in or near this suburb. For each comparable, provide realistic data based on current South African property market conditions. Use actual suburb names near ${suburb}, ${city}. Prices should be in South African Rand (ZAR).
+1. **comparables**: An array of 3-5 recent comparable property sales in or near this suburb. For each comparable, provide realistic data based on current South African property market conditions. Use actual suburb names near ${sSuburb}, ${sCity}. Prices should be in South African Rand (ZAR).
 
 2. **marketInsights**: A brief market analysis (2-3 paragraphs) covering:
-   - Current market conditions in ${suburb}, ${city}
-   - Average price trends for ${propertyType || "house"} properties in the area
+   - Current market conditions in ${sSuburb}, ${sCity}
+   - Average price trends for ${sPropertyType} properties in the area
    - Price per square metre benchmarks
    - Key factors affecting property values in this area (e.g. proximity to schools, transport, security estates)
 
-3. **estimatedPriceRange**: Your estimated price range for a ${bedrooms || 3}-bed ${propertyType || "house"} in ${suburb}, ${city} based on current market data.
+3. **estimatedPriceRange**: Your estimated price range for a ${sBedrooms}-bed ${sPropertyType} in ${sSuburb}, ${sCity} based on current market data.
 
 All prices must be in ZAR. Use realistic South African suburbs and pricing. Today's date is ${new Date().toISOString().split("T")[0]}.`;
 

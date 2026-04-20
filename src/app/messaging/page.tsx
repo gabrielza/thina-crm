@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,11 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  MessageSquare, Send, Phone, Clock, CheckCircle2, XCircle, Search,
+  MessageSquare, Send, Clock, CheckCircle2, XCircle, Search,
 } from "lucide-react";
 import {
-  getSmsMessages, addSmsMessage, getContacts, getLeads,
-  type SmsMessage, type Contact, type Lead,
+  getSmsMessages, addSmsMessage, getContacts,
+  type SmsMessage, type Contact,
 } from "@/lib/firestore";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { useAuth } from "@/lib/hooks/use-auth";

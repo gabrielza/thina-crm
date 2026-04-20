@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DollarSign, GripVertical } from "lucide-react";
 import { getLeads, updateLead, type Lead } from "@/lib/firestore";
 import { NewLeadSheet } from "@/components/new-lead-sheet";

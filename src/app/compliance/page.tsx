@@ -17,13 +17,13 @@ import {
 } from "@/components/ui/sheet";
 import {
   ShieldCheck, ShieldAlert, ShieldX, AlertTriangle, CheckCircle2, XCircle,
-  FileText, TrendingUp, GraduationCap, Receipt, Search,
+  FileText, GraduationCap, Receipt, Search,
 } from "lucide-react";
 import {
   getContacts, updateContact, getTransactions,
   type Contact, type PopiaConsent, type Transaction,
 } from "@/lib/firestore";
-import { format, differenceInDays, addYears } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 
 type Tab = "popia" | "fica" | "commission" | "cpd";
 

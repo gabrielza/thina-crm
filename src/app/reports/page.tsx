@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, TrendingUp, TrendingDown, Users, DollarSign, Target, Activity, BarChart3 } from "lucide-react";
 import { getLeads, getContacts, getTasks, getActivities, type Lead, type Contact, type Task, type Activity as ActivityType } from "@/lib/firestore";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
-import { format, subDays, startOfMonth, isAfter } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
+import { format, subDays, isAfter } from "date-fns";
 
 const COLORS = ["#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#10b981", "#6366f1", "#ec4899", "#14b8a6"];
 
@@ -37,7 +37,7 @@ export default function ReportsPage() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // --- Computed Metrics (memoised) ---
-  const { totalLeads, wonDeals, lostDeals, openDeals, wonRevenue, pipelineValue, avgDealSize, winRate, statusData, sourceData, pipelineData, topDeals } = useMemo(() => {
+  const { totalLeads, lostDeals, wonRevenue, pipelineValue, avgDealSize, winRate, statusData, sourceData, pipelineData, topDeals } = useMemo(() => {
     const totalLeads = leads.length;
     const wonDeals = leads.filter((l) => l.status === "won");
     const lostDeals = leads.filter((l) => l.status === "lost");

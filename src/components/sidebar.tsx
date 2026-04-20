@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3, LogOut, Moon, Sun, Menu, X, Receipt, ShieldCheck, Home, MessageSquare, Building2, Inbox, Zap, UserSearch, FileText, TrendingUp, Timer, FileBarChart } from "lucide-react";
+import { LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3, LogOut, Moon, Sun, Menu, Receipt, ShieldCheck, Home, MessageSquare, Building2, Inbox, Zap, UserSearch, FileText, TrendingUp, Timer, FileBarChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -86,7 +87,7 @@ export function Sidebar() {
     <aside className="hidden lg:flex h-screen w-[240px] flex-col bg-sidebar-bg border-r border-sidebar-border">
       {/* Brand */}
       <div className="flex h-14 items-center gap-2.5 px-5">
-        <img src="/logo.png" alt="Thina CRM" className="h-7 w-7 rounded-md" />
+        <Image src="/logo.png" alt="Thina CRM" width={28} height={28} className="h-7 w-7 rounded-md" />
         <span className="text-sm font-semibold tracking-tight text-sidebar-fg-active">Thina</span>
         <span className="text-[10px] font-medium text-sidebar-fg uppercase tracking-widest ml-auto">CRM</span>
       </div>

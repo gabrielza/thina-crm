@@ -8,7 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Search, Pencil, Home, FileCheck } from "lucide-react";
+import { Trash2, Search, Home, FileCheck } from "lucide-react";
 import { getTransactions, deleteTransaction, type Transaction, type TransactionStage, TRANSACTION_STAGES } from "@/lib/firestore";
 import { formatCurrency } from "@/lib/utils";
 
@@ -141,7 +141,7 @@ export function TransactionsTable({ refreshKey }: TransactionsTableProps) {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-destructive" onClick={(e) => { e.stopPropagation(); t.id && handleDelete(t.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-destructive" onClick={(e) => { e.stopPropagation(); if (t.id) handleDelete(t.id); }}><Trash2 className="h-3.5 w-3.5" /></Button>
                       </div>
                     </TableCell>
                   </TableRow>

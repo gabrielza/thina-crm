@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { addTransaction, getContacts, type TransactionStage, TRANSACTION_STAGES, type Contact } from "@/lib/firestore";
+import { addTransaction, getContacts, type TransactionStage, type Contact } from "@/lib/firestore";
 import { calculateCommission } from "@/lib/scoring";
 import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/lib/hooks/use-auth";

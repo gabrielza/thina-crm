@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  ArrowLeft, Pencil, Trash2, Home, DollarSign, FileCheck, Scale, Landmark,
+  ArrowLeft, Pencil, Trash2, Home, FileCheck, Scale, Landmark,
   Calendar, User, CheckCircle2, Circle, XCircle, ArrowRight,
 } from "lucide-react";
 import {
@@ -17,7 +17,6 @@ import {
 } from "@/lib/firestore";
 import { EditTransactionSheet } from "@/components/edit-transaction-sheet";
 import { calculateCommission } from "@/lib/scoring";
-import { format } from "date-fns";
 
 const stageColors: Record<TransactionStage, string> = {
   otp_signed: "text-blue-700 bg-blue-50",

@@ -58,7 +58,7 @@ const TITLES = [
   "Procurement Manager","General Manager","Technical Director","Finance Director","HR Director",
 ];
 const SOURCES = ["Website","LinkedIn","Referral","Cold Call","Trade Show","Google Ads","Email Campaign","Partner","Social Media","Webinar"];
-const LEAD_STATUSES = ["new","contacted","qualified","proposal","won","lost"] as const;
+const _LEAD_STATUSES = ["new","contacted","qualified","proposal","won","lost"] as const;
 const ACTIVITY_TYPES = ["call","email","meeting","note"] as const;
 const TASK_PRIORITIES = ["low","medium","high"] as const;
 const ACTIVITY_SUBJECTS: Record<string, string[]> = {
@@ -276,7 +276,7 @@ export async function POST(req: NextRequest) {
       });
 
       // 4. Generate tasks
-      const taskDocs = Array.from({ length: counts.tasks }, (_, i) => {
+      const taskDocs = Array.from({ length: counts.tasks }, (_, _i) => {
         const leadIdx = randInt(0, leadIds.length - 1);
         const lead = leadDocs[leadIdx];
         const title = rand(TASK_TITLES).replace("{name}", lead.name.split(" ")[0]).replace("{company}", lead.company);
@@ -311,7 +311,7 @@ export async function POST(req: NextRequest) {
         const vatAmount = vatIncluded ? Math.round(grossCommission * 0.15) : 0;
 
         const stageWeights = [15, 12, 10, 12, 10, 8, 8, 15, 10];
-        let r = randInt(1, 100), cumulative = 0, stageIdx = 0;
+        const r = randInt(1, 100); let cumulative = 0, stageIdx = 0;
         for (let s = 0; s < stageWeights.length; s++) {
           cumulative += stageWeights[s];
           if (r <= cumulative) { stageIdx = s; break; }
@@ -462,7 +462,7 @@ export async function POST(req: NextRequest) {
       });
 
       // 10. Generate SMS messages
-      const smsMessageDocs = Array.from({ length: counts.smsMessages }, (_, i) => {
+      const smsMessageDocs = Array.from({ length: counts.smsMessages }, () => {
         const contactIdx = randInt(0, contactIds.length - 1);
         const contact = contactDocs[contactIdx];
         const isOutbound = Math.random() > 0.3;
@@ -528,7 +528,7 @@ export async function POST(req: NextRequest) {
       });
 
       // 13. Generate buyer profiles
-      const buyerProfileDocs = Array.from({ length: counts.buyerProfiles }, (_, i) => {
+      const buyerProfileDocs = Array.from({ length: counts.buyerProfiles }, () => {
         const contactIdx = randInt(0, contactIds.length - 1);
         const contact = contactDocs[contactIdx];
         const minBudget = randInt(5, 40) * 100000;
@@ -602,7 +602,7 @@ export async function POST(req: NextRequest) {
       const cmaReportDocs = Array.from({ length: counts.cmaReports }, (_, i) => {
         const prop = propertyDocs[i % propertyDocs.length];
         const compCount = randInt(3, 6);
-        const comparables = Array.from({ length: compCount }, (_, j) => {
+        const comparables = Array.from({ length: compCount }, () => {
           const compSuburb = Math.random() > 0.5 ? prop.suburb : rand(SA_SUBURBS);
           const compPrice = prop.askingPrice + randInt(-300000, 300000);
           const compFloor = randInt(80, 400);

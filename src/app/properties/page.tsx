@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
 import { AppShell } from "@/components/app-shell";
 import { formatCurrency } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import {
-  Building2, Plus, Search, Pencil, Trash2, Home, Calendar, AlertTriangle,
+  Building2, Plus, Search, Pencil, Trash2, AlertTriangle,
 } from "lucide-react";
 import {
   getProperties, addProperty, updateProperty, deleteProperty,
@@ -110,7 +110,7 @@ export default function PropertiesPage() {
     if (!user || !form.address) return;
     setSaving(true);
     try {
-      const { featureInput, contactId, ...data } = form;
+      const { featureInput: _fi, contactId, ...data } = form;
       const propertyData = { ...data, contactId: contactId || undefined };
       if (editId) {
         await updateProperty(editId, propertyData);

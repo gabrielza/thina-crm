@@ -44,7 +44,7 @@ const PIPELINE_COLORS: Record<string, string> = {
   Lost: "#ef4444",
 };
 
-const SOURCE_COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
+const _SOURCE_COLORS = ["#3b82f6", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899"];
 
 const formatCompact = (value: number) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0, notation: "compact" }).format(value);

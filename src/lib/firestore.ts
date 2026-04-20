@@ -16,7 +16,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { getFirebaseDb } from "./firebase";
-import { parseDoc, LeadSchema, ContactSchema, TransactionSchema, PropertySchema, InboundLeadSchema } from "./schemas";
+import { parseDoc, LeadSchema, ContactSchema, TransactionSchema } from "./schemas";
 
 // ─── LEADS ───────────────────────────────────────────────
 

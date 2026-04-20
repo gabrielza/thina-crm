@@ -3,20 +3,19 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { AppShell } from "@/components/app-shell";
 import { formatCurrency } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
 } from "@/components/ui/sheet";
 import {
-  UserSearch, Plus, Trash2, CheckCircle2, Home, Users,
+  UserSearch, Plus, Trash2, CheckCircle2, Home,
 } from "lucide-react";
 import {
-  getBuyerProfiles, addBuyerProfile, updateBuyerProfile, deleteBuyerProfile,
+  getBuyerProfiles, addBuyerProfile, deleteBuyerProfile,
   getProperties, getContacts,
   type BuyerProfile, type Property, type Contact,
 } from "@/lib/firestore";
@@ -88,7 +87,7 @@ export default function BuyerMatchPage() {
     if (!user || !form.contactId) return;
     setSaving(true);
     try {
-      const { areaInput, featureInput, ...data } = form;
+      const { areaInput: _a, featureInput: _f, ...data } = form;
       await addBuyerProfile({ ...data, active: true, ownerId: user.uid });
       setForm({
         contactId: "", contactName: "", minBudget: 0, maxBudget: 0,

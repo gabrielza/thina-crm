@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  FileText, Upload, Trash2, Download, Search, File, Image, FolderOpen,
+  FileText, Upload, Trash2, Download, Search, File, Image as ImageIcon, FolderOpen,
 } from "lucide-react";
 import {
   addStoredDocument, getDocumentsByTransaction, getDocumentsByContact, deleteStoredDocument,
@@ -209,7 +209,7 @@ export default function DocumentsPage() {
                   <TableRow key={doc.id}>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {doc.mimeType?.startsWith("image/") ? <Image className="h-4 w-4 text-muted-foreground" /> : <File className="h-4 w-4 text-muted-foreground" />}
+                        {doc.mimeType?.startsWith("image/") ? <ImageIcon className="h-4 w-4 text-muted-foreground" /> : <File className="h-4 w-4 text-muted-foreground" />}
                         <span className="font-medium text-[13px]">{doc.name}</span>
                       </div>
                     </TableCell>
