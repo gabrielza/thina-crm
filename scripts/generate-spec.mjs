@@ -31,7 +31,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "1.0.1";
+const VERSION = "1.1.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -1259,6 +1259,10 @@ function sectionTesting() {
         ["scoring.test.ts", "Commission calculator (calculateCommission): base commission, VAT calculation, splits deduction, zero-handling, edge cases", "12"],
         ["scoring.test.ts", "Transaction forecasting (calculateTransactionForecast): stage-weighted revenue, monthly projections, pipeline metrics", "10"],
         ["utils.test.ts", "cn() class name merge: Tailwind conflict resolution, conditional classes, null/undefined handling", "6"],
+        ["api-health.test.ts", "Health API (GET /api/health): healthy status with Firestore, unhealthy fallback", "2"],
+        ["api-cma-research.test.ts", "CMA Research API (POST /api/cma/research): auth check, missing API key, missing params, Gemini success, no-content error", "5"],
+        ["api-inbound.test.ts", "Inbound webhook (POST /api/leads/inbound): HMAC auth required, missing/invalid signature, empty content, missing ownerId, invalid source, valid HMAC create, GET pending count", "8"],
+        ["api-sms.test.ts", "SMS gateway (POST /api/sms/send): no auth, bad format, invalid token, missing to/body, message length, GET status", "7"],
       ]
     ),
     emptyPara(),
@@ -1323,19 +1327,19 @@ function sectionTesting() {
     ),
     emptyPara(),
 
-    h2("9.4 Test Metrics (v1.0.1)"),
+    h2("9.4 Test Metrics (v1.1.0)"),
     makeTable(
       ["Metric", "Value"],
       [
         ["Unit/Smoke Framework", "Vitest 4.x"],
         ["E2E Framework", "Playwright (Chromium)"],
-        ["Unit/Smoke Test Files", "3"],
+        ["Unit/Smoke Test Files", "7"],
         ["E2E Test Files", "1"],
-        ["Total Unit/Smoke Tests", "61"],
+        ["Total Unit/Smoke Tests", "83"],
         ["Total E2E Tests", "89"],
-        ["Combined Total Tests", "150"],
-        ["Pass Rate", "98% (1 transient timeout on Messaging sidebar nav)"],
-        ["Unit Execution Time", "~3.1 seconds"],
+        ["Combined Total Tests", "172"],
+        ["Pass Rate", "100% unit, 98% E2E (1 transient timeout on Messaging sidebar nav)"],
+        ["Unit Execution Time", "~8 seconds"],
         ["E2E Execution Time", "~14 minutes"],
         ["CI Integration", "Unit tests in GitHub Actions — E2E on-demand only"],
       ]
@@ -1458,7 +1462,7 @@ function sectionIntegration() {
     bullet("allow create: if isCreatingOwn() — Must set ownerId to own UID when creating"),
     bullet("allow update, delete: if isOwner() — Only the document owner can modify or delete"),
     bullet("No open access patterns — no 'allow read, write: if true' anywhere in the rules"),
-    bullet("Special rules: showDays allows public read (QR code forms); showDayLeads allows public create (registration)"),
+    bullet("Special rules: showDays allows public read (QR code forms); showDayLeads allows public create with schema validation (type, length, field count constraints)"),
     bullet("Rules deployed via: npx firebase-tools deploy --only firestore:rules --project thina-crm"),
     emptyPara(),
 
@@ -1493,6 +1497,7 @@ function sectionIntegration() {
         ["BULKSMS_TOKEN_ID", "BulkSMS API token ID for SMS gateway authentication"],
         ["BULKSMS_TOKEN_SECRET", "BulkSMS API token secret for SMS gateway authentication"],
         ["INBOUND_WEBHOOK_SECRET", "HMAC-SHA256 shared secret for inbound lead webhook signature verification"],
+        ["GEMINI_API_KEY", "Google Gemini API key for AI-powered CMA research (stored in Cloud Secret Manager)"],
       ]
     ),
     emptyPara(),
@@ -1687,6 +1692,8 @@ function sectionVersionHistory() {
         ["v0.12.0", "Comparative Market Analysis (CMA) reports with comparable sales management, auto-calculated valuations, confidence levels, KPI cards. New cmaReports collection, 5 CRUD functions, 40 seed records, 9 new E2E tests (84 total). Updated spec document generator."],
         ["v0.13.0", "CMA enhancements: PDF export via @react-pdf/renderer (4-page professional report), auto-fill from existing properties, clone CMA as draft, value range display (statistical ±band), confidence auto-score (count + 6-month recency). New cma-pdf-document.tsx component. Training guide and demo guide documentation."],
         ["v1.0.0", "Customer-centric data model: every entity now links back to a Contact (customer). Added contactId to Property (seller), ShowDayLead (visitor), InboundLead (on acceptance). Added propertyId to ShowDay. 5 new query functions (getTasksByContact, getTransactionsByContact, getPropertiesByContact, getBuyerProfilesByContact, getCmaReportsByContact). Contact pickers on Property, Transaction, ShowDay, and CMA forms. Expanded Contact detail page to show all 9 related entity types. Updated seed data with cross-entity references."],
+        ["v1.0.1", "Agent assignment, BulkSMS API, Firebase Storage, inbound webhook with HMAC-SHA256, pipeline UX improvements. 10 new unit tests, 5 new E2E tests (150 total)."],
+        ["v1.1.0", "Gemini AI CMA research with Google Search grounding, security hardening (required HMAC auth, Firestore rules schema validation, Zod runtime validation, ErrorBoundary), ESLint 9 flat config, 4 new API test files (22 new tests, 172 total)."],
       ]
     ),
     emptyPara(),
@@ -1717,7 +1724,7 @@ function sectionVersionHistory() {
     bullet("Installed and configured Vitest 4.x with TypeScript path alias support"),
     bullet("Installed and configured Playwright with Chromium for E2E testing"),
     bullet("Created test user accounts in Firebase Auth"),
-    bullet("Wrote 51 unit/smoke tests and 84+ E2E tests"),
+    bullet("Wrote 83 unit/API tests and 89 E2E tests"),
     bullet("Configured GitHub Actions CI pipeline to block deploys on test failure"),
     emptyPara(),
 
@@ -1745,7 +1752,7 @@ function sectionVersionHistory() {
         ["Code Implementation", "", "✓ Wrote all application code, components, and tests"],
         ["Infrastructure Config", "", "✓ Configured Git, Firebase, CI/CD, Playwright"],
         ["Security Rules", "", "✓ Designed and deployed Firestore security rules"],
-        ["Testing", "✓ Directed test strategy", "✓ Wrote and ran all 135 tests"],
+        ["Testing", "✓ Directed test strategy", "✓ Wrote and ran all 172 tests"],
         ["Deployment", "✓ Approved releases", "✓ Built, tested, deployed each version"],
         ["Documentation", "✓ Requested spec document", "✓ Created generator and content"],
         ["Code Review", "✓ Reviewed outputs and directed corrections", ""],
@@ -1844,6 +1851,11 @@ function sectionVersionHistoryContent() {
           "June 2026",
           'Agent Assignment, BulkSMS API, Firebase Storage, Inbound Webhook & Pipeline UX (v1.0.1) — Agent assignment with assignedAgentId/assignedAgentName/assignedAt on Lead and Contact models. BulkSMS gateway API route (api/sms/send) with token authentication. Firebase Storage integration for document uploads. Inbound lead webhook (api/leads/inbound) with HMAC-SHA256 signature verification. Pipeline UX improvements with contact-linked deal flow. 10 new unit tests (commission calculator, transaction forecasting) bringing total to 61. 5 new E2E tests (contact pickers, contact detail sections) bringing total to 89. Combined test count: 150.',
         ],
+        [
+          "v1.1.0",
+          "April 2026",
+          'Gemini AI CMA Research & Security Hardening (v1.1.0) — Added Gemini AI-powered CMA research endpoint (api/cma/research) using @google/genai SDK with Google Search grounding tool. Returns structured comparable sales data, market insights, and estimated price ranges for any suburb. "Research with Gemini" button on CMA Reports page auto-populates comparables and market notes. Security hardening: inbound webhook now requires HMAC secret (returns 503 if unconfigured), Firestore rules schema validation for showDayLeads collection, Zod runtime validation (parseDoc helper) for Firestore document reads on leads/contacts/transactions. Added ErrorBoundary component wrapping app layout. ESLint 9 flat config (next/core-web-vitals + typescript rules). 4 new API test files: api-health, api-cma-research, api-inbound, api-sms (22 new tests). GEMINI_API_KEY stored in Cloud Secret Manager. Total: 83 unit + 89 E2E = 172 tests.',
+        ],
       ]
     ),
 
@@ -1891,6 +1903,7 @@ function sectionAppendix() {
     bullet("api/seed/route.ts — Server-side seed API route (Firebase Admin)"),
     bullet("api/leads/inbound/route.ts — Inbound lead webhook (POST) — receives leads from external portals with HMAC-SHA256 signature verification"),
     bullet("api/sms/send/route.ts — BulkSMS gateway (POST) — sends SMS messages via BulkSMS API with token authentication"),
+    bullet("api/cma/research/route.ts — Gemini AI CMA research (POST) — returns comparable sales data with Google Search grounding"),
     emptyPara(),
 
     h3("Components (src/components/)"),
@@ -1916,6 +1929,7 @@ function sectionAppendix() {
     bullet("edit-transaction-sheet.tsx — Edit transaction form with stage management"),
     bullet("forecast-chart.tsx — Pipeline and transaction forecast visualisation"),
     bullet("cma-pdf-document.tsx — Professional 4-page CMA PDF report (cover, subject, comparables, feature comparison)"),
+    bullet("error-boundary.tsx — React error boundary with retry UI"),
     emptyPara(),
 
     h3("UI Primitives (src/components/ui/)"),
@@ -1928,6 +1942,7 @@ function sectionAppendix() {
     bullet("firebase-admin.ts — Server Firebase Admin initialisation"),
     bullet("firestore.ts — All CRUD operations and batch utilities"),
     bullet("scoring.ts — Lead scoring algorithm, pipeline forecasting, commission calculator, transaction forecasting"),
+    bullet("schemas.ts — Zod runtime validation schemas (Lead, Contact, Transaction, Property, InboundLead, PopiaConsent) with parseDoc helper"),
     bullet("utils.ts — cn() class name merge utility"),
     bullet("hooks/use-auth.ts — Authentication React hook"),
     emptyPara(),
@@ -1936,6 +1951,10 @@ function sectionAppendix() {
     bullet("scoring.test.ts — Lead scoring, score labels, pipeline forecasting, commission calculator, transaction forecasting tests (43 tests)"),
     bullet("utils.test.ts — cn() class merge utility tests (6 tests)"),
     bullet("smoke.test.ts — Infrastructure, config, security rules, data model smoke tests (12 tests)"),
+    bullet("api-health.test.ts — Health API endpoint tests (2 tests)"),
+    bullet("api-cma-research.test.ts — Gemini CMA research API tests (5 tests)"),
+    bullet("api-inbound.test.ts — Inbound webhook API tests (8 tests)"),
+    bullet("api-sms.test.ts — SMS gateway API tests (7 tests)"),
     emptyPara(),
 
     h3("E2E Tests (e2e/)"),
@@ -1948,7 +1967,8 @@ function sectionAppendix() {
     bullet("tailwind.config.js — Tailwind theme extensions, colours, animations"),
     bullet("next.config.js — Next.js configuration (image remote patterns)"),
     bullet("postcss.config.mjs — PostCSS plugins (Tailwind, Autoprefixer)"),
-    bullet("apphosting.yaml — Firebase App Hosting deployment config"),
+    bullet("eslint.config.mjs — ESLint 9 flat config (next/core-web-vitals + typescript)"),
+    bullet("apphosting.yaml — Firebase App Hosting deployment config (includes GEMINI_API_KEY secret)"),
     bullet("firebase.json — Firebase project services configuration"),
     bullet("firestore.rules — Firestore security rules"),
     bullet("firestore.indexes.json — Firestore composite indexes"),
