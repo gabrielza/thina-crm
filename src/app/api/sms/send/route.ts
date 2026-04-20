@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { smsLimiter } from "@/lib/rate-limit";
 
 // ─── BulkSMS API Integration ─────────────────────────────
 // Docs: https://www.bulksms.com/developer/json/message/send/
@@ -84,6 +85,15 @@ export async function POST(req: NextRequest) {
     const token = authHeader.slice(7);
     const decoded = await adminAuth.verifyIdToken(token);
     const uid = decoded.uid;
+
+    // Rate limit: 20 SMS per minute per user
+    const rateResult = smsLimiter.check(uid);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait before sending more messages." },
+        { status: 429, headers: smsLimiter.headers(rateResult) }
+      );
+    }
 
     const body: SendSmsRequest = await req.json();
 

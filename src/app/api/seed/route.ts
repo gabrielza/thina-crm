@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { seedLimiter } from "@/lib/rate-limit";
 
 // ─── Name pools ─────────────────────────────────────────
 const FIRST_NAMES_ZA = [
@@ -171,6 +172,14 @@ async function adminClearCollection(collectionName: string): Promise<number> {
 
 export async function POST(req: NextRequest) {
   try {
+    // Block seed operations in production unless explicitly enabled
+    if (process.env.NODE_ENV === "production" && process.env.ALLOW_SEED !== "true") {
+      return NextResponse.json(
+        { error: "Seed endpoint is disabled in production" },
+        { status: 403 }
+      );
+    }
+
     // Verify the user is authenticated via Authorization header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
@@ -179,6 +188,15 @@ export async function POST(req: NextRequest) {
     const token = authHeader.slice(7);
     const decoded = await adminAuth.verifyIdToken(token);
     const uid = decoded.uid;
+
+    // Rate limit: 2 seed requests per minute
+    const rateResult = seedLimiter.check(uid);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait before seeding again." },
+        { status: 429, headers: seedLimiter.headers(rateResult) }
+      );
+    }
 
     const body = await req.json();
     const action = body.action as string;

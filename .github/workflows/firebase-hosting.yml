@@ -1,6 +1,6 @@
 # GitHub Action for Firebase App Hosting
-# This workflow deploys your Next.js app to Firebase on every push to main.
-# Each deployment is tagged with the git commit SHA for version tracking.
+# This workflow runs tests and builds on every push to master and on PRs.
+# Deployment is handled automatically by Firebase App Hosting on push to master.
 #
 # SETUP (GitHub Repository Secrets needed):
 # 1. FIREBASE_SERVICE_ACCOUNT — JSON key from Firebase Console > Project Settings > Service Accounts
@@ -11,13 +11,13 @@
 # 6. NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 # 7. NEXT_PUBLIC_FIREBASE_APP_ID
 
-name: Deploy to Firebase App Hosting
+name: CI — Test & Build
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   build_and_deploy:
@@ -51,25 +51,8 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Tag deployment version
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
           VERSION="v$(date +'%Y%m%d')-${GITHUB_SHA::7}"
           echo "DEPLOY_VERSION=$VERSION" >> $GITHUB_ENV
           echo "Deploying version: $VERSION"
-
-      - name: Deploy to Firebase (on push to main only)
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
-
-      - name: Deploy preview (on PR only)
-        if: github.event_name == 'pull_request'
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}

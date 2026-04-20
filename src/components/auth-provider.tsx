@@ -42,9 +42,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (u) => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, async (u) => {
       setUser(u);
       setLoading(false);
+      // Sync lightweight session cookie for middleware auth gate
+      if (u) {
+        const token = await u.getIdToken();
+        document.cookie = `__session=${token}; path=/; max-age=3600; SameSite=Lax; Secure`;
+      } else {
+        document.cookie = "__session=; path=/; max-age=0";
+      }
     });
     return unsubscribe;
   }, []);

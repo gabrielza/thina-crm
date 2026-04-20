@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
 import { GoogleGenAI, Type } from "@google/genai";
+import { cmaLimiter } from "@/lib/rate-limit";
 
 // ─── POST /api/cma/research ─────────────────────────────
 // Uses Gemini with Google Search grounding to research comparable property sales
@@ -17,7 +18,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const token = authHeader.slice(7);
-    await adminAuth.verifyIdToken(token);
+    const decoded = await adminAuth.verifyIdToken(token);
+
+    // Rate limit: 10 CMA research requests per minute per user
+    const rateResult = cmaLimiter.check(decoded.uid);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait before running more research." },
+        { status: 429, headers: cmaLimiter.headers(rateResult) }
+      );
+    }
 
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
     if (!GEMINI_API_KEY) {

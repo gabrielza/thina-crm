@@ -31,7 +31,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "1.1.0";
+const VERSION = "1.2.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -1327,19 +1327,19 @@ function sectionTesting() {
     ),
     emptyPara(),
 
-    h2("9.4 Test Metrics (v1.1.0)"),
+    h2("9.4 Test Metrics (v1.2.0)"),
     makeTable(
       ["Metric", "Value"],
       [
         ["Unit/Smoke Framework", "Vitest 4.x"],
         ["E2E Framework", "Playwright (Chromium)"],
-        ["Unit/Smoke Test Files", "7"],
+        ["Unit/Smoke Test Files", "9"],
         ["E2E Test Files", "1"],
-        ["Total Unit/Smoke Tests", "83"],
+        ["Total Unit/Smoke Tests", "91"],
         ["Total E2E Tests", "89"],
-        ["Combined Total Tests", "172"],
+        ["Combined Total Tests", "180"],
         ["Pass Rate", "100% unit, 98% E2E (1 transient timeout on Messaging sidebar nav)"],
-        ["Unit Execution Time", "~8 seconds"],
+        ["Unit Execution Time", "~10 seconds"],
         ["E2E Execution Time", "~14 minutes"],
         ["CI Integration", "Unit tests in GitHub Actions — E2E on-demand only"],
       ]
@@ -1694,6 +1694,7 @@ function sectionVersionHistory() {
         ["v1.0.0", "Customer-centric data model: every entity now links back to a Contact (customer). Added contactId to Property (seller), ShowDayLead (visitor), InboundLead (on acceptance). Added propertyId to ShowDay. 5 new query functions (getTasksByContact, getTransactionsByContact, getPropertiesByContact, getBuyerProfilesByContact, getCmaReportsByContact). Contact pickers on Property, Transaction, ShowDay, and CMA forms. Expanded Contact detail page to show all 9 related entity types. Updated seed data with cross-entity references."],
         ["v1.0.1", "Agent assignment, BulkSMS API, Firebase Storage, inbound webhook with HMAC-SHA256, pipeline UX improvements. 10 new unit tests, 5 new E2E tests (150 total)."],
         ["v1.1.0", "Gemini AI CMA research with Google Search grounding, security hardening (required HMAC auth, Firestore rules schema validation, Zod runtime validation, ErrorBoundary), ESLint 9 flat config, 4 new API test files (22 new tests, 172 total)."],
+        ["v1.2.0", "Production hardening sprint: CI pipeline fix (main→master branch), seed endpoint production guard, Next.js middleware for server-side auth, in-memory rate limiting on SMS/CMA/seed APIs, error.tsx + not-found.tsx + loading.tsx pages, rate-limit and seed API tests. 8 new tests (180 total)."],
       ]
     ),
     emptyPara(),
@@ -1724,7 +1725,7 @@ function sectionVersionHistory() {
     bullet("Installed and configured Vitest 4.x with TypeScript path alias support"),
     bullet("Installed and configured Playwright with Chromium for E2E testing"),
     bullet("Created test user accounts in Firebase Auth"),
-    bullet("Wrote 83 unit/API tests and 89 E2E tests"),
+    bullet("Wrote 91 unit/API tests and 89 E2E tests"),
     bullet("Configured GitHub Actions CI pipeline to block deploys on test failure"),
     emptyPara(),
 
@@ -1855,6 +1856,11 @@ function sectionVersionHistoryContent() {
           "v1.1.0",
           "April 2026",
           'Gemini AI CMA Research & Security Hardening (v1.1.0) — Added Gemini AI-powered CMA research endpoint (api/cma/research) using @google/genai SDK with Google Search grounding tool. Returns structured comparable sales data, market insights, and estimated price ranges for any suburb. "Research with Gemini" button on CMA Reports page auto-populates comparables and market notes. Security hardening: inbound webhook now requires HMAC secret (returns 503 if unconfigured), Firestore rules schema validation for showDayLeads collection, Zod runtime validation (parseDoc helper) for Firestore document reads on leads/contacts/transactions. Added ErrorBoundary component wrapping app layout. ESLint 9 flat config (next/core-web-vitals + typescript rules). 4 new API test files: api-health, api-cma-research, api-inbound, api-sms (22 new tests). GEMINI_API_KEY stored in Cloud Secret Manager. Total: 83 unit + 89 E2E = 172 tests.',
+        ],
+        [
+          "v1.2.0",
+          "April 2026",
+          'Production Hardening (v1.2.0) — CI pipeline fix: GitHub Actions workflow now triggers on master branch (was incorrectly targeting main). Seed endpoint production guard: /api/seed returns 403 in production unless ALLOW_SEED=true. Next.js middleware (middleware.ts) for server-side auth verification: lightweight cookie-based gate on all protected routes, public paths exempted (/login, /showday/*, /api/health, /api/leads/inbound). In-memory rate limiting on cost-sensitive APIs: SMS (20/min), CMA research (10/min), seed (2/min) with X-RateLimit headers. Root-level error pages: error.tsx, not-found.tsx, loading.tsx. Auth cookie sync in auth-provider.tsx. New rate-limit.ts utility. 8 new tests (rate-limit + seed API). Total: 91 unit + 89 E2E = 180 tests.',
         ],
       ]
     ),
