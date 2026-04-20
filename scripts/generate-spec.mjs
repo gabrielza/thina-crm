@@ -1394,7 +1394,7 @@ function sectionIntegration() {
         ["Branch", "master"],
         ["Committer", "Gabriel d'Oliveira (gadolive@microsoft.com)"],
         ["Commit Convention", "Conventional commits (feat:, test:, fix:, etc.)"],
-        ["Tagging Strategy", "Semantic version tags (v0.1.0 through v0.11.0)"],
+        ["Tagging Strategy", "Semantic version tags (v0.1.0 through v1.1.0) — annotated tags on every release"],
         ["Push Command", "git push origin master --tags"],
         [".gitignore", "node_modules/, .next/, .env.local, tmp-e2e-user.json, build artifacts"],
       ]
@@ -1704,7 +1704,7 @@ function sectionVersionHistory() {
 
     h3("12.3.1 Git & GitHub"),
     bullet("Initialised Git repository and configured remote origin"),
-    bullet("Created semantic version tags (v0.1.0 through v0.11.0) at each milestone"),
+    bullet("Created semantic version tags (v0.1.0 through v1.1.0) at each milestone — 17 annotated tags"),
     bullet("Wrote conventional commit messages with multi-line descriptions"),
     bullet("Pushed code and tags to GitHub after every version"),
     bullet("Configured .gitignore for Node.js/Next.js/Firebase projects"),
