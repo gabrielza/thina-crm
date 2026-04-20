@@ -18,8 +18,8 @@ import {
   Inbox, CheckCircle2, XCircle, Clock, FileText, Plus, ArrowRight,
 } from "lucide-react";
 import {
-  getInboundLeads, addInboundLead, updateInboundLead, addLead,
-  type InboundLead,
+  getInboundLeads, addInboundLead, updateInboundLead, addLead, addContact, getContacts,
+  type InboundLead, type Contact,
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { format } from "date-fns";
@@ -82,6 +82,29 @@ export default function InboundPage() {
   const handleAccept = async (lead: InboundLead) => {
     if (!user || !lead.id) return;
     try {
+      // Find or create a Contact for this inbound lead
+      const existingContacts = await getContacts();
+      let contactId: string | undefined;
+      const matchedContact = existingContacts.find(
+        (c) => c.email.toLowerCase() === lead.parsed.email.toLowerCase()
+      );
+      if (matchedContact?.id) {
+        contactId = matchedContact.id;
+      } else if (lead.parsed.name && lead.parsed.email) {
+        contactId = await addContact({
+          name: lead.parsed.name,
+          email: lead.parsed.email,
+          phone: lead.parsed.phone,
+          company: "",
+          title: "",
+          notes: `Auto-created from ${lead.source} portal enquiry.`,
+          ownerId: user.uid,
+          assignedAgentId: user.uid,
+          assignedAgentName: user.displayName || user.email || "Unknown Agent",
+          assignedAt: new Date().toISOString(),
+        });
+      }
+
       const leadId = await addLead({
         name: lead.parsed.name,
         email: lead.parsed.email,
@@ -91,9 +114,18 @@ export default function InboundPage() {
         source: lead.source === "property24" ? "Property24" : lead.source === "private-property" ? "Private Property" : "Portal",
         notes: `Portal enquiry: ${lead.parsed.message}\nProperty: ${lead.parsed.propertyAddress}\nRef: ${lead.parsed.propertyRef}`,
         value: 0,
+        contactId,
         ownerId: user.uid,
+        assignedAgentId: user.uid,
+        assignedAgentName: user.displayName || user.email || "Unknown Agent",
+        assignedAt: new Date().toISOString(),
       });
-      await updateInboundLead(lead.id, { status: "accepted", leadId, reviewedAt: serverTimestamp() as unknown as InboundLead["reviewedAt"] });
+      await updateInboundLead(lead.id, {
+        status: "accepted",
+        leadId,
+        contactId,
+        reviewedAt: serverTimestamp() as unknown as InboundLead["reviewedAt"],
+      });
       fetchData();
     } catch (error) {
       console.error("Failed to accept lead:", error);

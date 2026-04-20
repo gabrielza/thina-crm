@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Pencil, Trash2, Mail, Phone, Building2, Calendar, DollarSign, Tag, Receipt } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Mail, Phone, Building2, Calendar, DollarSign, Tag, Receipt, UserCheck } from "lucide-react";
 import { getLeadById, deleteLead, getActivitiesByLead, getTasksByLead, type Lead, type Activity, type Task } from "@/lib/firestore";
 import { EditLeadSheet } from "@/components/edit-lead-sheet";
 import { ActivityTimeline } from "@/components/activity-timeline";
@@ -103,6 +103,7 @@ export default function LeadDetailPage() {
             <CardContent className="space-y-3">
               <div className="flex items-center gap-3"><DollarSign className="h-4 w-4 text-muted-foreground/60" /><span className="font-mono text-sm font-semibold">{lead.value ? formatCurrency(lead.value) : "No value set"}</span></div>
               <div className="flex items-center gap-3"><Tag className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">Source: {lead.source || "—"}</span></div>
+              <div className="flex items-center gap-3"><UserCheck className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">Agent: {lead.assignedAgentName || "—"}</span></div>
               <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">Created: {lead.createdAt ? format(lead.createdAt.toDate(), "dd MMM yyyy, HH:mm") : "—"}</span></div>
               {lead.updatedAt && <div className="flex items-center gap-3"><Calendar className="h-4 w-4 text-muted-foreground/60" /><span className="text-[13px]">Updated: {format(lead.updatedAt.toDate(), "dd MMM yyyy, HH:mm")}</span></div>}
             </CardContent>

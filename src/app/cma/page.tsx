@@ -22,8 +22,8 @@ import {
 } from "lucide-react";
 import {
   getCmaReports, addCmaReport, updateCmaReport, deleteCmaReport,
-  getProperties,
-  type CmaReport, type CmaComparable, type Property,
+  getProperties, getContacts,
+  type CmaReport, type CmaComparable, type Property, type Contact,
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
 
@@ -66,7 +66,7 @@ const emptyForm = {
   estimatedValue: 0, pricePerSqm: 0,
   confidenceLevel: "medium" as CmaReport["confidenceLevel"],
   status: "draft" as CmaReport["status"],
-  contactName: "", notes: "",
+  contactName: "", contactId: "", notes: "",
 };
 
 export default function CmaPage() {
@@ -80,12 +80,14 @@ export default function CmaPage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [properties, setProperties] = useState<Property[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
 
   const fetchData = useCallback(async () => {
     try {
-      const [cmaData, propData] = await Promise.all([getCmaReports(), getProperties()]);
+      const [cmaData, propData, contactData] = await Promise.all([getCmaReports(), getProperties(), getContacts()]);
       setReports(cmaData);
       setProperties(propData);
+      setContacts(contactData);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
@@ -139,6 +141,7 @@ export default function CmaPage() {
       confidenceLevel: report.confidenceLevel,
       status: report.status,
       contactName: report.contactName || "",
+      contactId: report.contactId || "",
       notes: report.notes || "",
     });
     setSheetOpen(true);
@@ -179,6 +182,7 @@ export default function CmaPage() {
       confidenceLevel: report.confidenceLevel,
       status: "draft",
       contactName: report.contactName || "",
+      contactId: report.contactId || "",
       notes: report.notes || "",
     });
     setSheetOpen(true);
@@ -219,6 +223,7 @@ export default function CmaPage() {
         confidenceLevel: form.confidenceLevel,
         status: form.status,
         contactName: form.contactName,
+        contactId: form.contactId || undefined,
         notes: form.notes,
         ownerId: user.uid,
       };
@@ -446,8 +451,22 @@ export default function CmaPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Contact Name</Label>
-                  <Input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} />
+                  <Label>Contact</Label>
+                  {contacts.length > 0 ? (
+                    <Select value={form.contactId || "none"} onValueChange={(v) => {
+                      const cid = v === "none" ? "" : v;
+                      const contact = contacts.find((c) => c.id === cid);
+                      setForm({ ...form, contactId: cid, contactName: contact ? contact.name : form.contactName });
+                    }}>
+                      <SelectTrigger><SelectValue placeholder="Select a contact..." /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— No linked contact —</SelectItem>
+                        {contacts.map((c) => <SelectItem key={c.id} value={c.id!}>{c.name} ({c.email})</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} />
+                  )}
                 </div>
               </div>
             </div>

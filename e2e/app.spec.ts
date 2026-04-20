@@ -799,3 +799,68 @@ test.describe("Empty State Usability", () => {
     await expect(table.or(empty)).toBeVisible({ timeout: 10000 });
   });
 });
+
+// ═══════════════════════════════════════════════════════════
+// v1.0.0 — Customer-Centric Data Model E2E Tests
+// ═══════════════════════════════════════════════════════════
+
+test.describe("v1.0.0 — Contact Pickers on Forms", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("property form has 'Link to Contact' picker", async ({ page }) => {
+    await page.goto("/properties");
+    await page.getByRole("button", { name: "Add Property" }).click();
+    await expect(page.getByText("Link to Contact")).toBeVisible({ timeout: 5000 });
+  });
+
+  test("transaction form has 'Link to Contact (Buyer/Customer)' picker", async ({ page }) => {
+    await page.goto("/transactions");
+    await page.getByRole("button", { name: "New Transaction" }).click();
+    await expect(page.getByText("Link to Contact (Buyer/Customer)")).toBeVisible({ timeout: 5000 });
+  });
+
+  test("show day form has 'Link to Property Listing' picker", async ({ page }) => {
+    await page.goto("/showdays");
+    await page.getByRole("button", { name: "New Show Day" }).click();
+    await expect(page.getByText("Link to Property Listing")).toBeVisible({ timeout: 5000 });
+  });
+
+  test("CMA form has contact picker dropdown", async ({ page }) => {
+    await page.goto("/cma");
+    // Open the new CMA report form — button may say "New Report" or "New CMA"
+    const newBtn = page.getByRole("button", { name: /New/ }).first();
+    await newBtn.click();
+    // The CMA form should have a "Contact" label for the contact picker
+    await expect(page.getByText("Contact").first()).toBeVisible({ timeout: 5000 });
+  });
+});
+
+test.describe("v1.0.0 — Contact Detail Page Sections", () => {
+  test.beforeEach(async ({ page }) => { await signIn(page); });
+
+  test("contact detail page shows expanded entity sections", async ({ page }) => {
+    await page.goto("/contacts");
+    // Wait for contacts table to load
+    await expect(page.locator("h1")).toContainText("Contacts", { timeout: 10000 });
+
+    // Click on the first contact row if available
+    const firstRow = page.locator("table tbody tr").first();
+    const hasRows = await firstRow.isVisible({ timeout: 10000 }).catch(() => false);
+
+    if (hasRows) {
+      await firstRow.click();
+      await page.waitForURL(/\/contacts\//, { timeout: 10000 });
+
+      // Should show the v1.0.0 expanded sections — at minimum the card titles are rendered
+      await expect(page.getByText("Contact")).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText("Associated Leads")).toBeVisible({ timeout: 10000 });
+
+      // v1.0.0 new sections (these render even if empty — they show count 0)
+      await expect(page.getByText(/Transactions/)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/Properties/)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/Documents/)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/CMA Reports/)).toBeVisible({ timeout: 5000 });
+      await expect(page.getByText(/SMS History/)).toBeVisible({ timeout: 5000 });
+    }
+  });
+});

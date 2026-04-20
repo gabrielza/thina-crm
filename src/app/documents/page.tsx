@@ -22,6 +22,8 @@ import {
   getTransactions, getContacts,
   type StoredDocument, type Transaction, type Contact,
 } from "@/lib/firestore";
+import { getFirebaseStorage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { format } from "date-fns";
 
@@ -102,13 +104,15 @@ export default function DocumentsPage() {
     if (!user || !form.name || !file) return;
     setUploading(true);
     try {
-      // In production, upload to Firebase Storage first
-      // For now, create a document record with a placeholder URL
       const storagePath = `documents/${user.uid}/${Date.now()}-${file.name}`;
+      const storage = getFirebaseStorage();
+      const storageRef = ref(storage, storagePath);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
       await addStoredDocument({
         name: form.name || file.name,
         type: form.type,
-        url: `https://storage.googleapis.com/thina-crm.appspot.com/${storagePath}`,
+        url,
         storagePath,
         fileSize: file.size,
         mimeType: file.type,

@@ -16,8 +16,6 @@ import {
   WidthType,
   AlignmentType,
   BorderStyle,
-  TableOfContents,
-  StyleLevel,
   PageBreak,
   Footer,
   Header,
@@ -33,7 +31,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "0.13.0";
+const VERSION = "1.0.0";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -237,17 +235,50 @@ function titlePage() {
 // ─── Sections ─────────────────────────────────────────────────────────────────
 
 function sectionTableOfContents() {
+  const tocEntries = [
+    "1. Executive Summary",
+    "2. System Architecture",
+    "3. Technology Stack & Frameworks",
+    "4. Component Inventory",
+    "5. Page Routes & Features",
+    "6. Core Functions & APIs",
+    "7. Design System",
+    "8. Data Seeder",
+    "9. Testing & Quality Assurance",
+    "10. System Integration & Configuration",
+    "11. Deployment",
+    "12. AI-Assisted Development",
+    "13. Version History",
+    "14. Appendix",
+  ];
+
   return [
     heading("Table of Contents"),
-    new TableOfContents("Table of Contents", {
-      hyperlink: true,
-      headingStyleRange: "1-3",
-      stylesWithLevels: [
-        new StyleLevel("Heading1", 1),
-        new StyleLevel("Heading2", 2),
-        new StyleLevel("Heading3", 3),
-      ],
-    }),
+    emptyPara(),
+    ...tocEntries.map(
+      (entry) =>
+        new Paragraph({
+          spacing: { before: 80, after: 80 },
+          indent: { left: convertInchesToTwip(0.3) },
+          border: {
+            bottom: {
+              style: BorderStyle.SINGLE,
+              size: 1,
+              color: "E4E4E7",
+              space: 4,
+            },
+          },
+          children: [
+            new TextRun({
+              text: entry,
+              font: "Aptos",
+              size: 24,
+              color: "27272A",
+            }),
+          ],
+        })
+    ),
+    emptyPara(),
     new Paragraph({ children: [new PageBreak()] }),
   ];
 }
@@ -724,10 +755,10 @@ function sectionFunctions() {
         ["Activity", "activities", "type (call/email/meeting/note), subject, description, leadId, contactId, ownerId"],
         ["Task", "tasks", "title, description, dueDate, status (pending/completed/overdue), priority (low/medium/high), leadId, contactId, ownerId"],
         ["Transaction", "transactions", "propertyAddress, salePrice, commissionRate, commissionAmount, vatIncluded, vatAmount, splits[], agentNetCommission, stage (9 stages), stageHistory[], ficaBuyer, ficaSeller, conveyancer, bondOriginator, buyerName, sellerName, leadId, contactId, ownerId"],
-        ["ShowDay", "showDays", "title, propertyId, date, startTime, endTime, address, notes, ownerId"],
-        ["ShowDayLead", "showDayLeads", "showDayId, name, email, phone, notes, ownerId"],
-        ["Property", "properties", "title, address, suburb, city, province, price, bedrooms, bathrooms, garages, erfSize, floorSize, mandateType (sole/open/dual/auction), status, notes, ownerId"],
-        ["InboundLead", "inboundLeads", "source, rawContent, parsedName, parsedEmail, parsedPhone, status, notes, ownerId"],
+        ["ShowDay", "showDays", "title, propertyId, date, startTime, endTime, address, notes, propertyId (linked listing), ownerId"],
+        ["ShowDayLead", "showDayLeads", "showDayId, name, email, phone, notes, contactId (visitor link), ownerId"],
+        ["Property", "properties", "title, address, suburb, city, province, price, bedrooms, bathrooms, garages, erfSize, floorSize, mandateType (sole/open/dual/auction), status, contactId (seller link), notes, ownerId"],
+        ["InboundLead", "inboundLeads", "source, rawContent, parsedName, parsedEmail, parsedPhone, status, contactId (linked on acceptance), notes, ownerId"],
         ["SmsMessage", "smsMessages", "contactId, contactName, phone, message, direction, status, ownerId"],
         ["FollowUpSequence", "followUpSequences", "name, description, steps[] (delay, channel, template), isActive, ownerId"],
         ["SequenceEnrollment", "sequenceEnrollments", "sequenceId, contactId, leadId, currentStep, status, nextRunAt, ownerId"],
@@ -786,6 +817,7 @@ function sectionFunctions() {
         ["addTask", "addTask(task) → Promise<string>", "Creates a new task."],
         ["getTasks", "getTasks() → Promise<Task[]>", "Fetches all tasks."],
         ["getTasksByLead", "getTasksByLead(leadId) → Promise<Task[]>", "Fetches tasks linked to a lead."],
+        ["getTasksByContact", "getTasksByContact(contactId) → Promise<Task[]>", "Fetches tasks linked to a contact."],
         ["updateTask", "updateTask(id, data) → Promise<void>", "Partially updates a task."],
         ["deleteTask", "deleteTask(id) → Promise<void>", "Deletes a task."],
       ]
@@ -802,6 +834,7 @@ function sectionFunctions() {
         ["updateTransaction", "updateTransaction(id, data) → Promise<void>", "Partially updates a transaction."],
         ["deleteTransaction", "deleteTransaction(id) → Promise<void>", "Deletes a transaction."],
         ["getTransactionsByLead", "getTransactionsByLead(leadId) → Promise<Transaction[]>", "Fetches transactions linked to a lead."],
+        ["getTransactionsByContact", "getTransactionsByContact(contactId) → Promise<Transaction[]>", "Fetches transactions linked to a contact."],
       ]
     ),
     emptyPara(),
@@ -839,6 +872,7 @@ function sectionFunctions() {
         ["getPropertyById", "getPropertyById(id) → Promise<Property|null>", "Fetches a single property by ID."],
         ["updateProperty", "updateProperty(id, data) → Promise<void>", "Partially updates a property."],
         ["deleteProperty", "deleteProperty(id) → Promise<void>", "Deletes a property listing."],
+        ["getPropertiesByContact", "getPropertiesByContact(contactId) → Promise<Property[]>", "Fetches properties where contact is the seller."],
       ]
     ),
     emptyPara(),
@@ -888,6 +922,7 @@ function sectionFunctions() {
         ["getBuyerProfiles", "getBuyerProfiles() → Promise<BuyerProfile[]>", "Fetches all buyer profiles."],
         ["updateBuyerProfile", "updateBuyerProfile(id, data) → Promise<void>", "Updates a buyer profile."],
         ["deleteBuyerProfile", "deleteBuyerProfile(id) → Promise<void>", "Deletes a buyer profile."],
+        ["getBuyerProfilesByContact", "getBuyerProfilesByContact(contactId) → Promise<BuyerProfile[]>", "Fetches buyer profiles linked to a contact."],
       ]
     ),
     emptyPara(),
@@ -925,6 +960,7 @@ function sectionFunctions() {
         ["getCmaReportById", "getCmaReportById(id) → Promise<CmaReport|null>", "Fetches a single CMA report by document ID."],
         ["updateCmaReport", "updateCmaReport(id, data) → Promise<void>", "Partially updates a CMA report. Auto-sets updatedAt."],
         ["deleteCmaReport", "deleteCmaReport(id) → Promise<void>", "Permanently deletes a CMA report."],
+        ["getCmaReportsByContact", "getCmaReportsByContact(contactId) → Promise<CmaReport[]>", "Fetches CMA reports linked to a contact."],
       ]
     ),
     emptyPara(),
@@ -1634,6 +1670,7 @@ function sectionVersionHistory() {
         ["v0.11.0", "13 SA real estate features (properties, show days, inbound leads, messaging, sequences, speed-to-lead, buyer match, documents, lead ROI, compliance), 10 new collections, 39 new functions, 58 new E2E tests, Playwright config hardening"],
         ["v0.12.0", "Comparative Market Analysis (CMA) reports with comparable sales management, auto-calculated valuations, confidence levels, KPI cards. New cmaReports collection, 5 CRUD functions, 40 seed records, 9 new E2E tests (84 total). Updated spec document generator."],
         ["v0.13.0", "CMA enhancements: PDF export via @react-pdf/renderer (4-page professional report), auto-fill from existing properties, clone CMA as draft, value range display (statistical ±band), confidence auto-score (count + 6-month recency). New cma-pdf-document.tsx component. Training guide and demo guide documentation."],
+        ["v1.0.0", "Customer-centric data model: every entity now links back to a Contact (customer). Added contactId to Property (seller), ShowDayLead (visitor), InboundLead (on acceptance). Added propertyId to ShowDay. 5 new query functions (getTasksByContact, getTransactionsByContact, getPropertiesByContact, getBuyerProfilesByContact, getCmaReportsByContact). Contact pickers on Property, Transaction, ShowDay, and CMA forms. Expanded Contact detail page to show all 9 related entity types. Updated seed data with cross-entity references."],
       ]
     ),
     emptyPara(),
@@ -1664,7 +1701,7 @@ function sectionVersionHistory() {
     bullet("Installed and configured Vitest 4.x with TypeScript path alias support"),
     bullet("Installed and configured Playwright with Chromium for E2E testing"),
     bullet("Created test user accounts in Firebase Auth"),
-    bullet("Wrote 51 unit/smoke tests and 84 E2E tests (135 total)"),
+    bullet("Wrote 51 unit/smoke tests and 84+ E2E tests"),
     bullet("Configured GitHub Actions CI pipeline to block deploys on test failure"),
     emptyPara(),
 
@@ -1775,6 +1812,16 @@ function sectionVersionHistoryContent() {
           "v0.12.0",
           "April 2026",
           'Comparative Market Analysis (CMA) — Added CMA report management for property valuations. Subject property details (address, suburb, type, bedrooms, bathrooms, erf/floor size), comparable sales with sale price, date, distance, and adjustments. Auto-calculated estimated value and price per square metre. Confidence level indicator (Low/Medium/High). Report status workflow (Draft → Final → Presented). 4 KPI cards, search, inline CRUD with slide-over Sheet forms. New cmaReports Firestore collection with 5 CRUD functions, security rules, and 40 seed records (1,604 total across 16 collections). 9 new E2E tests (84 total, 135 combined). Updated specification document generator.',
+        ],
+        [
+          "v0.13.0",
+          "April 2026",
+          'CMA Enhancements — PDF export via @react-pdf/renderer (4-page professional report), auto-fill from existing properties, clone CMA as draft, value range display (statistical ±band), confidence auto-score (count + 6-month recency). New cma-pdf-document.tsx component. Training guide and demo guide documentation.',
+        ],
+        [
+          "v1.0.0",
+          "June 2026",
+          'Customer-Centric Data Model (v1.0.0) — Every data entity can now be traced back to a Contact (customer). Added contactId to Property (seller link), ShowDayLead (visitor link), InboundLead (linked on acceptance). Added propertyId to ShowDay (property listing link). 5 new contact-scoped query functions: getTasksByContact, getTransactionsByContact, getPropertiesByContact, getBuyerProfilesByContact, getCmaReportsByContact. Contact picker dropdowns on Property, Transaction, ShowDay, and CMA forms with auto-fill. Expanded Contact detail page to display all 9 related entity types (leads, activities, tasks, transactions, properties, documents, buyer profiles, CMA reports, SMS history). Updated seed data with cross-entity references. 13 of 16 Firestore entities now link to Contact; remaining 3 are config entities (FollowUpSequence, AutoResponseRule) or self-referencing (Contact). This release marks the first major version of Thina CRM.',
         ],
       ]
     ),

@@ -31,6 +31,9 @@ export interface Lead {
   value: number;
   contactId?: string;
   score?: number;
+  assignedAgentId?: string;
+  assignedAgentName?: string;
+  assignedAt?: string; // ISO date — locked on first touch
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   ownerId: string;
@@ -105,6 +108,9 @@ export interface Contact {
   title: string;
   notes: string;
   popiaConsent?: PopiaConsent;
+  assignedAgentId?: string;
+  assignedAgentName?: string;
+  assignedAt?: string; // ISO date — locked on first touch
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   ownerId: string;
@@ -250,6 +256,13 @@ export async function getTasksByLead(leadId: string): Promise<Task[]> {
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Task[];
 }
 
+export async function getTasksByContact(contactId: string): Promise<Task[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, TASKS_COLLECTION), where("contactId", "==", contactId), orderBy("dueDate", "asc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Task[];
+}
+
 export async function updateTask(id: string, data: Partial<Task>) {
   const db = getFirebaseDb();
   await updateDoc(doc(db, TASKS_COLLECTION, id), { ...data, updatedAt: serverTimestamp() });
@@ -378,10 +391,18 @@ export async function getTransactionsByLead(leadId: string): Promise<Transaction
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Transaction[];
 }
 
+export async function getTransactionsByContact(contactId: string): Promise<Transaction[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, TRANSACTIONS_COLLECTION), where("contactId", "==", contactId), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Transaction[];
+}
+
 // ─── SHOW DAYS ───────────────────────────────────────────
 
 export interface ShowDay {
   id?: string;
+  propertyId?: string;
   propertyAddress: string;
   date: string; // ISO date
   timeSlot: string;
@@ -395,6 +416,7 @@ export interface ShowDay {
 export interface ShowDayLead {
   id?: string;
   showDayId: string;
+  contactId?: string;
   name: string;
   email: string;
   phone: string;
@@ -479,6 +501,7 @@ export interface Property {
   sellerName: string;
   sellerPhone: string;
   sellerEmail: string;
+  contactId?: string;
   transactionId?: string;
   leadId?: string;
   ownerId: string;
@@ -524,6 +547,13 @@ export async function deleteProperty(id: string) {
   await deleteDoc(doc(db, PROPERTIES_COLLECTION, id));
 }
 
+export async function getPropertiesByContact(contactId: string): Promise<Property[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, PROPERTIES_COLLECTION), where("contactId", "==", contactId), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Property[];
+}
+
 // ─── INBOUND LEADS (Portal Injection) ───────────────────
 
 export interface InboundLead {
@@ -540,6 +570,7 @@ export interface InboundLead {
   };
   status: "pending" | "accepted" | "rejected";
   leadId?: string; // linked lead after acceptance
+  contactId?: string; // linked contact after acceptance
   receivedAt?: Timestamp;
   reviewedAt?: Timestamp;
   ownerId: string;
@@ -742,6 +773,13 @@ export async function deleteBuyerProfile(id: string) {
   await deleteDoc(doc(db, BUYER_PROFILES_COLLECTION, id));
 }
 
+export async function getBuyerProfilesByContact(contactId: string): Promise<BuyerProfile[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, BUYER_PROFILES_COLLECTION), where("contactId", "==", contactId), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as BuyerProfile[];
+}
+
 // ─── DOCUMENTS ───────────────────────────────────────────
 
 export interface StoredDocument {
@@ -911,6 +949,13 @@ export async function updateCmaReport(id: string, data: Partial<CmaReport>) {
 export async function deleteCmaReport(id: string) {
   const db = getFirebaseDb();
   await deleteDoc(doc(db, CMA_COLLECTION, id));
+}
+
+export async function getCmaReportsByContact(contactId: string): Promise<CmaReport[]> {
+  const db = getFirebaseDb();
+  const q = query(collection(db, CMA_COLLECTION), where("contactId", "==", contactId), orderBy("createdAt", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as CmaReport[];
 }
 
 // ─── BATCH WRITE (for seeding) ───────────────────────────

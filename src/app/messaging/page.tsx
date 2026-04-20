@@ -20,6 +20,7 @@ import {
   getSmsMessages, addSmsMessage, getContacts, getLeads,
   type SmsMessage, type Contact, type Lead,
 } from "@/lib/firestore";
+import { getFirebaseAuth } from "@/lib/firebase";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { format } from "date-fns";
 
@@ -70,16 +71,32 @@ export default function MessagingPage() {
     if (!user || !form.to || !form.body) return;
     setSending(true);
     try {
-      // Queue the message — in production this would call BulkSMS/Clickatell API
-      await addSmsMessage({
-        to: form.to,
-        body: form.body,
-        status: "queued",
-        provider: "bulksms",
-        contactId: form.contactId || undefined,
-        direction: "outbound",
-        ownerId: user.uid,
-      });
+      // Send via server-side BulkSMS API route
+      const auth = getFirebaseAuth();
+      const idToken = await auth.currentUser?.getIdToken();
+      if (idToken) {
+        const res = await fetch("/api/sms/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ to: form.to, body: form.body, contactId: form.contactId || undefined }),
+        });
+        const data = await res.json();
+        if (!res.ok && res.status !== 502) {
+          console.error("SMS API error:", data.error);
+        }
+        // API route handles Firestore write, just refresh
+      } else {
+        // Fallback: write directly to Firestore as queued
+        await addSmsMessage({
+          to: form.to,
+          body: form.body,
+          status: "queued",
+          provider: "bulksms",
+          contactId: form.contactId || undefined,
+          direction: "outbound",
+          ownerId: user.uid,
+        });
+      }
       setForm({ to: "", body: "", contactId: "" });
       setComposeOpen(false);
       fetchData();
@@ -134,7 +151,7 @@ export default function MessagingPage() {
         <Card className="border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-950/10">
           <CardContent className="py-3">
             <p className="text-xs text-blue-700 dark:text-blue-400">
-              <strong>SMS Gateway:</strong> Configure your BulkSMS or Clickatell API credentials in environment variables to enable sending. Messages are queued and will be sent when the gateway is configured.
+              <strong>SMS Gateway:</strong> Messages are sent via the BulkSMS API. Set <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">BULKSMS_TOKEN_ID</code> and <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded">BULKSMS_TOKEN_SECRET</code> environment variables to enable sending. Without credentials, messages are recorded but not delivered.
             </p>
           </CardContent>
         </Card>

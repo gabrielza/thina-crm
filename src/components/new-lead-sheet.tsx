@@ -78,6 +78,9 @@ export function NewLeadSheet({ onLeadAdded }: NewLeadSheetProps) {
       await addLead({
         ...form,
         ownerId: user.uid,
+        assignedAgentId: user.uid,
+        assignedAgentName: user.displayName || user.email || "Unknown Agent",
+        assignedAt: new Date().toISOString(),
       });
       setForm({
         name: "",

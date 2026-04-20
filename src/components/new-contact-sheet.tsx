@@ -40,7 +40,13 @@ export function NewContactSheet({ onContactAdded }: NewContactSheetProps) {
 
     setSaving(true);
     try {
-      await addContact({ ...form, ownerId: user.uid });
+      await addContact({
+        ...form,
+        ownerId: user.uid,
+        assignedAgentId: user.uid,
+        assignedAgentName: user.displayName || user.email || "Unknown Agent",
+        assignedAt: new Date().toISOString(),
+      });
       setForm({ name: "", email: "", phone: "", company: "", title: "", notes: "" });
       setOpen(false);
       onContactAdded();

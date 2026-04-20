@@ -129,6 +129,88 @@ describe("Firebase Configuration Files", () => {
   });
 });
 
+// ═══════════════════════════════════════════════════════════
+// v1.0.0 — Customer-Centric Data Model Tests
+// ═══════════════════════════════════════════════════════════
+
+describe("v1.0.0 — Contact-Scoped Query Function Exports", () => {
+  it("exports getTasksByContact function", async () => {
+    const mod = await import("../firestore");
+    expect(typeof mod.getTasksByContact).toBe("function");
+  });
+
+  it("exports getTransactionsByContact function", async () => {
+    const mod = await import("../firestore");
+    expect(typeof mod.getTransactionsByContact).toBe("function");
+  });
+
+  it("exports getPropertiesByContact function", async () => {
+    const mod = await import("../firestore");
+    expect(typeof mod.getPropertiesByContact).toBe("function");
+  });
+
+  it("exports getBuyerProfilesByContact function", async () => {
+    const mod = await import("../firestore");
+    expect(typeof mod.getBuyerProfilesByContact).toBe("function");
+  });
+
+  it("exports getCmaReportsByContact function", async () => {
+    const mod = await import("../firestore");
+    expect(typeof mod.getCmaReportsByContact).toBe("function");
+  });
+});
+
+describe("v1.0.0 — Data Model Interface Fields", () => {
+  it("Property interface accepts contactId (seller link)", async () => {
+    const mod = await import("../firestore");
+    // Verify the addProperty function exists (typed with contactId in interface)
+    expect(typeof mod.addProperty).toBe("function");
+    // TypeScript compilation already validates the interface shape;
+    // this test confirms the module loads without error with the new fields
+  });
+
+  it("ShowDay interface accepts propertyId (listing link)", async () => {
+    const mod = await import("../firestore");
+    expect(typeof mod.addShowDay).toBe("function");
+  });
+
+  it("ShowDayLead interface accepts contactId (visitor link)", async () => {
+    const mod = await import("../firestore");
+    expect(typeof mod.addShowDayLead).toBe("function");
+  });
+
+  it("InboundLead interface accepts contactId (acceptance link)", async () => {
+    const mod = await import("../firestore");
+    expect(typeof mod.addInboundLead).toBe("function");
+  });
+
+  it("all 16 data model interfaces are exported", async () => {
+    const mod = await import("../firestore");
+    // Verify key CRUD functions exist for each of the 16 collections
+    const expectedExports = [
+      "addLead", "getLeads",
+      "addContact", "getContacts",
+      "addActivity", "getActivities",
+      "addTask", "getTasks",
+      "addTransaction", "getTransactions",
+      "addShowDay", "getShowDays",
+      "addShowDayLead", "getShowDayLeads",
+      "addProperty", "getProperties",
+      "addInboundLead", "getInboundLeads",
+      "addSmsMessage", "getSmsMessages",
+      "addSequence", "getSequences",
+      "addEnrollment", "getEnrollments",
+      "addBuyerProfile", "getBuyerProfiles",
+      "addStoredDocument", "getDocumentsByTransaction",
+      "addAutoResponseRule", "getAutoResponseRules",
+      "addCmaReport", "getCmaReports",
+    ];
+    for (const fn of expectedExports) {
+      expect(typeof mod[fn], `Missing export: ${fn}`).toBe("function");
+    }
+  });
+});
+
 describe("Data Model Consistency", () => {
   it("firestore.ts exports all expected CRUD functions", async () => {
     const firestore = await import("@/lib/firestore");

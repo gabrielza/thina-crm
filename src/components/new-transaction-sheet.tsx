@@ -11,7 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { addTransaction, type TransactionStage, TRANSACTION_STAGES } from "@/lib/firestore";
+import { addTransaction, getContacts, type TransactionStage, TRANSACTION_STAGES, type Contact } from "@/lib/firestore";
 import { calculateCommission } from "@/lib/scoring";
 import { formatCurrency } from "@/lib/utils";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -29,6 +29,7 @@ export function NewTransactionSheet({ onTransactionAdded, defaultLeadId, default
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [contacts, setContacts] = useState<Contact[]>([]);
 
   const [form, setForm] = useState({
     propertyAddress: "",
@@ -41,7 +42,12 @@ export function NewTransactionSheet({ onTransactionAdded, defaultLeadId, default
     bondOriginator: "",
     notes: "",
     leadId: defaultLeadId || "",
+    contactId: "",
   });
+
+  useEffect(() => {
+    getContacts().then(setContacts).catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (defaultBuyerName) setForm((f) => ({ ...f, buyerName: defaultBuyerName }));
@@ -85,6 +91,7 @@ export function NewTransactionSheet({ onTransactionAdded, defaultLeadId, default
         buyerName: form.buyerName,
         sellerName: form.sellerName,
         leadId: form.leadId,
+        contactId: form.contactId || undefined,
         notes: form.notes,
         dates: { otpSigned: now },
         ownerId: user.uid,
@@ -100,6 +107,7 @@ export function NewTransactionSheet({ onTransactionAdded, defaultLeadId, default
         bondOriginator: "",
         notes: "",
         leadId: "",
+        contactId: "",
       });
       setOpen(false);
       onTransactionAdded();
@@ -138,6 +146,26 @@ export function NewTransactionSheet({ onTransactionAdded, defaultLeadId, default
               <Input id="sellerName" required value={form.sellerName} onChange={(e) => setForm({ ...form, sellerName: e.target.value })} placeholder="Seller name" />
             </div>
           </div>
+          {contacts.length > 0 && (
+            <div className="space-y-2">
+              <Label>Link to Contact (Buyer/Customer)</Label>
+              <Select value={form.contactId || "none"} onValueChange={(v) => {
+                const cid = v === "none" ? "" : v;
+                const contact = contacts.find((c) => c.id === cid);
+                setForm({
+                  ...form,
+                  contactId: cid,
+                  buyerName: contact ? contact.name : form.buyerName,
+                });
+              }}>
+                <SelectTrigger><SelectValue placeholder="Select a contact..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— No linked contact —</SelectItem>
+                  {contacts.map((c) => <SelectItem key={c.id} value={c.id!}>{c.name} ({c.email})</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="salePrice">Sale Price (R) *</Label>
             <Input id="salePrice" type="number" min={0} required value={form.salePrice || ""} onChange={(e) => setForm({ ...form, salePrice: Number(e.target.value) || 0 })} placeholder="2500000" />

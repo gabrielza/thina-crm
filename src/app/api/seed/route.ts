@@ -235,7 +235,7 @@ export async function POST(req: NextRequest) {
       // 1. Generate and write contacts
       const contactDocs = Array.from({ length: counts.contacts }, (_, i) => {
         const p = generatePerson(i);
-        return { name: p.name, email: p.email, phone: p.phone, company: p.company, title: p.title, notes: `${p.title} at ${p.company}. Seed #${i + 1}.`, ownerId: uid };
+        return { name: p.name, email: p.email, phone: p.phone, company: p.company, title: p.title, notes: `${p.title} at ${p.company}. Seed #${i + 1}.`, ownerId: uid, assignedAgentId: uid, assignedAgentName: decoded.name || decoded.email || "Seed Agent", assignedAt: new Date().toISOString() };
       });
       const contactIds = await adminBatchWrite("contacts", contactDocs);
 
@@ -246,7 +246,7 @@ export async function POST(req: NextRequest) {
         const contactId = i < counts.contacts ? contactIds[i] : contactIds[randInt(0, contactIds.length - 1)];
         const value = randValue();
         const source = rand(SOURCES);
-        return { name: p.name, email: p.email, phone: p.phone, company: p.company, status, source, value, notes: `Source: ${source}. ${status} stage. R${value.toLocaleString()}.`, contactId, score: 0, ownerId: uid };
+        return { name: p.name, email: p.email, phone: p.phone, company: p.company, status, source, value, notes: `Source: ${source}. ${status} stage. R${value.toLocaleString()}.`, contactId, score: 0, ownerId: uid, assignedAgentId: uid, assignedAgentName: decoded.name || decoded.email || "Seed Agent", assignedAt: new Date().toISOString() };
       });
       const leadIds = await adminBatchWrite("leads", leadDocs);
 
@@ -362,6 +362,7 @@ export async function POST(req: NextRequest) {
           if (!features.includes(f)) features.push(f);
         }
         const seller = generatePerson(i + 5000);
+        const sellerContactId = contactIds[i % contactIds.length];
         return {
           address: `${street}, ${suburb}`, suburb, city, province,
           propertyType: pType, bedrooms: beds, bathrooms: baths, garages,
@@ -371,6 +372,7 @@ export async function POST(req: NextRequest) {
           status: rand(PROPERTY_STATUSES),
           description: `Beautiful ${pType} in ${suburb}, ${city}. ${beds} bed, ${baths} bath.`,
           features, sellerName: seller.name, sellerPhone: seller.phone, sellerEmail: seller.email,
+          contactId: sellerContactId,
           ownerId: uid,
         };
       });
@@ -379,12 +381,14 @@ export async function POST(req: NextRequest) {
 
       // 7. Generate show days (linked to properties)
       const showDayDocs = Array.from({ length: counts.showDays }, (_, i) => {
-        const prop = propertyDocs[i % propertyDocs.length];
+        const propIdx = i % propertyDocs.length;
+        const prop = propertyDocs[propIdx];
         const daysFromNow = randInt(-14, 30);
         const date = formatDate(new Date(Date.now() + daysFromNow * 86400000));
         const hours = [9, 10, 11, 13, 14, 15];
         const startHour = rand(hours);
         return {
+          propertyId: propertyIds[propIdx],
           propertyAddress: `${prop.address}, ${prop.city}`,
           date,
           timeSlot: `${startHour}:00 - ${startHour + 1}:00`,
@@ -400,8 +404,10 @@ export async function POST(req: NextRequest) {
       const showDayLeadDocs = Array.from({ length: counts.showDayLeads }, (_, i) => {
         const p = generatePerson(i + 6000);
         const budgets = ["< R1M","R1M - R2M","R2M - R3M","R3M - R5M","R5M+"];
+        const linkedContactId = Math.random() > 0.5 ? contactIds[randInt(0, contactIds.length - 1)] : undefined;
         return {
           showDayId: showDayIds[i % showDayIds.length],
+          contactId: linkedContactId,
           name: p.name,
           email: p.email,
           phone: p.phone,
@@ -418,6 +424,8 @@ export async function POST(req: NextRequest) {
         const prop = propertyDocs[i % propertyDocs.length];
         const source = rand(PORTALS);
         const propertyRef = `REF-${randInt(10000, 99999)}`;
+        const status = rand(["pending","pending","pending","accepted","rejected"] as const);
+        const linkedContactId = status === "accepted" ? contactIds[randInt(0, contactIds.length - 1)] : undefined;
         return {
           source,
           rawContent: `New enquiry from ${source}: ${p.name} (${p.email}) interested in ${prop.address}, ${prop.city}.`,
@@ -429,7 +437,8 @@ export async function POST(req: NextRequest) {
             propertyAddress: `${prop.address}, ${prop.city}`,
             message: `I am interested in this ${prop.propertyType} in ${prop.suburb}. Please contact me.`,
           },
-          status: rand(["pending","pending","pending","accepted","rejected"] as const),
+          status,
+          contactId: linkedContactId,
           ownerId: uid,
         };
       });

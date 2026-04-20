@@ -87,6 +87,7 @@ export function ContactsTable({ refreshKey }: ContactsTableProps) {
                   <TableHead>Company</TableHead>
                   <TableHead>Title</TableHead>
                   <TableHead>Phone</TableHead>
+                  <TableHead>Agent</TableHead>
                   <TableHead className="w-[120px]"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -102,6 +103,7 @@ export function ContactsTable({ refreshKey }: ContactsTableProps) {
                     <TableCell className="text-muted-foreground">{contact.company || "—"}</TableCell>
                     <TableCell className="text-muted-foreground text-[13px]">{contact.title || "—"}</TableCell>
                     <TableCell className="text-muted-foreground text-[13px]">{contact.phone || "—"}</TableCell>
+                    <TableCell className="text-muted-foreground text-[13px]">{contact.assignedAgentName ? <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-green-500" />{contact.assignedAgentName.split(" ")[0]}</span> : "—"}</TableCell>
                     <TableCell>
                       <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         {contact.phone && <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); window.open(`tel:${contact.phone}`); }}><Phone className="h-3.5 w-3.5" /></Button>}

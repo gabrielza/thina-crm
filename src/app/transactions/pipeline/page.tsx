@@ -144,13 +144,14 @@ export default function TransactionPipelinePage() {
                           key={t.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, t)}
+                          onClick={() => router.push(`/transactions/${t.id}`)}
                           className={`cursor-grab active:cursor-grabbing hover:shadow-md transition-all ${draggedTransaction?.id === t.id ? "opacity-40" : ""}`}
                         >
                           <CardContent className="p-3 space-y-2">
                             <div className="flex items-start gap-2">
                               <GripVertical className="h-4 w-4 text-muted-foreground/50 mt-0.5 shrink-0" />
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate cursor-pointer hover:text-primary" onClick={() => router.push(`/transactions/${t.id}`)}>
+                                <p className="text-sm font-medium truncate">
                                   {t.propertyAddress.split(",")[0]}
                                 </p>
                                 <p className="text-xs text-muted-foreground truncate">{t.buyerName}</p>

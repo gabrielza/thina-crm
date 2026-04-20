@@ -20,7 +20,8 @@ import {
 } from "lucide-react";
 import {
   getProperties, addProperty, updateProperty, deleteProperty,
-  type Property, type MandateType,
+  getContacts,
+  type Property, type MandateType, type Contact,
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { format, differenceInDays } from "date-fns";
@@ -42,11 +43,13 @@ const emptyForm = {
   mandateEnd: "", status: "active" as Property["status"],
   description: "", features: [] as string[], featureInput: "",
   sellerName: "", sellerPhone: "", sellerEmail: "",
+  contactId: "",
 };
 
 export default function PropertiesPage() {
   const { user } = useAuth();
   const [properties, setProperties] = useState<Property[]>([]);
+  const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
@@ -57,8 +60,9 @@ export default function PropertiesPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const data = await getProperties();
-      setProperties(data);
+      const [propData, contactData] = await Promise.all([getProperties(), getContacts()]);
+      setProperties(propData);
+      setContacts(contactData);
     } catch (error) {
       console.error("Failed to fetch properties:", error);
     } finally {
@@ -97,6 +101,7 @@ export default function PropertiesPage() {
       ...prop,
       featureInput: "",
       province: prop.province || "Gauteng",
+      contactId: prop.contactId || "",
     });
     setSheetOpen(true);
   };
@@ -105,11 +110,12 @@ export default function PropertiesPage() {
     if (!user || !form.address) return;
     setSaving(true);
     try {
-      const { featureInput, ...data } = form;
+      const { featureInput, contactId, ...data } = form;
+      const propertyData = { ...data, contactId: contactId || undefined };
       if (editId) {
-        await updateProperty(editId, data);
+        await updateProperty(editId, propertyData);
       } else {
-        await addProperty({ ...data, ownerId: user.uid });
+        await addProperty({ ...propertyData, ownerId: user.uid });
       }
       setSheetOpen(false);
       fetchData();
@@ -283,6 +289,28 @@ export default function PropertiesPage() {
             </div>
             <div className="border-t border-border pt-4 space-y-3">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Seller Details</p>
+              {contacts.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Link to Contact</Label>
+                  <Select value={form.contactId || "none"} onValueChange={(v) => {
+                    const cid = v === "none" ? "" : v;
+                    const contact = contacts.find((c) => c.id === cid);
+                    setForm({
+                      ...form,
+                      contactId: cid,
+                      sellerName: contact ? contact.name : form.sellerName,
+                      sellerPhone: contact ? contact.phone : form.sellerPhone,
+                      sellerEmail: contact ? contact.email : form.sellerEmail,
+                    });
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="Select a contact..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— No linked contact —</SelectItem>
+                      {contacts.map((c) => <SelectItem key={c.id} value={c.id!}>{c.name} ({c.email})</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2"><Label>Seller Name</Label><Input value={form.sellerName} onChange={(e) => setForm({ ...form, sellerName: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2"><Label>Phone</Label><Input value={form.sellerPhone} onChange={(e) => setForm({ ...form, sellerPhone: e.target.value })} /></div>

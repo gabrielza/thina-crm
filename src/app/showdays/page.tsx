@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -18,7 +19,8 @@ import {
 } from "lucide-react";
 import {
   getShowDays, addShowDay, deleteShowDay, getShowDayLeads,
-  type ShowDay, type ShowDayLead,
+  getProperties,
+  type ShowDay, type ShowDayLead, type Property,
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
 import { format } from "date-fns";
@@ -28,17 +30,19 @@ export default function ShowDaysPage() {
   const [showDays, setShowDays] = useState<ShowDay[]>([]);
   const [selectedDay, setSelectedDay] = useState<ShowDay | null>(null);
   const [selectedLeads, setSelectedLeads] = useState<ShowDayLead[]>([]);
+  const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
-  const [form, setForm] = useState({ propertyAddress: "", date: "", timeSlot: "", notes: "" });
+  const [form, setForm] = useState({ propertyAddress: "", date: "", timeSlot: "", notes: "", propertyId: "" });
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const fetchShowDays = useCallback(async () => {
     try {
-      const data = await getShowDays();
-      setShowDays(data);
+      const [dayData, propData] = await Promise.all([getShowDays(), getProperties()]);
+      setShowDays(dayData);
+      setProperties(propData);
     } catch (error) {
       console.error("Failed to fetch show days:", error);
     } finally {
@@ -54,13 +58,14 @@ export default function ShowDaysPage() {
     try {
       await addShowDay({
         propertyAddress: form.propertyAddress,
+        propertyId: form.propertyId || undefined,
         date: form.date,
         timeSlot: form.timeSlot,
         notes: form.notes,
         ownerId: user.uid,
         active: true,
       });
-      setForm({ propertyAddress: "", date: "", timeSlot: "", notes: "" });
+      setForm({ propertyAddress: "", date: "", timeSlot: "", notes: "", propertyId: "" });
       setCreateOpen(false);
       fetchShowDays();
     } catch (error) {
@@ -233,6 +238,28 @@ export default function ShowDaysPage() {
             <SheetDescription>Create an open house event with a QR code for lead capture</SheetDescription>
           </SheetHeader>
           <div className="space-y-4 mt-6">
+            {properties.length > 0 && (
+              <div className="space-y-2">
+                <Label>Link to Property Listing</Label>
+                <Select value={form.propertyId || "none"} onValueChange={(v) => {
+                  const pid = v === "none" ? "" : v;
+                  const prop = properties.find((p) => p.id === pid);
+                  setForm({
+                    ...form,
+                    propertyId: pid,
+                    propertyAddress: prop ? `${prop.address}, ${prop.suburb}, ${prop.city}` : form.propertyAddress,
+                  });
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Select a property..." /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Enter address manually —</SelectItem>
+                    {properties.filter((p) => p.status === "active").map((p) => (
+                      <SelectItem key={p.id} value={p.id!}>{p.address}, {p.suburb}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Property Address *</Label>
               <Input value={form.propertyAddress} onChange={(e) => setForm({ ...form, propertyAddress: e.target.value })} placeholder="e.g. 12 Oak Avenue, Sandton" />
