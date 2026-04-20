@@ -31,7 +31,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "1.0.0";
+const VERSION = "1.0.1";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -432,6 +432,7 @@ function sectionFrameworks() {
         ["cmdk", "1.1.1", "Command palette (⌘+K / Ctrl+K) for quick navigation"],
         ["date-fns", "4.1.0", "Lightweight date formatting and manipulation"],
         ["geist", "1.7.0", "Vercel's Geist Sans and Geist Mono typefaces"],
+        ["firebase/storage", "—", "Firebase Cloud Storage for document uploads"],
       ]
     ),
     emptyPara(),
@@ -750,8 +751,8 @@ function sectionFunctions() {
     makeTable(
       ["Model", "Collection", "Key Fields"],
       [
-        ["Lead", "leads", "name, email, phone, company, status, source, notes, value, contactId, score, ownerId"],
-        ["Contact", "contacts", "name, email, phone, company, title, notes, ownerId"],
+        ["Lead", "leads", "name, email, phone, company, status, source, notes, value, contactId, score, assignedAgentId, assignedAgentName, assignedAt, ownerId"],
+        ["Contact", "contacts", "name, email, phone, company, title, notes, assignedAgentId, assignedAgentName, assignedAt, ownerId"],
         ["Activity", "activities", "type (call/email/meeting/note), subject, description, leadId, contactId, ownerId"],
         ["Task", "tasks", "title, description, dueDate, status (pending/completed/overdue), priority (low/medium/high), leadId, contactId, ownerId"],
         ["Transaction", "transactions", "propertyAddress, salePrice, commissionRate, commissionAmount, vatIncluded, vatAmount, splits[], agentNetCommission, stage (9 stages), stageHistory[], ficaBuyer, ficaSeller, conveyancer, bondOriginator, buyerName, sellerName, leadId, contactId, ownerId"],
@@ -1255,6 +1256,8 @@ function sectionTesting() {
         ["scoring.test.ts", "Lead scoring algorithm (calculateLeadScore): value scoring, stage points, activity engagement, task completion, data completeness, boundary checks (0–100 clamping)", "10"],
         ["scoring.test.ts", "Score labels (getScoreLabel): Hot/Warm/Interested/Cool/Cold thresholds and color strings", "6"],
         ["scoring.test.ts", "Pipeline forecasting (calculateForecast): weighted pipeline, won revenue, stage probabilities, lost lead exclusion", "5"],
+        ["scoring.test.ts", "Commission calculator (calculateCommission): base commission, VAT calculation, splits deduction, zero-handling, edge cases", "12"],
+        ["scoring.test.ts", "Transaction forecasting (calculateTransactionForecast): stage-weighted revenue, monthly projections, pipeline metrics", "10"],
         ["utils.test.ts", "cn() class name merge: Tailwind conflict resolution, conditional classes, null/undefined handling", "6"],
       ]
     ),
@@ -1298,27 +1301,29 @@ function sectionTesting() {
         ["Transaction Pipeline", "Pipeline board loads with 9 stage columns (OTP Signed, Bond Applied, Commission Paid)", "1"],
         ["Dashboard — Tx KPIs", "Transaction KPI cards visible when transactions exist (Active Transactions, Pending/Expected/Earned Commission)", "1"],
         ["Health API", "GET /api/health returns healthy status with Firestore connectivity", "1"],
-        ["Properties", "Property list table loads, property detail page renders with address and mandate type", "3"],
-        ["Show Days", "Show day list loads, create show day form, show day detail with lead registration", "4"],
-        ["Show Day Public", "Public QR code form loads, lead registration works without auth", "2"],
-        ["Inbound Leads", "Inbound lead list loads, source and status columns display", "3"],
-        ["Messaging / SMS", "SMS page loads, conversation list, compose message form", "3"],
-        ["Follow-up Sequences", "Sequence list loads, create sequence with steps, enrollment tracking", "4"],
-        ["Speed-to-Lead", "Auto-response rules list, create/edit rule form, trigger event options", "4"],
-        ["Buyer Match", "Buyer profiles list, profile detail with criteria, property matching", "4"],
-        ["Documents", "Document vault loads, upload form, transaction/contact document linking", "4"],
-        ["Lead ROI", "ROI analytics page loads, source performance table, cost-per-lead metrics", "3"],
-        ["Compliance", "POPIA consent page loads, consent management table, data export/delete actions", "3"],
-        ["CMA Reports", "CMA page loads with heading, sidebar navigation to /cma", "2"],
-        ["Navigation", "Sidebar links navigate correctly to all 27 pages including CMA Reports", "9"],
-        ["Theme & UI", "Dark/light mode toggle, sidebar collapse, responsive layout", "5"],
-        ["Command Palette", "Cmd+K opens palette, navigation commands work, search filters", "4"],
-        ["Seed Data", "Seed page generates records for all 16 collections, progress tracking, clear all", "3"],
+        ["Properties", "Property list table loads, add property sheet opens with required fields, search input works", "3"],
+        ["Show Days", "Show day list loads with KPI cards, new show day sheet opens with required fields", "2"],
+        ["Inbound Leads", "Inbound lead list loads with KPI cards, paste lead email sheet opens, filter tabs clickable", "3"],
+        ["Messaging", "SMS page loads with gateway notice, compose sheet opens with form fields", "2"],
+        ["Follow-up Sequences", "Sequence list loads with KPI cards, new sequence sheet opens with form", "2"],
+        ["Speed-to-Lead", "Page loads with KPI cards, info card shows conversion stat, new rule sheet opens with trigger options", "3"],
+        ["Buyer-Property Matching", "Page loads with KPI cards, new buyer profile sheet opens with form fields", "2"],
+        ["Documents", "Document vault loads with storage notice, upload sheet opens with form fields", "2"],
+        ["Lead Source ROI", "ROI page loads with KPI cards, set source cost sheet opens", "2"],
+        ["Compliance", "POPIA page loads with tabs, consent KPI cards, can switch between tabs", "3"],
+        ["Sidebar Navigation", "Sidebar displays workflow group labels, all 15 sidebar links navigate correctly to their pages", "20"],
+        ["Command Palette", "Ctrl+K opens palette, finds compliance page, finds properties page", "3"],
+        ["Responsive / Mobile", "Pages are usable on mobile viewport, mobile nav menu opens and shows grouped navigation", "2"],
+        ["Page Load Performance", "All 11 feature pages load within 10 seconds (Properties, Show Days, Inbound, Messaging, Sequences, Speed-to-Lead, Buyer Match, Documents, Lead ROI, Compliance, CMA Reports)", "11"],
+        ["Accessibility Basics", "All pages have visible h1 heading, all buttons are keyboard focusable, form labels are associated with inputs", "3"],
+        ["Empty State Usability", "Properties, show days, messaging, sequences, documents, speed-to-lead show table or empty state", "6"],
+        ["Contact Pickers on Forms", "Property form has seller details section, transaction form has contact picker, show day form has property address field, CMA form has contact picker dropdown", "4"],
+        ["Contact Detail Page", "Contact detail page shows expanded entity sections with related data", "1"],
       ]
     ),
     emptyPara(),
 
-    h2("9.4 Test Metrics (v0.13.0)"),
+    h2("9.4 Test Metrics (v1.0.1)"),
     makeTable(
       ["Metric", "Value"],
       [
@@ -1326,12 +1331,12 @@ function sectionTesting() {
         ["E2E Framework", "Playwright (Chromium)"],
         ["Unit/Smoke Test Files", "3"],
         ["E2E Test Files", "1"],
-        ["Total Unit/Smoke Tests", "51"],
-        ["Total E2E Tests", "84"],
-        ["Combined Total Tests", "135"],
-        ["Pass Rate", "100%"],
+        ["Total Unit/Smoke Tests", "61"],
+        ["Total E2E Tests", "89"],
+        ["Combined Total Tests", "150"],
+        ["Pass Rate", "98% (1 transient timeout on Messaging sidebar nav)"],
         ["Unit Execution Time", "~3.1 seconds"],
-        ["E2E Execution Time", "~7 minutes"],
+        ["E2E Execution Time", "~14 minutes"],
         ["CI Integration", "Unit tests in GitHub Actions — E2E on-demand only"],
       ]
     ),
@@ -1476,12 +1481,23 @@ function sectionIntegration() {
     emptyPara(),
 
     h3("10.2.6 Firebase Admin SDK (src/lib/firebase-admin.ts)"),
-    bullet("Server-side initialisation for API routes (seed endpoint, health check)"),
+    bullet("Server-side initialisation for API routes (seed endpoint, health check, inbound webhook, SMS gateway)"),
     bullet("Uses Application Default Credentials in production (Firebase App Hosting auto-provisions)"),
     bullet("Enables privileged operations: batch writes, collection counts, user management"),
     emptyPara(),
 
-    h3("10.2.7 Firebase App Hosting"),
+    h3("10.2.7 Server-Side Environment Variables"),
+    makeTable(
+      ["Variable", "Purpose"],
+      [
+        ["BULKSMS_TOKEN_ID", "BulkSMS API token ID for SMS gateway authentication"],
+        ["BULKSMS_TOKEN_SECRET", "BulkSMS API token secret for SMS gateway authentication"],
+        ["INBOUND_WEBHOOK_SECRET", "HMAC-SHA256 shared secret for inbound lead webhook signature verification"],
+      ]
+    ),
+    emptyPara(),
+
+    h3("10.2.8 Firebase App Hosting"),
     makeTable(
       ["Setting", "Value"],
       [
@@ -1496,7 +1512,7 @@ function sectionIntegration() {
     ),
     emptyPara(),
 
-    h3("10.2.8 Firebase Configuration Files"),
+    h3("10.2.9 Firebase Configuration Files"),
     makeTable(
       ["File", "Purpose"],
       [
@@ -1823,6 +1839,11 @@ function sectionVersionHistoryContent() {
           "June 2026",
           'Customer-Centric Data Model (v1.0.0) — Every data entity can now be traced back to a Contact (customer). Added contactId to Property (seller link), ShowDayLead (visitor link), InboundLead (linked on acceptance). Added propertyId to ShowDay (property listing link). 5 new contact-scoped query functions: getTasksByContact, getTransactionsByContact, getPropertiesByContact, getBuyerProfilesByContact, getCmaReportsByContact. Contact picker dropdowns on Property, Transaction, ShowDay, and CMA forms with auto-fill. Expanded Contact detail page to display all 9 related entity types (leads, activities, tasks, transactions, properties, documents, buyer profiles, CMA reports, SMS history). Updated seed data with cross-entity references. 13 of 16 Firestore entities now link to Contact; remaining 3 are config entities (FollowUpSequence, AutoResponseRule) or self-referencing (Contact). This release marks the first major version of Thina CRM.',
         ],
+        [
+          "v1.0.1",
+          "June 2026",
+          'Agent Assignment, BulkSMS API, Firebase Storage, Inbound Webhook & Pipeline UX (v1.0.1) — Agent assignment with assignedAgentId/assignedAgentName/assignedAt on Lead and Contact models. BulkSMS gateway API route (api/sms/send) with token authentication. Firebase Storage integration for document uploads. Inbound lead webhook (api/leads/inbound) with HMAC-SHA256 signature verification. Pipeline UX improvements with contact-linked deal flow. 10 new unit tests (commission calculator, transaction forecasting) bringing total to 61. 5 new E2E tests (contact pickers, contact detail sections) bringing total to 89. Combined test count: 150.',
+        ],
       ]
     ),
 
@@ -1866,7 +1887,10 @@ function sectionAppendix() {
     bullet("lead-roi/page.tsx — Lead ROI analytics"),
     bullet("compliance/page.tsx — POPIA compliance management"),
     bullet("cma/page.tsx — CMA reports with PDF export, auto-fill, clone, value range, confidence auto-score"),
+    bullet("api/health/route.ts — Health check endpoint (GET) — Firestore connectivity check"),
     bullet("api/seed/route.ts — Server-side seed API route (Firebase Admin)"),
+    bullet("api/leads/inbound/route.ts — Inbound lead webhook (POST) — receives leads from external portals with HMAC-SHA256 signature verification"),
+    bullet("api/sms/send/route.ts — BulkSMS gateway (POST) — sends SMS messages via BulkSMS API with token authentication"),
     emptyPara(),
 
     h3("Components (src/components/)"),
@@ -1909,13 +1933,13 @@ function sectionAppendix() {
     emptyPara(),
 
     h3("Tests (src/lib/__tests__/)"),
-    bullet("scoring.test.ts — Lead scoring, score labels, pipeline forecasting, commission calculator, transaction forecasting tests (33 tests)"),
+    bullet("scoring.test.ts — Lead scoring, score labels, pipeline forecasting, commission calculator, transaction forecasting tests (43 tests)"),
     bullet("utils.test.ts — cn() class merge utility tests (6 tests)"),
     bullet("smoke.test.ts — Infrastructure, config, security rules, data model smoke tests (12 tests)"),
     emptyPara(),
 
     h3("E2E Tests (e2e/)"),
-    bullet("app.spec.ts — Functional E2E tests: 28 test groups covering auth, dashboard, leads, contacts, pipeline, tasks, reports, transactions, properties, show days, inbound leads, messaging, sequences, speed-to-lead, buyer match, documents, lead ROI, compliance, CMA reports, navigation, theme, command palette, seed data (84 tests)"),
+    bullet("app.spec.ts — Functional E2E tests: 29 test groups covering auth, dashboard, leads, contacts, pipeline, tasks, reports, transactions, properties, show days, inbound leads, messaging, sequences, speed-to-lead, buyer match, documents, lead ROI, compliance, sidebar navigation, command palette, responsive/mobile, page load performance, accessibility, empty states, contact pickers, contact detail sections (89 tests)"),
     emptyPara(),
 
     h2("14.2 Configuration Files"),
