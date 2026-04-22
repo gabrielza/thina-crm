@@ -23,8 +23,23 @@ argument-hint: "e.g. 'deploy v1.3.0' or 'rollback to v1.2.0'"
 
 Run these in order before pushing to `master`:
 
-### 1. Pause OneDrive Sync
-**CRITICAL:** This workspace is in OneDrive. Pause sync first or `.next` cache corruption will break the build.
+### 1. Stop OneDrive (AUTOMATIC — do this without asking)
+**CRITICAL:** This workspace is in OneDrive. OneDrive corrupts `.next` cache files mid-build (manifest files vanish → `ENOENT pages-manifest.json`). Pausing isn't enough — fully stop the process:
+
+```powershell
+& "C:\Program Files\Microsoft OneDrive\OneDrive.exe" /shutdown
+Start-Sleep -Seconds 3
+Get-Process OneDrive -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+```
+
+Or use the helper: `.\scripts\onedrive-pause.ps1 -Action Stop`
+
+Always also clean stale `.next` from a prior corrupted build:
+```powershell
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+```
+
+After deploy completes, restart OneDrive: `.\scripts\onedrive-pause.ps1 -Action Start`
 
 ### 2. Run Linter
 ```bash
