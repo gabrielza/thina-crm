@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useDeferredValue } from "react";
-import dynamic from "next/dynamic";
 import { AppShell } from "@/components/app-shell";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,14 +26,21 @@ import {
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
 
-const PDFDownloadLink = dynamic(
-  () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
-  { ssr: false, loading: () => <Button size="sm" variant="ghost" disabled><Download className="h-4 w-4" /></Button> },
-);
-const CmaDocumentModule = dynamic(
-  () => import("@/components/cma-pdf-document").then((mod) => ({ default: mod.CmaDocument })),
-  { ssr: false },
-);
+async function downloadCmaPdf(report: CmaReport) {
+  const [{ pdf }, { CmaDocument }] = await Promise.all([
+    import("@react-pdf/renderer"),
+    import("@/components/cma-pdf-document"),
+  ]);
+  const blob = await pdf(<CmaDocument report={report} />).toBlob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `CMA-${report.subjectAddress.replace(/\s+/g, "_") || "report"}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
 const PROPERTY_TYPES: Property["propertyType"][] = ["house", "apartment", "townhouse", "land", "commercial", "farm"];
 const STATUS_OPTIONS: CmaReport["status"][] = ["draft", "final", "presented"];
@@ -449,11 +455,7 @@ export default function CmaPage() {
                       <TableCell className="text-right space-x-1">
                         <Button size="sm" variant="ghost" onClick={() => openEdit(r)} title="Edit"><Pencil className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" onClick={() => cloneReport(r)} title="Clone"><Copy className="h-4 w-4" /></Button>
-                        <PDFDownloadLink document={<CmaDocumentModule report={r} />} fileName={`CMA-${r.subjectAddress.replace(/\s+/g, "_")}.pdf`}>
-                          {({ loading: pdfLoading }) => (
-                            <Button size="sm" variant="ghost" disabled={pdfLoading} title="Download PDF"><Download className="h-4 w-4" /></Button>
-                          )}
-                        </PDFDownloadLink>
+                        <Button size="sm" variant="ghost" onClick={() => downloadCmaPdf(r)} title="Download PDF"><Download className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(r.id!)} title="Delete"><Trash2 className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
