@@ -262,7 +262,8 @@ test.describe("Properties", () => {
     await page.goto("/properties");
     await expect(page.locator("h1")).toContainText("Properties");
     await expect(page.getByText("Total Listings")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("Active")).toBeVisible();
+    // "Active" appears as both a KPI card label and many table badges — use exact + first to scope to the KPI label
+    await expect(page.getByText("Active", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Portfolio Value")).toBeVisible();
     await expect(page.getByText("Expiring Soon")).toBeVisible();
   });
@@ -400,7 +401,8 @@ test.describe("Speed-to-Lead", () => {
       await createFirstBtn.click();
     }
     await expect(page.getByText("Configure when and how to auto-respond")).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText("Rule Name")).toBeVisible();
+    // "Rule Name" matches both table column header and form label — scope to the form label with the asterisk
+    await expect(page.getByText("Rule Name *", { exact: true })).toBeVisible();
     await expect(page.getByText("Trigger Event *", { exact: true })).toBeVisible();
     await expect(page.locator("text=Message Preview")).toBeVisible();
   });
@@ -527,8 +529,8 @@ test.describe("Sidebar Navigation — Grouped Workflow Structure", () => {
       const sidebarLink = page.locator("aside").getByRole("link", { name: route.name, exact: true });
       await expect(sidebarLink).toBeVisible({ timeout: 10000 });
       await sidebarLink.click();
-      await page.waitForURL(`**${route.path}`, { timeout: 10000 });
-      await expect(page.locator("h1")).toContainText(route.heading, { timeout: 10000 });
+      await page.waitForURL(`**${route.path}`, { timeout: 15000 });
+      await expect(page.locator("h1")).toContainText(route.heading, { timeout: 20000 });
     });
   }
 

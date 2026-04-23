@@ -425,7 +425,6 @@ export default function CmaPage() {
                   <TableHead>Address</TableHead>
                   <TableHead>Suburb</TableHead>
                   <TableHead className="text-right">Estimated Value</TableHead>
-                  <TableHead className="text-right">Value Range</TableHead>
                   <TableHead className="text-right">R/m²</TableHead>
                   <TableHead>Confidence</TableHead>
                   <TableHead>Status</TableHead>
@@ -435,9 +434,9 @@ export default function CmaPage() {
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No CMA reports found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No CMA reports found</TableCell></TableRow>
                 ) : (
                   filtered.map((r) => {
                     const range = calculateValueRange(r);
@@ -446,13 +445,15 @@ export default function CmaPage() {
                       <TableCell className="font-medium">{r.title}</TableCell>
                       <TableCell>{r.subjectAddress}</TableCell>
                       <TableCell>{r.subjectSuburb}</TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(r.estimatedValue)}</TableCell>
-                      <TableCell className="text-right font-mono text-xs text-muted-foreground">{formatCurrency(range.low)} – {formatCurrency(range.high)}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        <div>{formatCurrency(r.estimatedValue)}</div>
+                        <div className="text-xs text-muted-foreground">{formatCurrency(range.low)} – {formatCurrency(range.high)}</div>
+                      </TableCell>
                       <TableCell className="text-right font-mono">{formatCurrency(r.pricePerSqm)}</TableCell>
                       <TableCell><Badge variant={confidenceColors[r.confidenceLevel]}>{r.confidenceLevel}</Badge></TableCell>
                       <TableCell><Badge variant={statusColors[r.status]}>{r.status}</Badge></TableCell>
                       <TableCell className="text-right">{r.comparables.length}</TableCell>
-                      <TableCell className="text-right space-x-1">
+                      <TableCell className="text-right whitespace-nowrap">
                         <Button size="sm" variant="ghost" onClick={() => openEdit(r)} title="Edit"><Pencil className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" onClick={() => cloneReport(r)} title="Clone"><Copy className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" onClick={() => downloadCmaPdf(r)} title="Download PDF"><Download className="h-4 w-4" /></Button>
