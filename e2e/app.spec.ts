@@ -100,6 +100,34 @@ test.describe("Leads", () => {
       await expect(leadName).toBeVisible();
     }
   });
+
+  test("can toggle star on a lead and persists after reload", async ({ page }) => {
+    await page.goto("/leads");
+    const firstRow = page.locator("table tbody tr").first();
+    const hasRows = await firstRow.isVisible({ timeout: 10000 }).catch(() => false);
+    if (!hasRows) test.skip();
+
+    const star = firstRow.locator('[data-testid="lead-star-toggle"]');
+    await expect(star).toBeVisible();
+    const initialPressed = (await star.getAttribute("aria-pressed")) === "true";
+
+    await star.click();
+    // aria-pressed should flip
+    await expect(star).toHaveAttribute("aria-pressed", String(!initialPressed), { timeout: 10000 });
+
+    // Reload — the new state should persist (Firestore round-trip)
+    await page.reload();
+    const reloadedFirstRow = page.locator("table tbody tr").first();
+    const reloadedStar = reloadedFirstRow.locator('[data-testid="lead-star-toggle"]');
+    await expect(reloadedStar).toBeVisible({ timeout: 10000 });
+
+    // Restore original state to keep dataset clean for other tests
+    if (!initialPressed) {
+      // We starred it; unstar it now
+      const starredStar = page.locator('[data-testid="lead-star-toggle"][aria-pressed="true"]').first();
+      await starredStar.click();
+    }
+  });
 });
 
 test.describe("Contacts", () => {

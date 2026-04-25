@@ -8,8 +8,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Search, Pencil, Phone, Mail } from "lucide-react";
-import { getLeads, deleteLead, type Lead } from "@/lib/firestore";
+import { Trash2, Search, Pencil, Phone, Mail, Star } from "lucide-react";
+import { getLeads, deleteLead, toggleLeadStar, type Lead } from "@/lib/firestore";
 import { formatCurrency } from "@/lib/utils";
 import { EditLeadSheet } from "@/components/edit-lead-sheet";
 
@@ -35,6 +35,7 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [statusFilter, setStatusFilter] = useState<Lead["status"] | "all">("all");
+  const [starredOnly, setStarredOnly] = useState(false);
   const [editLead, setEditLead] = useState<Lead | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
@@ -67,14 +68,38 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
     setEditOpen(true);
   };
 
+  const handleToggleStar = async (lead: Lead) => {
+    if (!lead.id) return;
+    const next = !lead.starred;
+    // Optimistic update
+    setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, starred: next } : l)));
+    try {
+      await toggleLeadStar(lead.id, next);
+    } catch (error) {
+      console.error("Failed to toggle star:", error);
+      // Revert on failure
+      setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, starred: !next } : l)));
+    }
+  };
+
   const filtered = leads.filter((lead) => {
     const matchesSearch =
       lead.name.toLowerCase().includes(deferredSearch.toLowerCase()) ||
       lead.email.toLowerCase().includes(deferredSearch.toLowerCase()) ||
       lead.company.toLowerCase().includes(deferredSearch.toLowerCase());
     const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesStarred = !starredOnly || lead.starred === true;
+    return matchesSearch && matchesStatus && matchesStarred;
   });
+
+  // Sort starred leads to top while preserving existing order otherwise
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    const aStar = a.starred ? 1 : 0;
+    const bStar = b.starred ? 1 : 0;
+    return bStar - aStar;
+  });
+
+  const starredCount = leads.filter((l) => l.starred).length;
 
   if (loading) {
     return (
@@ -96,6 +121,16 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
           <button onClick={() => setStatusFilter("all")} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${statusFilter === "all" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
             All {leads.length}
           </button>
+          {starredCount > 0 && (
+            <button
+              onClick={() => setStarredOnly((v) => !v)}
+              aria-pressed={starredOnly}
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors inline-flex items-center gap-1 ${starredOnly ? "bg-amber-500 text-white" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+            >
+              <Star className={`h-3 w-3 ${starredOnly ? "fill-white" : "fill-amber-400 text-amber-400"}`} />
+              Starred {starredCount}
+            </button>
+          )}
           {ALL_STATUSES.map((status) => {
             const count = leads.filter((l) => l.status === status).length;
             if (count === 0) return null;
@@ -119,6 +154,7 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
+                  <TableHead className="w-[36px]"></TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Company</TableHead>
                   <TableHead>Value</TableHead>
@@ -129,8 +165,19 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((lead) => (
+                {sortedFiltered.map((lead) => (
                   <TableRow key={lead.id} className="cursor-pointer" onClick={() => router.push(`/leads/${lead.id}`)}>
+                    <TableCell onClick={(e) => { e.stopPropagation(); handleToggleStar(lead); }}>
+                      <button
+                        type="button"
+                        aria-label={lead.starred ? "Unstar lead" : "Star lead"}
+                        aria-pressed={!!lead.starred}
+                        data-testid="lead-star-toggle"
+                        className="flex h-6 w-6 items-center justify-center rounded hover:bg-muted transition-colors"
+                      >
+                        <Star className={`h-3.5 w-3.5 ${lead.starred ? "fill-amber-400 text-amber-400" : "text-muted-foreground/60"}`} />
+                      </button>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/8 text-primary text-xs font-semibold">{lead.name.charAt(0)}</div>
@@ -158,10 +205,19 @@ export function LeadsTable({ refreshKey }: LeadsTableProps) {
 
           {/* Mobile Card List */}
           <div className="md:hidden space-y-2">
-            {filtered.map((lead) => (
+            {sortedFiltered.map((lead) => (
               <div key={lead.id} className="rounded-xl border border-border/50 p-4 active:bg-muted/30 transition-colors" onClick={() => router.push(`/leads/${lead.id}`)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      aria-label={lead.starred ? "Unstar lead" : "Star lead"}
+                      aria-pressed={!!lead.starred}
+                      onClick={(e) => { e.stopPropagation(); handleToggleStar(lead); }}
+                      className="flex h-7 w-7 items-center justify-center rounded hover:bg-muted transition-colors"
+                    >
+                      <Star className={`h-4 w-4 ${lead.starred ? "fill-amber-400 text-amber-400" : "text-muted-foreground/60"}`} />
+                    </button>
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">{lead.name.charAt(0)}</div>
                     <div><p className="font-medium text-sm">{lead.name}</p><p className="text-[12px] text-muted-foreground">{lead.company}</p></div>
                   </div>

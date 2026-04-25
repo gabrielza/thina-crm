@@ -35,6 +35,7 @@ export interface Lead {
   assignedAgentId?: string;
   assignedAgentName?: string;
   assignedAt?: string; // ISO date — locked on first touch
+  starred?: boolean;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   ownerId: string;
@@ -78,6 +79,12 @@ export async function getLeadById(id: string): Promise<Lead | null> {
 export async function deleteLead(id: string) {
   const db = getFirebaseDb();
   await deleteDoc(doc(db, LEADS_COLLECTION, id));
+}
+
+export async function toggleLeadStar(id: string, starred: boolean) {
+  const db = getFirebaseDb();
+  const docRef = doc(db, LEADS_COLLECTION, id);
+  await updateDoc(docRef, { starred, updatedAt: serverTimestamp() });
 }
 
 export async function getLeadsByContact(contactId: string): Promise<Lead[]> {

@@ -22,7 +22,7 @@
 
 ## Features
 
-- **Lead & Contact Management** — Pipeline board, Kanban drag-and-drop, lead scoring
+- **Lead & Contact Management** — Pipeline board, Kanban drag-and-drop, lead scoring, star/pin priority leads
 - **Transaction Tracking** — 9-stage pipeline from OTP to commission paid
 - **AI-Powered CMA** — Comparable Market Analysis with Gemini + Google Search grounding
 - **Property Listings** — Full CRUD with mandate tracking and alerts

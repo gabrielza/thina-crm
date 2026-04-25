@@ -34,6 +34,7 @@ export const LeadSchema = z.object({
   assignedAgentId: z.string().optional(),
   assignedAgentName: z.string().optional(),
   assignedAt: z.string().optional(),
+  starred: z.boolean().optional(),
   createdAt: firestoreTimestamp,
   updatedAt: firestoreTimestamp,
   ownerId: z.string(),
