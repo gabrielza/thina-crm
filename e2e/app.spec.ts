@@ -104,7 +104,8 @@ test.describe("Leads", () => {
   test("can toggle star on a lead and persists after reload", async ({ page }) => {
     await page.goto("/leads");
     const firstRow = page.locator("table tbody tr").first();
-    const hasRows = await firstRow.isVisible({ timeout: 10000 }).catch(() => false);
+    // isVisible() returns immediately — must use waitFor for true polling.
+    const hasRows = await firstRow.waitFor({ state: "visible", timeout: 30000 }).then(() => true).catch(() => false);
     if (!hasRows) test.skip();
 
     const star = firstRow.locator('[data-testid="lead-star-toggle"]');
@@ -118,8 +119,9 @@ test.describe("Leads", () => {
     // Reload — the new state should persist (Firestore round-trip)
     await page.reload();
     const reloadedFirstRow = page.locator("table tbody tr").first();
+    await reloadedFirstRow.waitFor({ state: "visible", timeout: 30000 });
     const reloadedStar = reloadedFirstRow.locator('[data-testid="lead-star-toggle"]');
-    await expect(reloadedStar).toBeVisible({ timeout: 10000 });
+    await expect(reloadedStar).toBeVisible({ timeout: 30000 });
 
     // Restore original state to keep dataset clean for other tests
     if (!initialPressed) {
