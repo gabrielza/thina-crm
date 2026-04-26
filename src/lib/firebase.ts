@@ -1,6 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
-import { getFirestore, type Firestore } from "firebase/firestore";
+import { getFirestore, initializeFirestore, type Firestore } from "firebase/firestore";
 import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -27,7 +27,18 @@ export function getFirebaseAuth(): Auth {
 }
 
 export function getFirebaseDb(): Firestore {
-  if (!_db) _db = getFirestore(getApp());
+  if (!_db) {
+    const app = getApp();
+    // Use initializeFirestore on first call so we can set ignoreUndefinedProperties.
+    // This lets call sites pass `field || undefined` without crashing the save.
+    // Subsequent getFirestore() calls in the same app return the same instance.
+    try {
+      _db = initializeFirestore(app, { ignoreUndefinedProperties: true });
+    } catch {
+      // Already initialized (e.g. HMR) — fall back to getFirestore.
+      _db = getFirestore(app);
+    }
+  }
   return _db;
 }
 

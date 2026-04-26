@@ -35,7 +35,7 @@ const nextConfig = {
     //   - frame-src allows the Firebase Auth popup origins.
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://maps.googleapis.com https://maps.gstatic.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://apis.google.com https://accounts.google.com https://maps.googleapis.com https://maps.gstatic.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
