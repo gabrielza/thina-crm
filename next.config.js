@@ -23,12 +23,19 @@ const nextConfig = {
     // Notes on chosen sources:
     //   - 'unsafe-inline' on style-src is required by Tailwind / shadcn at runtime;
     //     a nonce-based hardening pass is tracked separately.
-    //   - script-src includes Google identity scripts for the Firebase Auth popup.
+    //   - 'unsafe-inline' on script-src is required by Next.js 15 App Router, which
+    //     emits unhashable inline streaming scripts (`self.__next_f.push(...)`) for
+    //     React Server Components hydration. Without this, the entire client app
+    //     fails to hydrate (blank page after SSR markup loads). Proper fix is a
+    //     middleware-injected per-request nonce + 'strict-dynamic'; tracked as a
+    //     follow-up hardening task.
+    //   - script-src includes Google identity scripts for the Firebase Auth popup
+    //     and Maps JS API for address autocomplete.
     //   - connect-src enumerates the Firebase + Sentry + Google APIs the client talks to.
     //   - frame-src allows the Firebase Auth popup origins.
     const csp = [
       "default-src 'self'",
-      "script-src 'self' https://apis.google.com https://accounts.google.com https://maps.googleapis.com https://maps.gstatic.com",
+      "script-src 'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://maps.googleapis.com https://maps.gstatic.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",

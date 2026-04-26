@@ -122,7 +122,7 @@ The app auto-deploys to Firebase App Hosting on every push to `master`. The CI p
 
 - **Auth middleware** — Server-side `__session` cookie gate on all routes
 - **Firestore-backed rate limiting** — Distributed fixed-window limiter persisted in `rateLimits` collection with TTL auto-expiry. Limits: SMS 20/min per user, CMA 10/min per user, Seed 2/min per user, Inbound webhook 60/min per source, Places 30/min per user.
-- **Content-Security-Policy** — Enforcing (since 2026-04-25). Restricts script-src to Google identity + Maps origins; connect-src to Firebase / Sentry; frame-ancestors `'none'`.
+- **Content-Security-Policy** — Enforcing (since 2026-04-25). Restricts script-src to `'self'` + Google identity / Maps origins (`'unsafe-inline'` retained for Next.js 15 App Router streaming hydration scripts — nonce-based hardening tracked as follow-up); connect-src to Firebase / Sentry; frame-ancestors `'none'`.
 - **Other security headers** — X-Frame-Options DENY, HSTS preload, Referrer-Policy, Permissions-Policy
 - **HMAC webhook auth** — `/api/leads/inbound` verifies `X-Webhook-Signature` (SHA-256) against `INBOUND_WEBHOOK_SECRET`
 - **Restricted API keys** — Browser Maps key referrer-restricted; server Maps key API-restricted to Places only
