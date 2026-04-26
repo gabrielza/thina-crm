@@ -34,6 +34,9 @@
 - **Buyer Matching** — Profile-based property matching
 - **Speed-to-Lead** — Response time tracking and SLA monitoring
 - **Sequences** — Automated follow-up workflows
+- **Lead ROI** — Cost-per-lead tracking and source ROI analysis
+- **Inbound webhooks** — HMAC-signed lead injection from portals (Property24, Private Property)
+- **Address autocomplete** — Google Places Autocomplete + Place Details on properties and CMA pages
 
 ## Getting Started
 
@@ -61,6 +64,10 @@ GEMINI_API_KEY=...
 BULKSMS_TOKEN_ID=...
 BULKSMS_TOKEN_SECRET=...
 INBOUND_WEBHOOK_SECRET=...
+
+# Google Maps (Places autocomplete on /properties and /cma)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=...   # Browser key — referrer-restricted to your domains
+GOOGLE_MAPS_SERVER_KEY=...            # Server key — used by /api/places/resolve proxy (App Hosting secret in prod)
 
 # Optional
 NEXT_PUBLIC_SENTRY_DSN=...
@@ -90,8 +97,8 @@ npm test           # Vitest unit tests
 npm run test:e2e   # Playwright E2E tests (requires running dev server)
 ```
 
-- **Unit tests**: ~91 tests covering scoring, schemas, rate limiting, API routes
-- **E2E tests**: ~89 tests covering all page routes, navigation, CRUD flows
+- **Unit tests**: 126 tests covering scoring, schemas, rate limiting, utility helpers, and API routes (`/api/health`, `/api/sms/send`, `/api/leads/inbound`, `/api/cma/research`, `/api/places/resolve`, `/api/seed`)
+- **E2E tests**: ~90 tests covering all page routes, navigation, and key CRUD flows. Requires `E2E_EMAIL` and `E2E_PASSWORD` env vars (use `node scripts/reset-test-user-password.mjs` to provision the test user)
 
 ## Project Structure
 
@@ -114,10 +121,13 @@ The app auto-deploys to Firebase App Hosting on every push to `master`. The CI p
 ## Security
 
 - **Auth middleware** — Server-side `__session` cookie gate on all routes
-- **Rate limiting** — In-memory sliding window (SMS 20/min, CMA 10/min, Seed 2/min)
-- **Security headers** — X-Frame-Options, HSTS, CSP, Referrer-Policy
+- **Firestore-backed rate limiting** — Distributed fixed-window limiter persisted in `rateLimits` collection with TTL auto-expiry. Limits: SMS 20/min per user, CMA 10/min per user, Seed 2/min per user, Inbound webhook 60/min per source, Places 30/min per user.
+- **Content-Security-Policy** — Enforcing (since 2026-04-25). Restricts script-src to Google identity + Maps origins; connect-src to Firebase / Sentry; frame-ancestors `'none'`.
+- **Other security headers** — X-Frame-Options DENY, HSTS preload, Referrer-Policy, Permissions-Policy
+- **HMAC webhook auth** — `/api/leads/inbound` verifies `X-Webhook-Signature` (SHA-256) against `INBOUND_WEBHOOK_SECRET`
+- **Restricted API keys** — Browser Maps key referrer-restricted; server Maps key API-restricted to Places only
 - **Input sanitization** — CMA prompt inputs sanitized before Gemini interpolation
-- **Seed protection** — Production guard on seed endpoint
+- **Seed protection** — Production guard on seed endpoint (requires `ALLOW_SEED=true`)
 
 ## License
 

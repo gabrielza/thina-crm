@@ -1,5 +1,20 @@
 # Thina CRM — Backlog
 
+## ✅ Completed Security Sprint (v1.3.5 — 2026-04-26)
+
+All three high-priority items from the 2026-04-25 audit shipped:
+
+| ID | Item | Commit | Notes |
+|----|------|--------|-------|
+| F-01 | Firestore-backed distributed rate limiter | `999d272` | TTL policy on `rateLimits.expiresAt` enabled in Firebase console (Status: Serving) |
+| F-02 | Content-Security-Policy enforcing | `29993af` | Verified live: response header is `content-security-policy` (not `-Report-Only`) |
+| F-05 | Per-source inbound webhook rate limit | `1f77502` | Reuses F-01 limiter, keyed by `X-Webhook-Source` |
+
+Audit doc: [docs/Security/Thina-CRM-Security-Audit.docx](docs/Security/Thina-CRM-Security-Audit.docx)
+Resulting rating after sprint: **~9.0 / 10** (target met).
+
+---
+
 ## Security Remediation (from 2026-04-25 audit)
 
 Audit doc: [docs/security/Thina-CRM-Security-Audit.docx](docs/security/Thina-CRM-Security-Audit.docx)
