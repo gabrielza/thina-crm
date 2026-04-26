@@ -23,17 +23,20 @@ const userId = decoded.uid;
 ```
 
 ## Rate Limiting
+Backed by Firestore (`rateLimits` collection, server-only rule). `check()` is async.
 ```typescript
 import { createRateLimiter } from "@/lib/rate-limit";
 
-const limiter = createRateLimiter({ windowMs: 60_000, max: 10 });
-const result = limiter.check(userId);
+const limiter = createRateLimiter({ bucket: "myroute", windowMs: 60_000, max: 10 });
+const result = await limiter.check(userId);
 if (!result.allowed) {
-  return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  return NextResponse.json(
+    { error: "Too many requests" },
+    { status: 429, headers: limiter.headers(result) }
+  );
 }
-// Include rate limit headers in response
-headers.set("X-RateLimit-Remaining", String(result.remaining));
 ```
+Pre-configured limiters: `smsLimiter`, `cmaLimiter`, `seedLimiter`, `inboundLimiter`.
 
 ## Webhook Auth (HMAC-SHA256)
 For external webhook endpoints (e.g., `/api/leads/inbound`):

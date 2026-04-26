@@ -138,5 +138,11 @@ service cloud.firestore {
       allow create: if isCreatingOwn();
       allow update, delete: if isOwner();
     }
+
+    // Rate-limit counters — server-only via Admin SDK.
+    // Clients must never read or write these documents.
+    match /rateLimits/{docId} {
+      allow read, write: if false;
+    }
   }
 }

@@ -23,7 +23,7 @@ vi.mock("@/lib/firebase-admin", () => {
 
 vi.mock("@/lib/rate-limit", () => ({
   seedLimiter: {
-    check: vi.fn(() => ({ allowed: true, remaining: 1, resetAt: Date.now() + 60_000 })),
+    check: vi.fn(async () => ({ allowed: true, remaining: 1, resetAt: Date.now() + 60_000 })),
     headers: vi.fn(() => ({})),
   },
 }));

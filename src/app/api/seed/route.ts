@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
     const uid = decoded.uid;
 
     // Rate limit: 2 seed requests per minute
-    const rateResult = seedLimiter.check(uid);
+    const rateResult = await seedLimiter.check(uid);
     if (!rateResult.allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please wait before seeding again." },

@@ -9,6 +9,13 @@ vi.mock("@/lib/firebase-admin", () => ({
   adminDb: {},
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  cmaLimiter: {
+    check: vi.fn(async () => ({ allowed: true, remaining: 9, resetAt: Date.now() + 60_000 })),
+    headers: vi.fn(() => ({})),
+  },
+}));
+
 // ─── Mock @google/genai ─────────────────────────────────
 
 const mockGenerateContent = vi.fn();

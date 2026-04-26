@@ -11,6 +11,13 @@ vi.mock("@/lib/firebase-admin", () => ({
   adminAuth: { verifyIdToken: (token: string) => mockVerifyIdToken(token) },
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  smsLimiter: {
+    check: vi.fn(async () => ({ allowed: true, remaining: 19, resetAt: Date.now() + 60_000 })),
+    headers: vi.fn(() => ({})),
+  },
+}));
+
 // ─── Import after mocks ─────────────────────────────────
 
 import { POST, GET } from "@/app/api/sms/send/route";
