@@ -31,7 +31,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "1.3.1";
+const VERSION = "1.3.4";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -1696,6 +1696,9 @@ function sectionVersionHistory() {
         ["v1.1.0", "Gemini AI CMA research with Google Search grounding, security hardening (required HMAC auth, Firestore rules schema validation, Zod runtime validation, ErrorBoundary), ESLint 9 flat config, 4 new API test files (22 new tests, 172 total)."],
         ["v1.2.0", "Production hardening sprint: CI pipeline fix (main→master branch), seed endpoint production guard, Next.js middleware for server-side auth, in-memory rate limiting on SMS/CMA/seed APIs, error.tsx + not-found.tsx + loading.tsx pages, rate-limit and seed API tests. 8 new tests (180 total)."],
         ["v1.3.0", "Code quality & observability sprint: fixed 70+ lint errors across 25 files and re-enabled ESLint during builds, added security headers (X-Frame-Options, HSTS, CSP Permissions-Policy, X-Content-Type-Options, Referrer-Policy), sanitized CMA prompt inputs against injection, integrated Sentry error tracking (client + server + global error boundary), wrote comprehensive README.md. 91 unit tests, 89 E2E tests."],
+        ["v1.3.1", "Auth fix & Copilot customisation: fixed page-navigation logout (cookie-set race + onIdTokenChanged for token refresh, conditional Secure flag), added Copilot project customisation (6 instruction files, 3 skills, 1 prompt). 91 unit + 89 E2E tests."],
+        ["v1.3.2", "CMA crash fix & OneDrive deploy automation: replaced eager PDFDownloadLink (one per row, failing under React 19 / Next 15) with on-click downloadCmaPdf helper using dynamic pdf().toBlob() + anchor click; added auto-stop OneDrive step (full process kill, not pause) to deployment skill plus scripts/onedrive-pause.ps1 helper. 91 unit + 89 E2E tests."],
+        ["v1.3.3", "CMA layout fix & E2E selector hardening: merged Value Range column into Estimated Value cell (10→9 cols, colSpan 10→9) and added whitespace-nowrap on actions to fix right-side truncation in the max-w-6xl container; fixed three flaky E2E tests by scoping ambiguous selectors (Properties 'Active' — exact:true + .first(), Speed-to-Lead 'Rule Name *' — asterisk + exact, Show Days sidebar nav — waitForURL 15s + toContainText 20s). 91 unit + 88 E2E (1 known-flaky) tests."],
       ]
     ),
     emptyPara(),
@@ -1706,7 +1709,7 @@ function sectionVersionHistory() {
 
     h3("12.3.1 Git & GitHub"),
     bullet("Initialised Git repository and configured remote origin"),
-    bullet("Created semantic version tags (v0.1.0 through v1.3.0) at each milestone — 19 annotated tags"),
+    bullet("Created semantic version tags (v0.1.0 through v1.3.3) at each milestone — 22 annotated tags"),
     bullet("Wrote conventional commit messages with multi-line descriptions"),
     bullet("Pushed code and tags to GitHub after every version"),
     bullet("Configured .gitignore for Node.js/Next.js/Firebase projects"),
@@ -1872,6 +1875,16 @@ function sectionVersionHistoryContent() {
           "v1.3.1",
           "April 2026",
           'Auth Fix & Copilot Customisation (v1.3.1) — Fixed critical auth bug where navigating between pages logged the user out. Root cause: race condition where login page navigated before __session cookie was set. Fix: sign-in helpers now set cookie synchronously before returning. Switched onAuthStateChanged to onIdTokenChanged so cookie stays alive on automatic token refresh (~55 min). Conditional Secure flag on cookie (only on HTTPS, fixing localhost dev). Added Copilot project customisation: 6 instruction files (api-routes, auth-patterns, component-patterns, firebase-firestore, nextjs-app-router, sa-real-estate), 3 skills (new-feature, deployment, testing), 1 prompt (new-crud-entity). 91 unit tests, 89 E2E tests.',
+        ],
+        [
+          "v1.3.2",
+          "April 2026",
+          'CMA Crash Fix & OneDrive Deploy Automation (v1.3.2) — Fixed runtime crash on the /cma page caused by eager <PDFDownloadLink/> rendering one PDF blob per row under React 19 / Next 15. Replaced with an on-click downloadCmaPdf(report) helper that dynamically imports @react-pdf/renderer and @/components/cma-pdf-document, calls pdf(<CmaDocument report={report} />).toBlob(), then triggers an anchor click with object URL cleanup. Removed the dynamic CmaDocumentModule import and unused dynamic from next/dynamic on the page. Build & deploy pipeline: deployment skill now auto-stops OneDrive (full process kill via OneDrive.exe /shutdown then Stop-Process — not just pause) before any build; added scripts/onedrive-pause.ps1 helper with -Action Stop|Start|Status. User memory updated to enforce auto-stop across all OneDrive-synced workspaces. 91 unit + 89 E2E tests.',
+        ],
+        [
+          "v1.3.3",
+          "April 2026",
+          'CMA Layout Fix & E2E Selector Hardening (v1.3.3) — Fixed CMA Reports table right-side truncation (Actions column wrapping below row in the max-w-6xl container). Merged the "Value Range" column into the "Estimated Value" cell so the main value displays above the range in muted text, reducing column count from 10 to 9 (colSpan adjusted on the empty-state row). Added whitespace-nowrap to the actions cell so all action icons stay on one line. Fixed three flaky E2E tests caused by ambiguous selectors against seeded data: (1) Properties "page loads with heading and KPI cards" — getByText("Active") matched 53 elements (KPI label + status badges per row); switched to getByText("Active", { exact: true }).first(). (2) Speed-to-Lead "new rule sheet opens with trigger options" — getByText("Rule Name") matched both a table TH and a form label; switched to getByText("Rule Name *", { exact: true }) to scope to the form. (3) Sidebar Navigation Prospecting "Show Days" — 10s toContainText("Show Days") timed out on cold-start navigation; bumped waitForURL to 15s and toContainText to 20s for the entire prospecting/listings/pipeline group nav loop. Full E2E re-run after deploy: 88 passed, 0 failed, 1 flaky (unrelated Transactions→Documents nav, passed on retry). 91 unit + 88 E2E (1 flaky) tests.',
         ],
       ]
     ),
