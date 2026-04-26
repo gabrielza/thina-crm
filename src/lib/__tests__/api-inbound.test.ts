@@ -28,6 +28,13 @@ vi.mock("@/lib/firebase-admin", () => ({
   adminAuth: {},
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  inboundLimiter: {
+    check: vi.fn(async () => ({ allowed: true, remaining: 59, resetAt: Date.now() + 60_000 })),
+    headers: vi.fn(() => ({})),
+  },
+}));
+
 // ─── Import after mocks ─────────────────────────────────
 
 import { POST, GET } from "@/app/api/leads/inbound/route";
