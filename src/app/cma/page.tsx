@@ -25,6 +25,7 @@ import {
   type CmaReport, type CmaComparable, type Property, type Contact,
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { AddressAutocomplete, type ResolvedPlace } from "@/components/address-autocomplete";
 
 async function downloadCmaPdf(report: CmaReport) {
   const [{ pdf }, { CmaDocument }] = await Promise.all([
@@ -66,6 +67,7 @@ const emptyComparable: CmaComparable = {
 
 const emptyForm = {
   title: "", subjectAddress: "", subjectSuburb: "", subjectCity: "",
+  subjectPlaceId: "", subjectFormattedAddress: "", subjectLat: 0, subjectLng: 0,
   subjectType: "house" as Property["propertyType"],
   subjectBedrooms: 3, subjectBathrooms: 2, subjectErfSize: 0, subjectFloorSize: 0,
   comparables: [{ ...emptyComparable }] as CmaComparable[],
@@ -139,6 +141,10 @@ export default function CmaPage() {
       subjectAddress: report.subjectAddress,
       subjectSuburb: report.subjectSuburb,
       subjectCity: report.subjectCity,
+      subjectPlaceId: report.subjectPlaceId || "",
+      subjectFormattedAddress: report.subjectFormattedAddress || "",
+      subjectLat: report.subjectLat || 0,
+      subjectLng: report.subjectLng || 0,
       subjectType: report.subjectType,
       subjectBedrooms: report.subjectBedrooms,
       subjectBathrooms: report.subjectBathrooms,
@@ -180,6 +186,10 @@ export default function CmaPage() {
       subjectAddress: report.subjectAddress,
       subjectSuburb: report.subjectSuburb,
       subjectCity: report.subjectCity,
+      subjectPlaceId: report.subjectPlaceId || "",
+      subjectFormattedAddress: report.subjectFormattedAddress || "",
+      subjectLat: report.subjectLat || 0,
+      subjectLng: report.subjectLng || 0,
       subjectType: report.subjectType,
       subjectBedrooms: report.subjectBedrooms,
       subjectBathrooms: report.subjectBathrooms,
@@ -221,6 +231,10 @@ export default function CmaPage() {
         subjectAddress: form.subjectAddress,
         subjectSuburb: form.subjectSuburb,
         subjectCity: form.subjectCity,
+        subjectPlaceId: form.subjectPlaceId || undefined,
+        subjectFormattedAddress: form.subjectFormattedAddress || undefined,
+        subjectLat: form.subjectLat || undefined,
+        subjectLng: form.subjectLng || undefined,
         subjectType: form.subjectType,
         subjectBedrooms: form.subjectBedrooms,
         subjectBathrooms: form.subjectBathrooms,
@@ -284,6 +298,10 @@ export default function CmaPage() {
           bathrooms: form.subjectBathrooms,
           floorSize: form.subjectFloorSize,
           erfSize: form.subjectErfSize,
+          placeId: form.subjectPlaceId || undefined,
+          lat: form.subjectLat || undefined,
+          lng: form.subjectLng || undefined,
+          formattedAddress: form.subjectFormattedAddress || undefined,
         }),
       });
       const data = await res.json();
@@ -537,6 +555,33 @@ export default function CmaPage() {
             {/* Subject Property */}
             <div className="space-y-4">
               <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Subject Property</h3>
+              <div>
+                <Label>Search address</Label>
+                <AddressAutocomplete
+                  initialValue={form.subjectFormattedAddress || form.subjectAddress}
+                  getIdToken={async () => {
+                    if (!user) throw new Error("Not signed in");
+                    return user.getIdToken();
+                  }}
+                  onSelect={(place: ResolvedPlace) => {
+                    setForm((f) => ({
+                      ...f,
+                      subjectAddress: place.formattedAddress || f.subjectAddress,
+                      subjectSuburb: place.suburb || f.subjectSuburb,
+                      subjectCity: place.city || f.subjectCity,
+                      subjectPlaceId: place.placeId || f.subjectPlaceId,
+                      subjectFormattedAddress: place.formattedAddress || f.subjectFormattedAddress,
+                      subjectLat: place.lat || f.subjectLat,
+                      subjectLng: place.lng || f.subjectLng,
+                    }));
+                  }}
+                />
+                {form.subjectLat !== 0 && form.subjectLng !== 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Geocoded: {form.subjectLat.toFixed(5)}, {form.subjectLng.toFixed(5)}
+                  </p>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2"><Label>Address</Label><Input value={form.subjectAddress} onChange={(e) => setForm({ ...form, subjectAddress: e.target.value })} /></div>
                 <div><Label>Suburb</Label><Input value={form.subjectSuburb} onChange={(e) => setForm({ ...form, subjectSuburb: e.target.value })} /></div>
@@ -599,7 +644,35 @@ export default function CmaPage() {
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="col-span-2"><Label className="text-xs">Address</Label><Input className="h-8 text-sm" value={comp.address} onChange={(e) => updateComparable(idx, "address", e.target.value)} /></div>
+                    <div className="col-span-2">
+                      <Label className="text-xs">Address</Label>
+                      <AddressAutocomplete
+                        id={`comp-addr-${idx}`}
+                        initialValue={comp.formattedAddress || comp.address}
+                        getIdToken={async () => {
+                          if (!user) throw new Error("Not signed in");
+                          return user.getIdToken();
+                        }}
+                        onSelect={(place: ResolvedPlace) => {
+                          setForm((f) => ({
+                            ...f,
+                            comparables: f.comparables.map((c, i) =>
+                              i === idx
+                                ? {
+                                    ...c,
+                                    address: place.formattedAddress || c.address,
+                                    suburb: place.suburb || c.suburb,
+                                    placeId: place.placeId || c.placeId,
+                                    formattedAddress: place.formattedAddress || c.formattedAddress,
+                                    lat: place.lat || c.lat,
+                                    lng: place.lng || c.lng,
+                                  }
+                                : c
+                            ),
+                          }));
+                        }}
+                      />
+                    </div>
                     <div><Label className="text-xs">Suburb</Label><Input className="h-8 text-sm" value={comp.suburb} onChange={(e) => updateComparable(idx, "suburb", e.target.value)} /></div>
                     <div><Label className="text-xs">Sale Price</Label><Input className="h-8 text-sm" type="number" value={comp.salePrice} onChange={(e) => updateComparable(idx, "salePrice", +e.target.value)} /></div>
                     <div><Label className="text-xs">Sale Date</Label><Input className="h-8 text-sm" type="date" value={comp.saleDate} onChange={(e) => updateComparable(idx, "saleDate", e.target.value)} /></div>

@@ -20,3 +20,7 @@ env:
     value: G-TV1E3EPERE
   - variable: GEMINI_API_KEY
     secret: GEMINI_API_KEY
+  - variable: NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    value: AIzaSyDIF7haKrBz9Knx9LqKfJ53hIG7MEdw8sQ
+  - variable: GOOGLE_MAPS_SERVER_KEY
+    secret: GOOGLE_MAPS_SERVER_KEY

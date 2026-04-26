@@ -24,6 +24,7 @@ import {
   type Property, type MandateType, type Contact,
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { AddressAutocomplete, type ResolvedPlace } from "@/components/address-autocomplete";
 import { format, differenceInDays } from "date-fns";
 
 const PROPERTY_TYPES: Property["propertyType"][] = ["house", "apartment", "townhouse", "land", "commercial", "farm"];
@@ -36,6 +37,7 @@ const statusColors: Record<Property["status"], "success" | "warning" | "destruct
 
 const emptyForm = {
   address: "", suburb: "", city: "", province: "Gauteng",
+  placeId: "", formattedAddress: "", lat: 0, lng: 0,
   propertyType: "house" as Property["propertyType"],
   bedrooms: 3, bathrooms: 2, garages: 1, erfSize: 0, floorSize: 0,
   askingPrice: 0, mandateType: "sole" as MandateType,
@@ -102,6 +104,10 @@ export default function PropertiesPage() {
       featureInput: "",
       province: prop.province || "Gauteng",
       contactId: prop.contactId || "",
+      placeId: prop.placeId || "",
+      formattedAddress: prop.formattedAddress || "",
+      lat: prop.lat || 0,
+      lng: prop.lng || 0,
     });
     setSheetOpen(true);
   };
@@ -110,8 +116,15 @@ export default function PropertiesPage() {
     if (!user || !form.address) return;
     setSaving(true);
     try {
-      const { featureInput: _fi, contactId, ...data } = form;
-      const propertyData = { ...data, contactId: contactId || undefined };
+      const { featureInput: _fi, contactId, placeId, formattedAddress, lat, lng, ...data } = form;
+      const propertyData = {
+        ...data,
+        contactId: contactId || undefined,
+        placeId: placeId || undefined,
+        formattedAddress: formattedAddress || undefined,
+        lat: lat || undefined,
+        lng: lng || undefined,
+      };
       if (editId) {
         await updateProperty(editId, propertyData);
       } else {
@@ -230,6 +243,34 @@ export default function PropertiesPage() {
             <SheetDescription>Listing details and mandate information</SheetDescription>
           </SheetHeader>
           <div className="space-y-4 mt-6">
+            <div className="space-y-2">
+              <Label>Search address</Label>
+              <AddressAutocomplete
+                initialValue={form.formattedAddress || form.address}
+                getIdToken={async () => {
+                  if (!user) throw new Error("Not signed in");
+                  return user.getIdToken();
+                }}
+                onSelect={(place: ResolvedPlace) => {
+                  setForm((f) => ({
+                    ...f,
+                    address: place.formattedAddress || f.address,
+                    suburb: place.suburb || f.suburb,
+                    city: place.city || f.city,
+                    province: place.province || f.province,
+                    placeId: place.placeId || f.placeId,
+                    formattedAddress: place.formattedAddress || f.formattedAddress,
+                    lat: place.lat || f.lat,
+                    lng: place.lng || f.lng,
+                  }));
+                }}
+              />
+              {form.lat !== 0 && form.lng !== 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Geocoded: {form.lat.toFixed(5)}, {form.lng.toFixed(5)}
+                </p>
+              )}
+            </div>
             <div className="space-y-2"><Label>Address *</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="e.g. 12 Oak Avenue" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2"><Label>Suburb</Label><Input value={form.suburb} onChange={(e) => setForm({ ...form, suburb: e.target.value })} placeholder="e.g. Sandton" /></div>
