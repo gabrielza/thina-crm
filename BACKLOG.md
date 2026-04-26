@@ -7,7 +7,7 @@ All three high-priority items from the 2026-04-25 audit shipped:
 | ID | Item | Commit | Notes |
 |----|------|--------|-------|
 | F-01 | Firestore-backed distributed rate limiter | `999d272` | TTL policy on `rateLimits.expiresAt` enabled in Firebase console (Status: Serving) |
-| F-02 | Content-Security-Policy enforcing | `29993af` | Verified live: response header is `content-security-policy` (not `-Report-Only`). **Hotfix `<sha-pending>`** added `'unsafe-inline'` to `script-src` after E2E showed Next.js 15 App Router streaming scripts (`self.__next_f.push`) were blocked, breaking client hydration. Future: middleware-injected nonce + `'strict-dynamic'`. |
+| F-02 | Content-Security-Policy enforcing | `29993af` | Verified live: response header is `content-security-policy` (not `-Report-Only`). **Hotfix `15cc843`** added `'unsafe-inline'` to `script-src` after E2E showed Next.js 15 App Router streaming scripts (`self.__next_f.push`) were blocked, breaking client hydration. Future: middleware-injected nonce + `'strict-dynamic'`. |
 | F-05 | Per-source inbound webhook rate limit | `1f77502` | Reuses F-01 limiter, keyed by `X-Webhook-Source` |
 
 Audit doc: [docs/Security/Thina-CRM-Security-Audit.docx](docs/Security/Thina-CRM-Security-Audit.docx)
