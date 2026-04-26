@@ -28,7 +28,7 @@ const require = createRequire(import.meta.url);
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const DOCS_DIR = resolve(ROOT, "docs");
-const VERSION = "1.1.0";
+const VERSION = "1.3.6";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -743,6 +743,48 @@ function updateFeaturesDoc(blocks) {
   // Find the last heading/content and append
   blocks.push(...v101Section);
   blocks.push(...v110Section);
+
+  // ─── v1.2.0 → v1.3.6 rollup ──────────────────────────────────────────
+  const v13Section = [
+    makeBlock("h2", "v1.2.0 → v1.3.6 Feature Additions"),
+    makeBlock("paragraph", "The following features were added across v1.2.0 through v1.3.6, covering production hardening, security sprint, AI improvements, CMA redesign, address autocomplete and the new Agent Profile system."),
+    makeBlock("h3", "Production Hardening (v1.2.0)"),
+    makeBoldBlock("Server-side auth middleware", "src/middleware.ts gates every protected route on the __session cookie; public exemptions for /login, /showday/*, /api/health, /api/leads/inbound"),
+    makeBoldBlock("Rate limiting", "In-memory limiter (later replaced in v1.3.5) on /api/sms/send (20/min), /api/cma/research (10/min), /api/seed (2/min) with X-RateLimit-* response headers"),
+    makeBoldBlock("Seed production guard", "/api/seed returns 403 in production unless ALLOW_SEED=true is explicitly set"),
+    makeBoldBlock("Error pages", "Root-level error.tsx, not-found.tsx, loading.tsx for clean failure UX"),
+    makeBlock("h3", "Code Quality & Observability (v1.3.0)"),
+    makeBoldBlock("ESLint enforcement", "Fixed 70+ lint errors across 25 files; removed ignoreDuringBuilds so ESLint blocks bad builds"),
+    makeBoldBlock("Security headers", "X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, HSTS preload, Permissions-Policy denying camera/mic/geolocation"),
+    makeBoldBlock("Prompt sanitisation", "CMA prompt inputs strip HTML/template chars, clamp numeric ranges, limit string lengths to defeat prompt injection"),
+    makeBoldBlock("Sentry", "Client + server + global-error.tsx boundary integrated via @sentry/nextjs"),
+    makeBlock("h3", "Auth Stability (v1.3.1)"),
+    makeBlock("paragraph", "Fixed page-navigation logout: sign-in helpers now set the __session cookie synchronously before returning; switched to onIdTokenChanged so the cookie stays alive on automatic ~55-minute Firebase token refresh; conditional Secure cookie flag for HTTPS only."),
+    makeBlock("h3", "CMA Reliability (v1.3.2 → v1.3.3)"),
+    makeBoldBlock("Crash fix", "Replaced eager <PDFDownloadLink/> (one PDF blob per row, broke under React 19 / Next 15) with on-click downloadCmaPdf() helper using dynamic pdf().toBlob() + anchor click + URL cleanup"),
+    makeBoldBlock("Layout fix", "Merged Value Range column into Estimated Value cell (10→9 cols); whitespace-nowrap on actions to stop right-side truncation in the max-w-6xl container"),
+    makeBlock("h3", "Address Autocomplete (v1.3.4 — R-27)"),
+    makeBlock("paragraph", "New <AddressAutocomplete /> component wrapping Google Places Autocomplete (New) Web Component, restricted to ZA addresses. Used on the Properties form, the CMA Subject Property form, and each Comparable row. Captures placeId, lat, lng and formattedAddress alongside street/suburb/city."),
+    makeBoldBlock("API Route", "/api/places/resolve — server-proxied Place Details using GOOGLE_MAPS_SERVER_KEY, results cached in placesCache Firestore collection (30-day TTL)"),
+    makeBoldBlock("Gemini grounding", "Subject coordinates passed into /api/cma/research so Gemini anchors comparables to a precise location, not just a typed suburb name"),
+    makeBoldBlock("CSP", "Updated to allow maps.googleapis.com + maps.gstatic.com on script-src and connect-src"),
+    makeBlock("h3", "Security Sprint (v1.3.5)"),
+    makeBoldBlock("F-01 Distributed rate limiter", "src/lib/rate-limit.ts now uses adminDb.runTransaction against a rateLimits collection with TTL auto-expiry on expiresAt; replaces the in-memory limiter that did not span App Hosting instances"),
+    makeBoldBlock("F-02 CSP enforcing", "Content-Security-Policy flipped from Report-Only to enforcing; script-src restricted to 'self' + Google identity / Maps; 'unsafe-inline' retained for Next.js 15 streaming hydration scripts (nonce-based hardening on backlog)"),
+    makeBoldBlock("F-05 Webhook rate limit", "/api/leads/inbound now reuses the F-01 limiter keyed by X-Webhook-Source (60/min)"),
+    makeBoldBlock("Gemini hardening", "Friendly error mapping for quota / overload / configuration errors; removed responseSchema/responseMimeType because the googleSearch grounding tool is incompatible with structured output"),
+    makeBlock("h3", "CMA PDF Redesign (v1.3.5)"),
+    makeBlock("paragraph", "Full redesign of the CMA PDF: branded cover with hero address card; executive summary with KPI tiles + value-range bar; subject property tearsheet; per-comparable detailed cards; side-by-side comparison matrix; View-based price distribution chart (replaces fragile SVG charts); three-tier pricing recommendation (suggested list / target sale / walk-away floor); marketing recommendations; methodology; agent contact card. Download function hardened with try/catch + alert()."),
+    makeBlock("h3", "Agent Profile System (v1.3.6 — R-41 MVP)"),
+    makeBlock("paragraph", "New agentProfiles Firestore collection (17 total), keyed by Firebase Auth uid. Per-user /settings/profile page with personal details, agency, EAAB / FFC compliance, branding (profile photo + agency logo upload to Firebase Storage at agentProfiles/{uid}/), brand primary + accent colours, signature block, and web/social links."),
+    makeBoldBlock("Hook", "useAgentProfile() loads/caches the current user's profile and exposes a save() helper"),
+    makeBoldBlock("CMA PDF integration", "Cover 'Prepared By' shows job title + agency + email + phone; end-of-report agent card shows photo (or initials avatar fallback), agency logo, FFC #, full contact details"),
+    makeBoldBlock("Historical integrity", "Each saved CMA snapshots agentSnapshot { agentId, agentName, agentEmail, agentPhone, agencyName, photoUrl, agencyLogoUrl, ffcNumber } so historical reports keep their preparer details even if the live profile changes"),
+    makeBoldBlock("Security", "agentProfiles/{uid} — read by any signed-in user (so colleagues can see each other's contact card), write by owner only (request.auth.uid == uid && request.resource.data.uid == uid)"),
+    makeBlock("h3", "Updated Scale Metrics (v1.3.6)"),
+    makeBlock("paragraph", "17 Firestore collections · 80+ database functions · 32 page routes (incl. /settings/profile) · 6 API routes (health, sms/send, leads/inbound, cma/research, places/resolve, seed) · 1,604+ seed records · 126 unit tests · 89 E2E tests · 215 total tests"),
+  ];
+  blocks.push(...v13Section);
   return blocks;
 }
 
@@ -818,6 +860,38 @@ function updateTrainingGuide(blocks) {
 
   blocks.push(...newSections);
   blocks.push(...v110Sections);
+
+  // ─── v1.3.x training additions ───────────────────────────────────────
+  const v13Training = [
+    makeBlock("h1", "v1.3.x — New Feature Training"),
+    makeBlock("h2", "Setting Up Your Agent Profile (v1.3.6)"),
+    makeBlock("paragraph", "Your Agent Profile drives the branding on every CMA report and document Thina CRM produces for your clients. Set it up once and your details flow through automatically."),
+    makeBlock("h3", "How to Complete Your Profile"),
+    makeBlock("bullet", "Click the new 'Settings' group in the sidebar, then choose 'Agent Profile'."),
+    makeBlock("bullet", "Fill in Personal Details: first name, last name, display name, phone, WhatsApp, job title, short bio."),
+    makeBlock("bullet", "Fill in Agency: agency name, branch, company registration number, VAT number."),
+    makeBlock("bullet", "Fill in EAAB / FFC Compliance: FFC number, FFC expiry date, EAAB registration number — these print on every CMA."),
+    makeBlock("bullet", "Upload Branding: a profile photo and your agency logo (max 2MB each, PNG/JPEG). They are stored in Firebase Storage scoped to your account."),
+    makeBlock("bullet", "Set your brand primary and accent colours and your email signature block."),
+    makeBlock("bullet", "Add Web & Social links: website, LinkedIn, Facebook, Instagram handle."),
+    makeBlock("bullet", "Click Save. Your profile photo and agency logo will now appear on the cover and the agent card of every CMA PDF you download."),
+    makeBlock("h2", "Address Autocomplete (v1.3.4)"),
+    makeBlock("paragraph", "The Properties form, the CMA Subject Property form and each CMA Comparable row now use Google Places autocomplete. Start typing a South African address and pick the right one from the dropdown — the system captures the full formatted address, suburb, city and exact GPS coordinates automatically."),
+    makeBlock("bullet", "For CMAs, the captured coordinates are passed to the Gemini AI so it can find truly local comparables instead of guessing from the suburb name."),
+    makeBlock("bullet", "All Place Details lookups are cached for 30 days, so re-using the same address is instant and free."),
+    makeBlock("h2", "New CMA PDF Layout (v1.3.5)"),
+    makeBlock("paragraph", "The CMA PDF has been completely redesigned. When you click 'Download PDF' on any CMA report you now get:"),
+    makeBlock("bullet", "A branded cover page with the subject address and your name/agency."),
+    makeBlock("bullet", "An executive summary with KPI tiles and a visual value-range bar."),
+    makeBlock("bullet", "A subject property tearsheet showing all subject details on one page."),
+    makeBlock("bullet", "Detailed per-comparable cards (one per comparable sale)."),
+    makeBlock("bullet", "A side-by-side comparison matrix and a price distribution chart."),
+    makeBlock("bullet", "A three-tier pricing strategy: suggested list price, target sale price, walk-away floor."),
+    makeBlock("bullet", "Your full agent contact card at the end — with profile photo, agency logo, FFC# and contact details from your Agent Profile."),
+    makeBlock("h2", "Better Login Stability (v1.3.1)"),
+    makeBlock("paragraph", "You should no longer be unexpectedly logged out when navigating between pages. The system now keeps your session alive even when Firebase rotates your authentication token in the background (every ~55 minutes)."),
+  ];
+  blocks.push(...v13Training);
   return blocks;
 }
 
@@ -875,6 +949,39 @@ function updateMarketingGuide(blocks) {
 
   blocks.push(...newSections);
   blocks.push(...v110Sections);
+
+  // ─── v1.3.x marketing additions ──────────────────────────────────────
+  const v13Marketing = [
+    makeBlock("h1", "v1.3.x — New Capabilities"),
+    makeBlock("paragraph", "The following capabilities have shipped across v1.2.0 through v1.3.6."),
+    makeBlock("h2", "Now Live: Agent Profile & Branded CMAs (v1.3.6)"),
+    makeBlock("paragraph", "Each agent now has a personal profile in Thina CRM — personal details, agency, EAAB FFC compliance, profile photo, agency logo, brand colours and signature block. These details flow automatically onto every CMA PDF your team produces, so every report goes out professionally branded with the correct preparer's photo, contact details and FFC number. CMAs even snapshot the agent's details at the time of saving so historical reports stay accurate."),
+    makeBlock("h2", "Now Live: Address Autocomplete (v1.3.4)"),
+    makeBlock("paragraph", "Property addresses on the Properties form and on every CMA (subject + each comparable) now use Google Places autocomplete restricted to South Africa. Agents type, pick, and the system captures the full formatted address plus precise GPS coordinates. Subject coordinates are passed to the AI so generated comparables are anchored on the real location — not a typed suburb name."),
+    makeBlock("h2", "Now Live: Redesigned CMA PDF (v1.3.5)"),
+    makeBlock("paragraph", "A complete visual redesign of the Comparative Market Analysis PDF: branded cover, executive summary with KPI tiles and value-range bar, subject tearsheet, per-comparable detailed cards, side-by-side comparison matrix, price distribution chart, three-tier pricing strategy (suggested list / target sale / walk-away floor), marketing recommendations and a rich agent contact card. The output stands up to anything the big franchises produce."),
+    makeBlock("h2", "Now Live: Distributed Rate Limiting & Enforcing CSP (v1.3.5)"),
+    makeBlock("paragraph", "Rate limits on SMS, CMA, seed and webhook endpoints are now enforced across every Firebase App Hosting instance via a Firestore-backed limiter with TTL auto-expiry. The Content-Security-Policy is now in enforcing mode, blocking any unauthorised script source. The independent security audit rates the platform at ~9.0 / 10."),
+    makeBlock("h2", "Now Live: Production Hardening & Observability (v1.2.0 → v1.3.0)"),
+    makeBlock("paragraph", "Server-side auth middleware on every protected route, root-level error / not-found / loading pages, hardened security headers (X-Frame-Options, HSTS, Referrer-Policy, Permissions-Policy), CMA prompt sanitisation against AI prompt injection, full Sentry error tracking, and ESLint enforcement on every build."),
+    makeBlock("h2", "Updated Platform Summary (v1.3.6)"),
+  ];
+  v13Marketing.push({
+    type: "table",
+    headers: ["Metric", "Value"],
+    rows: [
+      ["Firestore Collections", "17 (incl. agentProfiles, placesCache, rateLimits)"],
+      ["Database Functions", "80+"],
+      ["Page Routes", "32 (incl. /settings/profile)"],
+      ["API Routes", "6 (health, sms/send, leads/inbound, cma/research, places/resolve, seed)"],
+      ["Seed Records", "1,604+"],
+      ["Unit Tests", "126"],
+      ["E2E Tests", "89"],
+      ["Total Tests", "215"],
+      ["Security Rating", "~9.0 / 10 (post-sprint)"],
+    ],
+  });
+  blocks.push(...v13Marketing);
   return blocks;
 }
 
@@ -913,6 +1020,23 @@ function updateDemoGuide(blocks) {
 
   blocks.push(...newSections);
   blocks.push(...v110Sections);
+
+  // ─── v1.3.x demo talking points ──────────────────────────────────────
+  const v13Demo = [
+    makeBlock("h1", "v1.3.x — New Demo Talking Points"),
+    makeBlock("h2", "Agent Profile & Branded CMAs (v1.3.6)"),
+    makeBlock("paragraph", "Open Settings → Agent Profile and show the form (photo + agency logo + FFC#). Then download any CMA PDF and flip to the cover and the last page. Say: 'Every agent has their own branded profile — photo, agency logo, FFC number, contact details. It flows automatically onto every CMA we produce. And because we snapshot the agent's details onto each saved report, historical CMAs always show the correct preparer — even if the agent later updates their profile or leaves.'"),
+    makeBlock("bullet", "Tip: have a demo agent profile fully populated before the demo so the PDF looks polished."),
+    makeBlock("h2", "Address Autocomplete (v1.3.4)"),
+    makeBlock("paragraph", "On the Properties form or the CMA form, type a partial address and pick from the dropdown. Say: 'We use Google Places autocomplete restricted to South Africa, and we capture the exact GPS coordinates. For CMAs, those coordinates are passed to the AI so the comparables it researches are properly local — not just based on a typed suburb name.'"),
+    makeBlock("h2", "The New CMA PDF (v1.3.5)"),
+    makeBlock("paragraph", "Open any CMA report and click 'Download PDF'. Walk through it page by page: cover, executive summary with KPI tiles and value-range bar, subject tearsheet, per-comparable detailed cards, comparison matrix, price distribution chart, three-tier pricing strategy, agent contact card. Say: 'This output is the equal of anything the major franchises produce — it gives our agents a real edge in winning mandates.'"),
+    makeBlock("h2", "Enterprise-Grade Security (v1.3.5)"),
+    makeBlock("paragraph", "For technical / IT-buyer audiences, mention: 'We've completed a full security sprint — distributed Firestore-backed rate limiting that scales across all instances, Content-Security-Policy in enforcing mode, HMAC-signed webhooks, and full Sentry observability. The independent audit rates us at 9.0 out of 10.'"),
+    makeBlock("h2", "AI-Grounded CMA Research"),
+    makeBlock("paragraph", "On the CMA page, click 'Research with Gemini'. Say: 'We use Google Gemini with live Search grounding, and now the AI is anchored on the exact GPS coordinates of the subject property — so the comparables it surfaces are genuinely nearby and recent.'"),
+  ];
+  blocks.push(...v13Demo);
   return blocks;
 }
 

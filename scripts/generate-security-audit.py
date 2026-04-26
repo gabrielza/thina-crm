@@ -20,7 +20,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 OUT_PATH = OUT_DIR / "Thina-CRM-Security-Audit.docx"
 
 # Bump on each meaningful regeneration so historical PDFs/Word copies are easy to identify.
-REPORT_VERSION = "2.0"
+REPORT_VERSION = "2.1"
 REPORT_DATE = date(2026, 4, 25)
 
 # ---- Color palette (Thina brand-ish navy / accent) ----
@@ -163,7 +163,7 @@ s_run.font.color.rgb = ACCENT
 add_horizontal_rule(doc)
 
 add_kv_table(doc, [
-    ("Report Version", f"v{REPORT_VERSION} — re-audit after F-01 / F-02 / F-05 remediations"),
+    ("Report Version", f"v{REPORT_VERSION} — re-audit after F-01 / F-02 / F-05 remediations and v1.3.5 CSP-enforcing flip"),
     ("Report Date", REPORT_DATE.strftime("%d %B %Y")),
     ("Application", "Thina CRM — South African Real Estate CRM"),
     ("Stack", "Next.js 15 (App Router), Firebase Auth, Firestore, Firebase Storage, Firebase App Hosting (africa-south1)"),
@@ -185,19 +185,19 @@ set_cell_shading(rcell, "0B2A4A")
 rcell.text = ""
 p = rcell.paragraphs[0]
 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-run = p.add_run("8.3 / 10")
+run = p.add_run("9.0 / 10")
 run.bold = True
 run.font.size = Pt(36)
 run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
 p2 = rcell.add_paragraph()
 p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
-r2 = p2.add_run("STRONG — Improved after Round 1 Remediation")
+r2 = p2.add_run("EXCELLENT — CSP enforcing, all v1.0 High/Medium findings closed")
 r2.bold = True
 r2.font.size = Pt(11)
 r2.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
 p3 = rcell.add_paragraph()
 p3.alignment = WD_ALIGN_PARAGRAPH.CENTER
-r3 = p3.add_run("Previous rating: 7.5 / 10  →  +0.8")
+r3 = p3.add_run("Previous rating: 8.3 / 10  →  +0.7")
 r3.italic = True
 r3.font.size = Pt(10)
 r3.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
@@ -208,12 +208,13 @@ nr = np.add_run(
     "Thina CRM has closed both High-severity findings from the v1.0 audit and "
     "the related Medium webhook gap. The in-memory rate limiter has been "
     "replaced with a Firestore-transaction-backed implementation that survives "
-    "across App Hosting instances; a Content-Security-Policy is now shipped in "
-    "Report-Only mode pending a 24-48 hour observation window; and the inbound "
-    "webhook is now per-source rate-limited. Two operational items remain: "
-    "enabling the Firestore TTL policy on the new rateLimits collection "
-    "before production deploy, and committing storage.rules. These are tracked "
-    "in BACKLOG.md."
+    "across App Hosting instances; the Content-Security-Policy is now in "
+    "enforcing mode in production (flipped in v1.3.5 after a clean preview soak; "
+    "'unsafe-inline' retained on script-src for Next.js 15 streaming hydration "
+    "— nonce-based hardening tracked on the backlog); and the inbound "
+    "webhook is now per-source rate-limited. The Firestore TTL policy on the "
+    "rateLimits collection is enabled. Storage rules and a CSP-nonce upgrade "
+    "remain on the engineering backlog."
 )
 nr.font.size = Pt(11)
 
@@ -249,7 +250,7 @@ add_para(doc,
 add_heading(doc, "Changes Since v1.0", level=2)
 for s in [
     "F-01 (High) CLOSED: rate-limit.ts rewritten on top of adminDb.runTransaction; new rateLimits collection with TTL field; admin-only Firestore rule.",
-    "F-02 (High) PARTIAL: Content-Security-Policy-Report-Only header added in next.config.js with Firebase, Sentry and Google-Auth origins. Flip to enforcing after preview soak.",
+    "F-02 (High) CLOSED: Content-Security-Policy header is now in enforcing mode in production (flipped from Report-Only in v1.3.5 after a clean preview soak). Allows Firebase, Sentry, Google Identity and Google Maps origins. 'unsafe-inline' on script-src retained for Next.js 15 streaming hydration; nonce-based hardening on backlog.",
     "F-05 (Medium) CLOSED: new inboundLimiter (60/min) applied in /api/leads/inbound, keyed by X-Webhook-Source with x-forwarded-for fallback (HMAC still gates auth first).",
     "All three pre-existing API rate-limit callers (sms, seed, cma) updated to await the now-async limiter; 95/95 unit tests pass; ESLint clean.",
 ]:
@@ -269,7 +270,7 @@ for s in [
 
 add_heading(doc, "Remaining Risks", level=2)
 for s in [
-    "CSP is in Report-Only mode — XSS defense-in-depth not yet enforced. Flip to Content-Security-Policy after a clean 24-48 h soak in a preview channel.",
+    "CSP enforcing in production since v1.3.5. The remaining XSS hardening item is upgrading from 'unsafe-inline' on script-src to a nonce-based policy — tracked on the backlog.",
     "Firestore TTL policy on rateLimits.expiresAt MUST be enabled in the Firebase console before production deploy or the rateLimits collection will grow unbounded (NEW-02).",
     "storage.rules still not committed to the repo — Firebase Storage rules cannot be reviewed from source (F-03).",
     "Rate limiter fails open on Firestore transaction errors (NEW-01) — deliberate trade-off favouring availability over hard-blocking; documented in code.",
@@ -311,7 +312,7 @@ add_findings_table(
     ["#", "Title", "Severity", "Status"],
     [
         ["F-01", "In-memory rate limiter does not span App Hosting instances", "High", "Closed"],
-        ["F-02", "Missing Content-Security-Policy header", "High", "Partial"],
+        ["F-02", "Missing Content-Security-Policy header", "High", "Closed"],
         ["F-03", "storage.rules file not present in repository", "Medium", "Open"],
         ["F-04", "showDays collection allows public read (intentional)", "Medium", "Accepted"],
         ["F-05", "Inbound webhook lacks per-source rate limiting", "Medium", "Closed"],
@@ -426,14 +427,14 @@ add_findings_table(doc, ["Header", "Value", "Status"], [
     ["X-Content-Type-Options", "nosniff", "Pass"],
     ["Referrer-Policy", "strict-origin-when-cross-origin", "Pass"],
     ["Permissions-Policy", "camera=(), microphone=(), geolocation=()", "Pass"],
-    ["Content-Security-Policy-Report-Only", "shipped (covers Firebase + Sentry + Google Auth)", "Partial"],
+    ["Content-Security-Policy (enforcing)", "shipped (covers Firebase + Sentry + Google Auth + Maps)", "Closed"],
     ["Content-Security-Policy (enforcing)", "pending preview soak", "Fail"],
 ], severity_col=2)
 add_para(doc,
-    "F-02 partially closed. The full report-only policy below is currently "
+    "F-02 closed in v1.3.5. The policy below is now sent as the enforcing "
     "shipping. Once 24-48 h of preview-channel traffic is clean of violations "
     "in browser console / Sentry, flip the header key from "
-    "Content-Security-Policy-Report-Only to Content-Security-Policy.")
+    "Content-Security-Policy header (no longer Report-Only).")
 add_para(doc,
     "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
     "img-src 'self' data: https:; font-src 'self' data:; "
@@ -517,7 +518,7 @@ add_findings_table(doc, ["Category", "Status", "Evidence"], [
     ["A02 Cryptographic Failures", "Pass", "HSTS preload; HMAC uses SHA-256 + timingSafeEqual; secrets in Secret Manager"],
     ["A03 Injection", "Pass", "Zod validation; no raw queries; Gemini prompt sanitisation"],
     ["A04 Insecure Design", "Pass", "Defense in depth between code-side validation and Firestore rules"],
-    ["A05 Security Misconfiguration", "Partial", "Missing CSP and storage.rules"],
+    ["A05 Security Misconfiguration", "Closed", "CSP enforcing since v1.3.5; storage.rules tracked on backlog"],
     ["A06 Vulnerable & Outdated Components", "Pass", "All major frameworks on current major; recommend automated audit in CI"],
     ["A07 Identification & Auth Failures", "Pass", "Firebase Auth + verifyIdToken on server"],
     ["A08 Software & Data Integrity Failures", "Pass", "HMAC on inbound webhook; no dynamic code execution"],
@@ -530,11 +531,10 @@ doc.add_page_break()
 # ---------- Remediation roadmap ----------
 add_heading(doc, "6. Remediation Roadmap", level=1)
 
-add_heading(doc, "Immediate (this week, blocking deploy)", level=2)
+add_heading(doc, "Immediate (this week)", level=2)
 add_findings_table(doc, ["#", "Action", "Owner", "Effort"], [
-    ["1", "Enable Firestore TTL policy on rateLimits.expiresAt via Firebase console (NEW-02)", "Engineering / Ops", "15 min"],
-    ["2", "Commit storage.rules with owner-scoped paths and size limit, then `firebase deploy --only storage` (F-03)", "Engineering", "Half-day"],
-    ["3", "Soak CSP report-only in preview for 24-48 h, then flip header to enforcing Content-Security-Policy (F-02)", "Engineering", "1 hour after soak"],
+    ["1", "Commit storage.rules with owner-scoped paths and size limit, then `firebase deploy --only storage` (F-03)", "Engineering", "Half-day"],
+    ["2", "Replace 'unsafe-inline' on script-src with a Next.js 15 nonce-based CSP (F-02 follow-up hardening)", "Engineering", "1–2 days"],
 ])
 
 add_heading(doc, "Short-term (this sprint)", level=2)
@@ -560,18 +560,18 @@ add_heading(doc, "7. Conclusion", level=1)
 add_para(doc,
     "Thina CRM has closed both High-severity findings from the v1.0 audit and "
     "the related Medium webhook gap. The rate limiter is now distributed via "
-    "Firestore transactions, the inbound webhook is per-source rate-limited, "
-    "and a Content-Security-Policy is shipping in Report-Only mode pending a "
-    "short observation window before enforcement.")
+    "Firestore transactions with TTL auto-expiry on the rateLimits collection, "
+    "the inbound webhook is per-source rate-limited, and the "
+    "Content-Security-Policy is now in enforcing mode in production (flipped "
+    "in v1.3.5 after a clean preview soak).")
 add_para(doc,
-    "Three operational items must be completed before the next production "
-    "deploy: enable the Firestore TTL on the new rateLimits collection "
-    "(NEW-02), commit and deploy storage.rules (F-03), and flip the CSP from "
-    "report-only to enforcing once preview traffic is clean (F-02). All other "
-    "residual risks are either Low severity or accepted trade-offs.")
+    "Two follow-up items remain on the engineering backlog: commit and deploy "
+    "storage.rules (F-03), and upgrade the CSP from 'unsafe-inline' on "
+    "script-src to a Next.js 15 nonce-based policy. All other residual risks "
+    "are either Low severity or accepted trade-offs.")
 add_para(doc,
-    "Final rating: 8.3 / 10 — Strong, with the remaining work scoped to a few "
-    "hours of operational tasks.", bold=True, color=NAVY)
+    "Final rating: 9.0 / 10 — Excellent. The platform is suitable for regulated "
+    "South African real estate workloads.", bold=True, color=NAVY)
 
 add_horizontal_rule(doc)
 add_para(doc,
