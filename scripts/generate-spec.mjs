@@ -31,7 +31,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
-const VERSION = "1.3.5";
+const VERSION = "1.3.6";
 const DOC_DATE = new Date().toLocaleDateString("en-ZA", {
   year: "numeric",
   month: "long",
@@ -604,6 +604,7 @@ function sectionPages() {
       ["Route", "File", "Description"],
       [
         ["/login", "app/login/page.tsx", "Authentication page with Google OAuth and email/password sign-in"],
+        ["/settings/profile", "app/settings/profile/page.tsx", "Agent profile settings — personal/agency details, EAAB FFC compliance, branding (photo + agency logo upload), brand colours, signature block, web/social links"],
         ["/seed", "app/seed/page.tsx", "Data seeding utility to generate 1,350 test records with progress tracking"],
       ]
     ),
@@ -731,7 +732,20 @@ function sectionPages() {
     bullet("Inline add, edit, and delete with slide-over Sheet forms"),
     bullet("Auto-fill from existing properties: select a property to populate all subject fields"),
     bullet("Clone CMA: duplicate any report as a new draft with '(Copy)' suffix"),
-    bullet("PDF export: professional 4-page PDF with cover page, subject details, valuation summary, comparables table, feature comparison, statistics, and disclaimer (via @react-pdf/renderer)"),
+    bullet("PDF export: professional multi-page PDF with branded cover, executive summary with KPI tiles + value-range bar, subject property tearsheet, per-comparable detailed cards, side-by-side comparison matrix, View-based price distribution chart, three-tier pricing strategy (suggested list / target sale / walk-away floor), marketing recommendations, methodology, and rich agent contact card with photo, agency logo, and FFC# (via @react-pdf/renderer)"),
+    bullet("Address autocomplete on Subject Property and each Comparable row (Google Places, ZA-restricted) with persisted placeId / lat / lng / formattedAddress; subject coordinates passed into the Gemini prompt to anchor research on a precise location"),
+    bullet("Agent snapshot: each saved CMA report embeds an agentSnapshot { agentId, agentName, agentEmail, agentPhone, agencyName, photoUrl, agencyLogoUrl, ffcNumber } so historical reports keep their preparer details even if the live agent profile changes"),
+
+    h2("5.20 Agent Profile"),
+    bullet("Per-user profile keyed by Firebase Auth uid in agentProfiles collection (one document per signed-in user)"),
+    bullet("Personal details: first name, last name, display name, email, phone, WhatsApp, job title, short bio"),
+    bullet("Agency details: agency name, branch / office, company registration #, VAT #"),
+    bullet("SA EAAB / FFC compliance: FFC number, FFC expiry date, EAAB registration number"),
+    bullet("Branding: profile photo + agency logo upload to Firebase Storage (agentProfiles/{uid}/), brand primary + accent colours, email signature block"),
+    bullet("Web & social: website URL, LinkedIn, Facebook, Instagram handle"),
+    bullet("Drives the rich agent block on every CMA PDF (cover \"Prepared By\" + end-of-report agent card with photo / agency logo / FFC #) and is the source of truth for branding across listing brochures and signatures"),
+    bullet("useAgentProfile() hook caches the current user's profile and exposes save() for the settings page"),
+    bullet("Security: read by any signed-in user (so colleagues can see each other's contact card); write by owner only — enforced in firestore.rules with request.auth.uid == uid and request.resource.data.uid == uid"),
 
     new Paragraph({ children: [new PageBreak()] }),
   ];
@@ -766,7 +780,8 @@ function sectionFunctions() {
         ["BuyerProfile", "buyerProfiles", "name, email, phone, minPrice, maxPrice, suburbs[], bedrooms, propertyType, notes, ownerId"],
         ["StoredDocument", "documents", "name, type, size, url, transactionId, contactId, tags[], ownerId"],
         ["AutoResponseRule", "autoResponseRules", "name, triggerEvent, responseTemplate, channel, delaySeconds, isActive, ownerId"],
-        ["CmaReport", "cmaReports", "title, subjectAddress, subjectSuburb, subjectCity, subjectType, subjectBedrooms, subjectBathrooms, subjectErfSize, subjectFloorSize, comparables[] (address, salePrice, saleDate, bedrooms, bathrooms, erfSize, floorSize, distanceKm, adjustedPrice), estimatedValue, pricePerSqm, confidenceLevel (low/medium/high), status (draft/final/presented), propertyId, contactId, contactName, notes, ownerId"],
+        ["CmaReport", "cmaReports", "title, subjectAddress, subjectSuburb, subjectCity, subjectPlaceId, subjectFormattedAddress, subjectLat, subjectLng, subjectType, subjectBedrooms, subjectBathrooms, subjectErfSize, subjectFloorSize, comparables[] (address, salePrice, saleDate, bedrooms, bathrooms, erfSize, floorSize, distanceKm, adjustedPrice, placeId, lat, lng), estimatedValue, pricePerSqm, confidenceLevel (low/medium/high), status (draft/final/presented), propertyId, contactId, contactName, notes, agentSnapshot { agentId, agentName, agentEmail, agentPhone, agencyName, photoUrl, agencyLogoUrl, ffcNumber }, ownerId"],
+        ["AgentProfile", "agentProfiles", "uid (doc id), firstName, lastName, displayName, email, phone, whatsapp, jobTitle, agencyName, branch, bio, ffcNumber, ffcExpiry, eaabNumber, vatNumber, companyRegNumber, photoUrl, agencyLogoUrl, brandPrimaryColor, brandAccentColor, signatureBlock, website, linkedinUrl, facebookUrl, instagramHandle"],
       ]
     ),
     emptyPara(),
@@ -962,6 +977,18 @@ function sectionFunctions() {
         ["updateCmaReport", "updateCmaReport(id, data) → Promise<void>", "Partially updates a CMA report. Auto-sets updatedAt."],
         ["deleteCmaReport", "deleteCmaReport(id) → Promise<void>", "Permanently deletes a CMA report."],
         ["getCmaReportsByContact", "getCmaReportsByContact(contactId) → Promise<CmaReport[]>", "Fetches CMA reports linked to a contact."],
+      ]
+    ),
+    emptyPara(),
+
+    h3("6.1.17 Agent Profile Functions"),
+    makeTable(
+      ["Function", "Signature", "Description"],
+      [
+        ["getAgentProfile", "getAgentProfile(uid) → Promise<AgentProfile|null>", "Fetches the agent profile document for a given Firebase Auth uid (key = uid)."],
+        ["upsertAgentProfile", "upsertAgentProfile(uid, data) → Promise<void>", "Creates the profile via setDoc on first save (enforcing data.uid == uid for the rules check) and updates via updateDoc thereafter. Auto-sets updatedAt."],
+        ["emptyAgentProfile", "emptyAgentProfile(uid, fallbackEmail?, fallbackName?) → AgentProfile", "Returns a blank AgentProfile object with sensible defaults (brandPrimaryColor #0F766E, brandAccentColor #F59E0B) for use when a user has not yet saved a profile."],
+        ["buildAgentSnapshot", "buildAgentSnapshot(profile) → AgentSnapshot", "Distils a full AgentProfile down to the eight fields embedded in saved CMA reports (agentId, agentName, agentEmail, agentPhone, agencyName, photoUrl, agencyLogoUrl, ffcNumber)."],
       ]
     ),
     emptyPara(),
@@ -1443,7 +1470,7 @@ function sectionIntegration() {
         ["Database", "(default)"],
         ["Region", "africa-south1 (Johannesburg)"],
         ["Edition", "Standard (free tier eligible)"],
-        ["Collections", "leads, contacts, activities, tasks, transactions, showDays, showDayLeads, properties, inboundLeads, smsMessages, followUpSequences, sequenceEnrollments, buyerProfiles, documents, autoResponseRules, cmaReports (16 total)"],
+        ["Collections", "leads, contacts, activities, tasks, transactions, showDays, showDayLeads, properties, inboundLeads, smsMessages, followUpSequences, sequenceEnrollments, buyerProfiles, documents, autoResponseRules, cmaReports, agentProfiles (17 total)"],
         ["Client SDK", "firebase/firestore — real-time reads, write operations"],
         ["Admin SDK", "firebase-admin — server-side seed API, health check"],
         ["Batch Operations", "writeBatch for seed data (batches of 450)"],
@@ -1699,6 +1726,9 @@ function sectionVersionHistory() {
         ["v1.3.1", "Auth fix & Copilot customisation: fixed page-navigation logout (cookie-set race + onIdTokenChanged for token refresh, conditional Secure flag), added Copilot project customisation (6 instruction files, 3 skills, 1 prompt). 91 unit + 89 E2E tests."],
         ["v1.3.2", "CMA crash fix & OneDrive deploy automation: replaced eager PDFDownloadLink (one per row, failing under React 19 / Next 15) with on-click downloadCmaPdf helper using dynamic pdf().toBlob() + anchor click; added auto-stop OneDrive step (full process kill, not pause) to deployment skill plus scripts/onedrive-pause.ps1 helper. 91 unit + 89 E2E tests."],
         ["v1.3.3", "CMA layout fix & E2E selector hardening: merged Value Range column into Estimated Value cell (10→9 cols, colSpan 10→9) and added whitespace-nowrap on actions to fix right-side truncation in the max-w-6xl container; fixed three flaky E2E tests by scoping ambiguous selectors (Properties 'Active' — exact:true + .first(), Speed-to-Lead 'Rule Name *' — asterisk + exact, Show Days sidebar nav — waitForURL 15s + toContainText 20s). 91 unit + 88 E2E (1 known-flaky) tests."],
+        ["v1.3.4", "Google Places address autocomplete + Maps integration. New <AddressAutocomplete /> component (ZA-restricted), used on Properties form, CMA Subject Property form, and each Comparable row. Captures placeId/lat/lng/formattedAddress. Server-proxied /api/places/resolve with placesCache (30-day TTL). Subject coordinates passed to /api/cma/research so Gemini grounds comps on real location. CSP updated for maps.googleapis.com. 126 unit + 89 E2E."],
+        ["v1.3.5", "Security sprint (F-01 Firestore-backed rate limiter, F-02 CSP enforcing, F-05 webhook rate limit), Gemini error handling + tools/schema fix, full CMA PDF redesign (cover, exec summary, comp cards, comparison matrix, View-based price chart, three-tier pricing, agent card). Resulting security rating ~9.0 / 10. 126 unit + 89 E2E."],
+        ["v1.3.6", "Agent Profile system MVP (R-41). New agentProfiles collection (17 total), /settings/profile page, useAgentProfile() hook, photo + agency-logo upload to Firebase Storage. CMA PDF cover and end-of-report agent card now render the rich agent block (photo, agency logo, FFC #, full contact details). Each saved CMA snapshots agentSnapshot for historical integrity. New <Textarea /> primitive. New Tier 1b CMA Excellence backlog R-28–R-40. 126 unit + 89 E2E."],
       ]
     ),
     emptyPara(),
@@ -1709,7 +1739,7 @@ function sectionVersionHistory() {
 
     h3("12.3.1 Git & GitHub"),
     bullet("Initialised Git repository and configured remote origin"),
-    bullet("Created semantic version tags (v0.1.0 through v1.3.3) at each milestone — 22 annotated tags"),
+    bullet("Created semantic version tags (v0.1.0 through v1.3.6) at each milestone — 25 annotated tags"),
     bullet("Wrote conventional commit messages with multi-line descriptions"),
     bullet("Pushed code and tags to GitHub after every version"),
     bullet("Configured .gitignore for Node.js/Next.js/Firebase projects"),
@@ -1885,6 +1915,21 @@ function sectionVersionHistoryContent() {
           "v1.3.3",
           "April 2026",
           'CMA Layout Fix & E2E Selector Hardening (v1.3.3) — Fixed CMA Reports table right-side truncation (Actions column wrapping below row in the max-w-6xl container). Merged the "Value Range" column into the "Estimated Value" cell so the main value displays above the range in muted text, reducing column count from 10 to 9 (colSpan adjusted on the empty-state row). Added whitespace-nowrap to the actions cell so all action icons stay on one line. Fixed three flaky E2E tests caused by ambiguous selectors against seeded data: (1) Properties "page loads with heading and KPI cards" — getByText("Active") matched 53 elements (KPI label + status badges per row); switched to getByText("Active", { exact: true }).first(). (2) Speed-to-Lead "new rule sheet opens with trigger options" — getByText("Rule Name") matched both a table TH and a form label; switched to getByText("Rule Name *", { exact: true }) to scope to the form. (3) Sidebar Navigation Prospecting "Show Days" — 10s toContainText("Show Days") timed out on cold-start navigation; bumped waitForURL to 15s and toContainText to 20s for the entire prospecting/listings/pipeline group nav loop. Full E2E re-run after deploy: 88 passed, 0 failed, 1 flaky (unrelated Transactions→Documents nav, passed on retry). 91 unit + 88 E2E (1 flaky) tests.',
+        ],
+        [
+          "v1.3.4",
+          "April 2026",
+          'Google Places Address Autocomplete + Maps Integration (v1.3.4) — Shipped R-27. New <AddressAutocomplete /> component wrapping Google Places Autocomplete (New) Web Component, restricted to ZA addresses. Used on the Properties form, the CMA Subject Property form, and each Comparable row. Captures placeId, lat, lng, and formattedAddress in addition to street/suburb/city. New /api/places/resolve server-proxy that calls Place Details with the server-side GOOGLE_MAPS_SERVER_KEY and caches results in a placesCache Firestore collection (30-day TTL). Subject coordinates are passed into /api/cma/research so Gemini can anchor comparables to a precise location, not just a typed suburb name. CSP updated to allow maps.googleapis.com + maps.gstatic.com on script-src and connect-src. New tests: api-places-resolve test file. Total: 126 unit + 89 E2E.',
+        ],
+        [
+          "v1.3.5",
+          "April 2026",
+          'Security Sprint + CSP Enforcing + Gemini & PDF Hardening (v1.3.5) — Three audit-driven security items shipped: F-01 Firestore-backed distributed rate limiter (replaces in-memory limiter; persisted in rateLimits collection with TTL auto-expiry on expiresAt); F-02 Content-Security-Policy flipped from Report-Only to enforcing (script-src self + Google identity + Maps; \'unsafe-inline\' retained for Next.js 15 streaming hydration scripts — nonce-based hardening on backlog); F-05 inbound webhook rate limit reuses F-01 keyed by X-Webhook-Source. Hotfix 15cc843 added \'unsafe-inline\' to script-src after E2E showed Next.js streaming scripts (self.__next_f.push) were blocked, breaking hydration. Gemini fixes: friendly error mapping for quota / overload / configuration errors (9f5a345); removed responseSchema/responseMimeType because the googleSearch grounding tool is incompatible with structured-output (a7ccdf1). CMA PDF redesign (ffb8ddc): brand cover with hero address card, executive summary with KPI tiles + value-range bar, subject property tearsheet, per-comparable detailed cards, side-by-side comparison matrix, View-based price distribution chart (replaced fragile SVG charts), three-tier pricing recommendation (suggested list / target sale / walk-away floor), marketing recommendations, methodology, agent contact card. Download function hardened with try/catch + alert(). Resulting security rating: ~9.0 / 10. 126 unit + 89 E2E (1 known-flaky) tests.',
+        ],
+        [
+          "v1.3.6",
+          "April 2026",
+          'Agent Profile System + CMA PDF Branding (v1.3.6 — R-41 MVP) — New agentProfiles Firestore collection (17 total), keyed by Firebase Auth uid. New /settings/profile page with full edit form for personal details, agency, EAAB / FFC compliance (FFC#, FFC expiry, EAAB reg #), branding (profile photo + agency logo upload to Firebase Storage at agentProfiles/{uid}/), brand primary + accent colours, signature block, and web/social links. New useAgentProfile() hook caches the current user\'s profile and exposes a save() helper. CMA PDF now renders the rich agent block: cover "Prepared By" shows job title + agency + email + phone; end-of-report agent card shows photo (or initials avatar fallback), agency logo, FFC #, full contact details. Each saved CMA report snapshots agentSnapshot { agentId, agentName, agentEmail, agentPhone, agencyName, photoUrl, agencyLogoUrl, ffcNumber } so historical reports keep their preparer details even if the live profile changes later. New <Textarea /> shadcn primitive. New Firestore rule: agentProfiles/{uid} allows read by any signed-in user (so colleagues can see each other\'s contact card) and write by owner only. Backlog item R-41 now tracks the remaining denormalisation onto leads/contacts/properties/transactions plus a backfill script. Tier 1b CMA Excellence (R-28 through R-40) added to the product roadmap covering map-of-comps, net-to-seller calculator, comp source verification, adjustment grid, comp quality score, days-on-market forecast, agent track-record auto-page, one-click "Generate CMA from Property", shareable web CMA + view tracking, SA compliance appendix, suburb cache, deeds-verified comps, and CMA versioning. 126 unit + 89 E2E (1 known-flaky) tests.',
         ],
       ]
     ),

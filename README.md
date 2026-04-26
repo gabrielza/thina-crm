@@ -37,6 +37,7 @@
 - **Lead ROI** — Cost-per-lead tracking and source ROI analysis
 - **Inbound webhooks** — HMAC-signed lead injection from portals (Property24, Private Property)
 - **Address autocomplete** — Google Places Autocomplete + Place Details on properties and CMA pages
+- **Agent Profile** — Per-user `/settings/profile` page covering personal/agency details, EAAB FFC compliance (FFC #, expiry, EAAB reg #), branding (profile photo + agency logo upload, brand colours, signature block) and web/social links. Auto-injected into the CMA PDF cover and end-of-report agent card; snapshotted onto every saved CMA report so historical reports keep their preparer details.
 
 ## Getting Started
 
@@ -88,7 +89,7 @@ npm run build
 
 ### Seed Demo Data
 
-Visit `/seed` in the browser (dev only) or call `POST /api/seed` with a Firebase auth token. Seeds 1,600+ records across 16 Firestore collections.
+Visit `/seed` in the browser (dev only) or call `POST /api/seed` with a Firebase auth token. Seeds 1,600+ records across 17 Firestore collections.
 
 ## Testing
 
