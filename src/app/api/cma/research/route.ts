@@ -178,7 +178,49 @@ All prices must be in ZAR. Use realistic South African suburbs and pricing. Toda
     });
   } catch (error) {
     console.error("CMA research error:", error);
-    const message = error instanceof Error ? error.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const rawMessage = error instanceof Error ? error.message : "Internal server error";
+
+    // Try to extract a structured error from the Gemini SDK (it often throws
+    // with a JSON-stringified body like {"error":{"code":429,"message":"..."}}).
+    let code: number | undefined;
+    let geminiMessage: string | undefined;
+    const jsonMatch = rawMessage.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      try {
+        const parsed = JSON.parse(jsonMatch[0]);
+        code = parsed?.error?.code;
+        geminiMessage = parsed?.error?.message;
+      } catch {
+        // not JSON — fall through
+      }
+    }
+
+    // Friendly mapping for the most common failures
+    if (code === 429 || /RESOURCE_EXHAUSTED|prepayment credits|quota/i.test(rawMessage)) {
+      return NextResponse.json(
+        {
+          error:
+            "Gemini AI is temporarily unavailable — the API quota/credits are depleted. Please add comparables manually, or contact your administrator to top up Gemini credits at https://ai.studio.",
+        },
+        { status: 503 }
+      );
+    }
+    if (code === 401 || code === 403 || /API key|PERMISSION_DENIED|UNAUTHENTICATED/i.test(rawMessage)) {
+      return NextResponse.json(
+        { error: "Gemini AI is not configured correctly. Please contact your administrator." },
+        { status: 503 }
+      );
+    }
+    if (code === 503 || /UNAVAILABLE|overloaded/i.test(rawMessage)) {
+      return NextResponse.json(
+        { error: "Gemini AI is currently overloaded. Please try again in a moment." },
+        { status: 503 }
+      );
+    }
+
+    return NextResponse.json(
+      { error: geminiMessage || "Research failed. Please try again or add comparables manually." },
+      { status: 500 }
+    );
   }
 }
