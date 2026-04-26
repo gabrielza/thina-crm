@@ -27,20 +27,28 @@ import {
 import { useAuth } from "@/lib/hooks/use-auth";
 import { AddressAutocomplete, type ResolvedPlace } from "@/components/address-autocomplete";
 
-async function downloadCmaPdf(report: CmaReport) {
-  const [{ pdf }, { CmaDocument }] = await Promise.all([
-    import("@react-pdf/renderer"),
-    import("@/components/cma-pdf-document"),
-  ]);
-  const blob = await pdf(<CmaDocument report={report} />).toBlob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `CMA-${report.subjectAddress.replace(/\s+/g, "_") || "report"}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+async function downloadCmaPdf(report: CmaReport, agent?: { name?: string; email?: string }) {
+  try {
+    const [{ pdf }, { CmaDocument }] = await Promise.all([
+      import("@react-pdf/renderer"),
+      import("@/components/cma-pdf-document"),
+    ]);
+    const blob = await pdf(
+      <CmaDocument report={report} agent={agent} />
+    ).toBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `CMA-${(report.subjectAddress || "report").replace(/[^a-zA-Z0-9]+/g, "_").slice(0, 80)}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("CMA PDF download failed", err);
+    alert(`Could not generate PDF: ${msg}`);
+  }
 }
 
 const PROPERTY_TYPES: Property["propertyType"][] = ["house", "apartment", "townhouse", "land", "commercial", "farm"];
@@ -474,7 +482,7 @@ export default function CmaPage() {
                       <TableCell className="text-right whitespace-nowrap">
                         <Button size="sm" variant="ghost" onClick={() => openEdit(r)} title="Edit"><Pencil className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" onClick={() => cloneReport(r)} title="Clone"><Copy className="h-4 w-4" /></Button>
-                        <Button size="sm" variant="ghost" onClick={() => downloadCmaPdf(r)} title="Download PDF"><Download className="h-4 w-4" /></Button>
+                        <Button size="sm" variant="ghost" onClick={() => downloadCmaPdf(r, { name: user?.displayName ?? undefined, email: user?.email ?? undefined })} title="Download PDF"><Download className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(r.id!)} title="Delete"><Trash2 className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>
