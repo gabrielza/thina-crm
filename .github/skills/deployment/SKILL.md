@@ -114,6 +114,21 @@ Runs 89 Playwright tests against the live deployment.
 - Verify a CRUD operation (create/edit a lead)
 - Check Sentry for new errors
 
+### 4. Cost Report — MANDATORY after every successful deploy
+**The user has explicitly requested this on every deploy. Do not skip.**
+```bash
+npm run cost-report -- --save
+```
+Run this immediately after the smoke test passes. Queries the BigQuery billing export for month-to-date and last-7-days spend, broken down by service. Saves a dated markdown snapshot to `docs/billing/YYYY-MM-DD.md` so spend trends are committed alongside release tags.
+
+After running, **summarize the totals back to the user** (MTD, last-7-days, biggest service line). If MTD spend grew >25% vs the previous saved report in `docs/billing/`, flag it explicitly.
+
+Notes:
+- Billing export data lags ~24h. The report shows spend as of yesterday's pipeline run, NOT real-time. There is no Google API that returns real-time cost.
+- If the script exits with "table not found", the export is enabled but hasn't landed its first table yet (24h after enabling) — re-run tomorrow.
+- If `GCP_BILLING_*` env vars aren't set, the script exits with a setup hint — see [`docs/billing/SETUP.md`](../../../docs/billing/SETUP.md). Deploys are not blocked, but flag the missing config to the user.
+- Commit the generated `docs/billing/YYYY-MM-DD.md` alongside the release tag so spend history is preserved in git.
+
 ## Environment Variables
 
 ### Public (in `apphosting.yaml`)
