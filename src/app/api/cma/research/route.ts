@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI } from "@google/genai";
 import { cmaLimiter } from "@/lib/rate-limit";
 
 // Module-level singleton — avoids re-instantiating the SDK on every request.
@@ -102,49 +102,39 @@ Please provide:
 
 3. **estimatedPriceRange**: Your estimated price range for a ${sBedrooms}-bed ${sPropertyType} in ${sSuburb}, ${sCity} based on current market data.
 
-All prices must be in ZAR. Use realistic South African suburbs and pricing. Today's date is ${new Date().toISOString().split("T")[0]}.`;
+All prices must be in ZAR. Use realistic South African suburbs and pricing. Today's date is ${new Date().toISOString().split("T")[0]}.
 
+**OUTPUT FORMAT — strict JSON only.** Respond with a single JSON object (no prose, no markdown fences) matching this exact shape:
+
+{
+  "comparables": [
+    {
+      "address": "string — street address",
+      "suburb": "string",
+      "salePrice": 0,
+      "saleDate": "YYYY-MM-DD",
+      "bedrooms": 0,
+      "bathrooms": 0,
+      "erfSize": 0,
+      "floorSize": 0,
+      "propertyType": "house | apartment | townhouse | land | commercial | farm",
+      "daysOnMarket": 0,
+      "notes": "string"
+    }
+  ],
+  "marketInsights": "2-3 paragraph string",
+  "estimatedPriceRange": { "low": 0, "high": 0 }
+}`;
+
+    // NOTE: Gemini does NOT support googleSearch tool together with
+    // responseMimeType:"application/json" + responseSchema. We keep search
+    // grounding (more valuable for real SA market data) and parse JSON from
+    // the text body ourselves.
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            comparables: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  address: { type: Type.STRING, description: "Street address of the property" },
-                  suburb: { type: Type.STRING, description: "Suburb name" },
-                  salePrice: { type: Type.NUMBER, description: "Sale price in ZAR" },
-                  saleDate: { type: Type.STRING, description: "Sale date in YYYY-MM-DD format" },
-                  bedrooms: { type: Type.NUMBER },
-                  bathrooms: { type: Type.NUMBER },
-                  erfSize: { type: Type.NUMBER, description: "Erf size in square metres" },
-                  floorSize: { type: Type.NUMBER, description: "Floor size in square metres" },
-                  propertyType: { type: Type.STRING, description: "house, apartment, townhouse, land, commercial, or farm" },
-                  daysOnMarket: { type: Type.NUMBER, description: "Days the property was on market before sale" },
-                  notes: { type: Type.STRING, description: "Brief notes about this comparable" },
-                },
-                required: ["address", "suburb", "salePrice", "saleDate", "bedrooms", "bathrooms", "propertyType", "notes"],
-              },
-            },
-            marketInsights: { type: Type.STRING, description: "2-3 paragraph market analysis" },
-            estimatedPriceRange: {
-              type: Type.OBJECT,
-              properties: {
-                low: { type: Type.NUMBER, description: "Low end of estimated price range in ZAR" },
-                high: { type: Type.NUMBER, description: "High end of estimated price range in ZAR" },
-              },
-              required: ["low", "high"],
-            },
-          },
-          required: ["comparables", "marketInsights", "estimatedPriceRange"],
-        },
       },
     });
 
@@ -153,10 +143,31 @@ All prices must be in ZAR. Use realistic South African suburbs and pricing. Toda
       return NextResponse.json({ error: "Gemini returned no content" }, { status: 502 });
     }
 
-    const data = JSON.parse(text);
+    // Strip optional ```json ... ``` fences and trim
+    const cleaned = text
+      .replace(/^\s*```(?:json)?\s*/i, "")
+      .replace(/\s*```\s*$/i, "")
+      .trim();
+
+    // Find the first { ... } block — Gemini sometimes prefixes a sentence
+    const firstBrace = cleaned.indexOf("{");
+    const lastBrace = cleaned.lastIndexOf("}");
+    const jsonStr = firstBrace >= 0 && lastBrace > firstBrace
+      ? cleaned.slice(firstBrace, lastBrace + 1)
+      : cleaned;
+
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(jsonStr);
+    } catch {
+      return NextResponse.json(
+        { error: "Gemini returned an invalid response. Please try again." },
+        { status: 502 }
+      );
+    }
 
     // Normalize comparables to match CmaComparable interface
-    const comparables = (data.comparables || []).map((c: Record<string, unknown>) => ({
+    const comparables = (data.comparables as Record<string, unknown>[] | undefined ?? []).map((c) => ({
       address: String(c.address || ""),
       suburb: String(c.suburb || ""),
       salePrice: Number(c.salePrice) || 0,
