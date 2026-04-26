@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { AppShell } from "@/components/app-shell";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,10 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, TrendingUp, TrendingDown, Users, DollarSign, Target, Activity, BarChart3 } from "lucide-react";
 import { getLeads, getContacts, getTasks, getActivities, type Lead, type Contact, type Task, type Activity as ActivityType } from "@/lib/firestore";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { format, subDays, isAfter } from "date-fns";
 
-const COLORS = ["#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#10b981", "#6366f1", "#ec4899", "#14b8a6"];
+const chartLoader = () => (
+  <div className="flex items-center justify-center py-16"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+);
+const PipelineByStageChart = dynamic(() => import("@/components/report-charts").then((m) => m.PipelineByStageChart), { loading: chartLoader, ssr: false });
+const LeadDistributionChart = dynamic(() => import("@/components/report-charts").then((m) => m.LeadDistributionChart), { loading: chartLoader, ssr: false });
+const RevenueBySourceChart = dynamic(() => import("@/components/report-charts").then((m) => m.RevenueBySourceChart), { loading: chartLoader, ssr: false });
+const ActivityBreakdownChart = dynamic(() => import("@/components/report-charts").then((m) => m.ActivityBreakdownChart), { loading: chartLoader, ssr: false });
+const ActivityTrendChart = dynamic(() => import("@/components/report-charts").then((m) => m.ActivityTrendChart), { loading: chartLoader, ssr: false });
 
 export default function ReportsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -22,7 +29,7 @@ export default function ReportsPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [l, c, t, a] = await Promise.all([getLeads(), getContacts(), getTasks(), getActivities()]);
+      const [l, c, t, a] = await Promise.all([getLeads(500), getContacts(500), getTasks(500), getActivities(200)]);
       setLeads(l);
       setContacts(c);
       setTasks(t);
@@ -196,29 +203,14 @@ export default function ReportsPage() {
           <Card>
             <CardHeader><CardTitle>Pipeline by Stage</CardTitle><CardDescription>Deal count and value per stage</CardDescription></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={pipelineData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="name" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(v) => `R${(v / 1000).toFixed(0)}k`} />
-                  <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                  <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <PipelineByStageChart data={pipelineData} />
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader><CardTitle>Lead Distribution</CardTitle><CardDescription>Leads by status</CardDescription></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <PieChart>
-                  <Pie data={statusData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                    {statusData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
+              <LeadDistributionChart data={statusData} />
             </CardContent>
           </Card>
         </div>
@@ -231,15 +223,7 @@ export default function ReportsPage() {
               {sourceData.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-12">No won deals yet.</p>
               ) : (
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={sourceData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis type="number" tickFormatter={(v) => `R${(v / 1000).toFixed(0)}k`} className="text-xs" />
-                    <YAxis type="category" dataKey="name" width={100} className="text-xs" />
-                    <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                    <Bar dataKey="value" fill="#10b981" radius={[0, 4, 4, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <RevenueBySourceChart data={sourceData} />
               )}
             </CardContent>
           </Card>
@@ -250,14 +234,7 @@ export default function ReportsPage() {
               {activities.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-12">No activities logged yet.</p>
               ) : (
-                <ResponsiveContainer width="100%" height={280}>
-                  <PieChart>
-                    <Pie data={activityTypeData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                      {activityTypeData.map((_, i) => <Cell key={i} fill={COLORS[i + 3]} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
+                <ActivityBreakdownChart data={activityTypeData} />
               )}
             </CardContent>
           </Card>
@@ -267,15 +244,7 @@ export default function ReportsPage() {
         <Card>
           <CardHeader><CardTitle>Activity Trend (Last 30 Days)</CardTitle><CardDescription>Daily logged activities</CardDescription></CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={activityTrend}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="date" className="text-xs" interval={4} />
-                <YAxis className="text-xs" allowDecimals={false} />
-                <Tooltip />
-                <Line type="monotone" dataKey="count" stroke="#8b5cf6" strokeWidth={2} dot={false} />
-              </LineChart>
-            </ResponsiveContainer>
+            <ActivityTrendChart data={activityTrend} />
           </CardContent>
         </Card>
 

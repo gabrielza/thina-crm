@@ -45,12 +45,12 @@ export default function DashboardPage() {
     async function fetchData() {
       try {
         const [l, cc, t, a, ac, tx] = await Promise.all([
-          getLeads(),
+          getLeads(200),
           getCollectionCount("contacts"),
-          getTasks(),
+          getTasks(100),
           getActivities(10),
           getCollectionCount("activities"),
-          getTransactions(),
+          getTransactions(100),
         ]);
         setLeads(l);
         setContactCount(cc);

@@ -493,6 +493,11 @@ export interface Property {
   suburb: string;
   city: string;
   province: string;
+  /** Google Places metadata (optional, captured by address autocomplete). */
+  placeId?: string;
+  formattedAddress?: string;
+  lat?: number;
+  lng?: number;
   propertyType: "house" | "apartment" | "townhouse" | "land" | "commercial" | "farm";
   bedrooms: number;
   bathrooms: number;
@@ -595,9 +600,9 @@ export async function addInboundLead(inbound: Omit<InboundLead, "id" | "received
   return docRef.id;
 }
 
-export async function getInboundLeads(): Promise<InboundLead[]> {
+export async function getInboundLeads(maxResults: number = 500): Promise<InboundLead[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, INBOUND_LEADS_COLLECTION), orderBy("receivedAt", "desc"));
+  const q = query(collection(db, INBOUND_LEADS_COLLECTION), orderBy("receivedAt", "desc"), limit(maxResults));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as InboundLead[];
 }
@@ -694,9 +699,9 @@ export async function addSequence(seq: Omit<FollowUpSequence, "id" | "createdAt"
   return docRef.id;
 }
 
-export async function getSequences(): Promise<FollowUpSequence[]> {
+export async function getSequences(maxResults: number = 100): Promise<FollowUpSequence[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, SEQUENCES_COLLECTION), orderBy("createdAt", "desc"));
+  const q = query(collection(db, SEQUENCES_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as FollowUpSequence[];
 }
@@ -720,9 +725,9 @@ export async function addEnrollment(enrollment: Omit<SequenceEnrollment, "id" | 
   return docRef.id;
 }
 
-export async function getEnrollments(): Promise<SequenceEnrollment[]> {
+export async function getEnrollments(maxResults: number = 200): Promise<SequenceEnrollment[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, ENROLLMENTS_COLLECTION), orderBy("startedAt", "desc"));
+  const q = query(collection(db, ENROLLMENTS_COLLECTION), orderBy("startedAt", "desc"), limit(maxResults));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as SequenceEnrollment[];
 }
@@ -764,9 +769,9 @@ export async function addBuyerProfile(profile: Omit<BuyerProfile, "id" | "create
   return docRef.id;
 }
 
-export async function getBuyerProfiles(): Promise<BuyerProfile[]> {
+export async function getBuyerProfiles(maxResults: number = 200): Promise<BuyerProfile[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, BUYER_PROFILES_COLLECTION), orderBy("createdAt", "desc"));
+  const q = query(collection(db, BUYER_PROFILES_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as BuyerProfile[];
 }
@@ -864,9 +869,9 @@ export async function addAutoResponseRule(rule: Omit<AutoResponseRule, "id" | "c
   return docRef.id;
 }
 
-export async function getAutoResponseRules(): Promise<AutoResponseRule[]> {
+export async function getAutoResponseRules(maxResults: number = 100): Promise<AutoResponseRule[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, AUTO_RESPONSE_COLLECTION), orderBy("createdAt", "desc"));
+  const q = query(collection(db, AUTO_RESPONSE_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as AutoResponseRule[];
 }
@@ -896,6 +901,11 @@ export interface CmaComparable {
   daysOnMarket: number;
   adjustedPrice?: number;
   notes: string;
+  /** Google Places metadata (optional, captured by address autocomplete). */
+  placeId?: string;
+  formattedAddress?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface CmaReport {
@@ -905,6 +915,11 @@ export interface CmaReport {
   subjectAddress: string;
   subjectSuburb: string;
   subjectCity: string;
+  /** Google Places metadata captured by the address autocomplete (optional). */
+  subjectPlaceId?: string;
+  subjectFormattedAddress?: string;
+  subjectLat?: number;
+  subjectLng?: number;
   subjectType: Property["propertyType"];
   subjectBedrooms: number;
   subjectBathrooms: number;
@@ -935,9 +950,9 @@ export async function addCmaReport(report: Omit<CmaReport, "id" | "createdAt" | 
   return docRef.id;
 }
 
-export async function getCmaReports(): Promise<CmaReport[]> {
+export async function getCmaReports(maxResults: number = 200): Promise<CmaReport[]> {
   const db = getFirebaseDb();
-  const q = query(collection(db, CMA_COLLECTION), orderBy("createdAt", "desc"));
+  const q = query(collection(db, CMA_COLLECTION), orderBy("createdAt", "desc"), limit(maxResults));
   const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as CmaReport[];
 }

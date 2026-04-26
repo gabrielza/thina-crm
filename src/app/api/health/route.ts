@@ -61,5 +61,11 @@ export async function GET() {
     checks,
   };
 
-  return NextResponse.json(response, { status: healthy ? 200 : 503 });
+  return NextResponse.json(response, {
+    status: healthy ? 200 : 503,
+    headers: {
+      // Allow short-lived caching of healthy responses by edge/proxies; never cache failures.
+      "Cache-Control": healthy ? "public, max-age=30, s-maxage=30" : "no-store",
+    },
+  });
 }

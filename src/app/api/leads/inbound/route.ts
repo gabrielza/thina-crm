@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import { FieldValue } from "firebase-admin/firestore";
 import { createHmac, timingSafeEqual } from "crypto";
+import { inboundLimiter } from "@/lib/rate-limit";
 
 // ─── Email Parsers ───────────────────────────────────────
 
@@ -64,6 +65,20 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get("X-Webhook-Signature") || "";
     if (!signature || !verifyHmac(rawBody, signature, webhookSecret)) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+
+    // Rate limit per webhook source (X-Webhook-Source header) or remote IP fallback.
+    // Even with valid HMAC we cap inbound traffic to protect downstream Firestore writes.
+    const sourceKey =
+      req.headers.get("X-Webhook-Source") ||
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      "unknown";
+    const rateResult = await inboundLimiter.check(sourceKey);
+    if (!rateResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many requests. Please slow down." },
+        { status: 429, headers: inboundLimiter.headers(rateResult) }
+      );
     }
 
     let body: { source?: string; content?: string; ownerId?: string };
@@ -157,6 +172,8 @@ export async function GET() {
     return NextResponse.json({
       pendingCount: snapshot.data().count,
       timestamp: new Date().toISOString(),
+    }, {
+      headers: { "Cache-Control": "private, max-age=10" },
     });
   } catch (error) {
     console.error("Inbound lead GET error:", error);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { AppShell } from "@/components/app-shell";
 import { formatCurrency } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -16,7 +17,11 @@ import {
 } from "@/components/ui/sheet";
 import { DollarSign, TrendingUp, Target, Plus, Trash2 } from "lucide-react";
 import { getLeads, type Lead } from "@/lib/firestore";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+
+const LeadRoiChart = dynamic(() => import("@/components/lead-roi-chart").then((m) => m.LeadRoiChart), {
+  loading: () => <div className="flex items-center justify-center py-16"><div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>,
+  ssr: false,
+});
 
 interface SourceCost {
   source: string;
@@ -34,7 +39,7 @@ export default function LeadRoiPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const data = await getLeads();
+      const data = await getLeads(500);
       setLeads(data);
     } catch (error) {
       console.error("Failed to fetch leads:", error);
@@ -193,22 +198,7 @@ export default function LeadRoiPage() {
               <CardDescription>Return on investment percentage for sources with tracked costs</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="name" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(v) => `${v}%`} />
-                  <Tooltip formatter={(value, name) => [
-                    name === "roi" ? `${value}%` : formatCurrency(Number(value)),
-                    name === "roi" ? "ROI" : name === "revenue" ? "Revenue" : "Cost",
-                  ]} />
-                  <Bar dataKey="roi" radius={[4, 4, 0, 0]}>
-                    {chartData.map((entry, i) => (
-                      <Cell key={i} fill={entry.roi >= 0 ? "#10b981" : "#ef4444"} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <LeadRoiChart data={chartData} />
             </CardContent>
           </Card>
         )}

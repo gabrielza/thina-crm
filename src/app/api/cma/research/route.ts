@@ -3,6 +3,15 @@ import { adminAuth } from "@/lib/firebase-admin";
 import { GoogleGenAI, Type } from "@google/genai";
 import { cmaLimiter } from "@/lib/rate-limit";
 
+// Module-level singleton — avoids re-instantiating the SDK on every request.
+let _aiClient: GoogleGenAI | undefined;
+function getAiClient(apiKey: string): GoogleGenAI {
+  if (!_aiClient) {
+    _aiClient = new GoogleGenAI({ apiKey });
+  }
+  return _aiClient;
+}
+
 // ─── POST /api/cma/research ─────────────────────────────
 // Uses Gemini with Google Search grounding to research comparable property sales
 // and market insights for a South African suburb/area.
@@ -21,7 +30,7 @@ export async function POST(req: NextRequest) {
     const decoded = await adminAuth.verifyIdToken(token);
 
     // Rate limit: 10 CMA research requests per minute per user
-    const rateResult = cmaLimiter.check(decoded.uid);
+    const rateResult = await cmaLimiter.check(decoded.uid);
     if (!rateResult.allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please wait before running more research." },
@@ -38,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { suburb, city, propertyType, bedrooms, bathrooms, floorSize, erfSize } = body;
+    const { suburb, city, propertyType, bedrooms, bathrooms, floorSize, erfSize, placeId, lat, lng, formattedAddress } = body;
 
     if (!suburb || !city) {
       return NextResponse.json({ error: "suburb and city are required" }, { status: 400 });
@@ -56,7 +65,18 @@ export async function POST(req: NextRequest) {
     const sFloorSize = Math.max(0, Math.min(99999, Number(floorSize) || 0));
     const sErfSize = Math.max(0, Math.min(99999, Number(erfSize) || 0));
 
-    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+    // Optional geocoding context (from Google Places autocomplete on the client).
+    // Bound-check before injecting so a malicious client can't exfiltrate more.
+    const sLat = typeof lat === "number" && Number.isFinite(lat) && lat >= -90 && lat <= 90 ? lat : null;
+    const sLng = typeof lng === "number" && Number.isFinite(lng) && lng >= -180 && lng <= 180 ? lng : null;
+    const sPlaceId = typeof placeId === "string" && /^[A-Za-z0-9_-]{1,256}$/.test(placeId) ? placeId : "";
+    const sFormatted = sanitize(formattedAddress, 200);
+
+    const geoBlock = sLat !== null && sLng !== null
+      ? `\n\n**Precise location** (use this to find truly nearby comparables, not just ones in the same suburb name):\n- Coordinates: ${sLat.toFixed(6)}, ${sLng.toFixed(6)}\n- Full address: ${sFormatted || `${sSuburb}, ${sCity}`}\n- Google Place ID: ${sPlaceId}\n- Prefer comparable sales within ~2 km of these coordinates.`
+      : "";
+
+    const ai = getAiClient(GEMINI_API_KEY);
 
     const prompt = `You are a South African real estate market research assistant.
 
@@ -68,7 +88,7 @@ Research recent property sales and market data for the following area and proper
 - **Target Bedrooms**: ${sBedrooms}
 - **Target Bathrooms**: ${sBathrooms}
 - **Target Floor Size**: ${sFloorSize} m²
-- **Target Erf Size**: ${sErfSize} m²
+- **Target Erf Size**: ${sErfSize} m²${geoBlock}
 
 Please provide:
 

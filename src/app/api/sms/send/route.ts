@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     const uid = decoded.uid;
 
     // Rate limit: 20 SMS per minute per user
-    const rateResult = smsLimiter.check(uid);
+    const rateResult = await smsLimiter.check(uid);
     if (!rateResult.allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please wait before sending more messages." },
@@ -157,5 +157,7 @@ export async function GET() {
     configured,
     baseUrl: BULKSMS_BASE_URL,
     timestamp: new Date().toISOString(),
+  }, {
+    headers: { "Cache-Control": "public, max-age=60, s-maxage=60" },
   });
 }
