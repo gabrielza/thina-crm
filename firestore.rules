@@ -139,6 +139,15 @@ service cloud.firestore {
       allow update, delete: if isOwner();
     }
 
+    // Agent Profiles — keyed by Firebase Auth uid.
+    // Read: any signed-in user (so colleagues can see each other's contact card).
+    // Write: owner only — `uid` field must match auth uid.
+    match /agentProfiles/{uid} {
+      allow read: if isAuth();
+      allow create, update: if isAuth() && request.auth.uid == uid && request.resource.data.uid == uid;
+      allow delete: if isAuth() && request.auth.uid == uid;
+    }
+
     // Rate-limit counters — server-only via Admin SDK.
     // Clients must never read or write these documents.
     match /rateLimits/{docId} {

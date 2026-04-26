@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3, LogOut, Moon, Sun, Menu, Receipt, ShieldCheck, Home, MessageSquare, Building2, Inbox, Zap, UserSearch, FileText, TrendingUp, Timer, FileBarChart } from "lucide-react";
+import { LayoutDashboard, Users, Contact, CheckSquare, Kanban, BarChart3, LogOut, Moon, Sun, Menu, Receipt, ShieldCheck, Home, MessageSquare, Building2, Inbox, Zap, UserSearch, FileText, TrendingUp, Timer, FileBarChart, UserCog } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -69,6 +69,12 @@ const navGroups: NavGroup[] = [
       { name: "Tasks", href: "/tasks", icon: CheckSquare },
       { name: "Reports", href: "/reports", icon: BarChart3 },
       { name: "Compliance", href: "/compliance", icon: ShieldCheck },
+    ],
+  },
+  {
+    label: "Settings",
+    items: [
+      { name: "Agent Profile", href: "/settings/profile", icon: UserCog },
     ],
   },
 ];

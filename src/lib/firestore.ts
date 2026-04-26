@@ -5,6 +5,7 @@ import {
   getDoc,
   getCountFromServer,
   doc,
+  setDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -933,6 +934,13 @@ export interface CmaReport {
   contactId?: string;
   contactName?: string;
   notes: string;
+  /**
+   * Snapshot of the assigned agent at the time of the last save. Used as a
+   * fallback for PDF rendering when the live profile is unavailable, and as a
+   * historical record of “who prepared this report” in case the agent later
+   * changes agency or leaves.
+   */
+  agentSnapshot?: AgentSnapshot;
   ownerId: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
@@ -1035,4 +1043,135 @@ export async function clearCollection(
   }
 
   return deleted;
+}
+
+// ─── AGENT PROFILE ───────────────────────────────────────
+//
+// One document per signed-in user, keyed by their Firebase Auth `uid`.
+// Drives the agent block on CMA reports, listing brochures, and signatures.
+// A lightweight `AgentSnapshot` is denormalized onto leads/contacts/properties
+// when assigned, so views and PDFs don't need an extra read.
+
+export interface AgentProfile {
+  uid: string;
+  // Personal
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  email: string;
+  phone: string;
+  whatsapp: string;
+  // Professional
+  jobTitle: string;
+  agencyName: string;
+  branch: string;
+  bio: string;
+  // SA compliance
+  ffcNumber: string;
+  ffcExpiry: string; // ISO date
+  eaabNumber: string;
+  vatNumber: string;
+  companyRegNumber: string;
+  // Branding
+  photoUrl: string;
+  agencyLogoUrl: string;
+  brandPrimaryColor: string;
+  brandAccentColor: string;
+  signatureBlock: string;
+  // Marketing
+  website: string;
+  linkedinUrl: string;
+  facebookUrl: string;
+  instagramHandle: string;
+  // Meta
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+}
+
+export interface AgentSnapshot {
+  agentId: string;
+  agentName: string;
+  agentEmail: string;
+  agentPhone: string;
+  agencyName: string;
+  photoUrl: string;
+  agencyLogoUrl: string;
+  ffcNumber: string;
+}
+
+const AGENT_PROFILES_COLLECTION = "agentProfiles";
+
+export function emptyAgentProfile(uid: string, fallbackEmail = "", fallbackName = ""): AgentProfile {
+  return {
+    uid,
+    firstName: "",
+    lastName: "",
+    displayName: fallbackName,
+    email: fallbackEmail,
+    phone: "",
+    whatsapp: "",
+    jobTitle: "",
+    agencyName: "",
+    branch: "",
+    bio: "",
+    ffcNumber: "",
+    ffcExpiry: "",
+    eaabNumber: "",
+    vatNumber: "",
+    companyRegNumber: "",
+    photoUrl: "",
+    agencyLogoUrl: "",
+    brandPrimaryColor: "",
+    brandAccentColor: "",
+    signatureBlock: "",
+    website: "",
+    linkedinUrl: "",
+    facebookUrl: "",
+    instagramHandle: "",
+  };
+}
+
+export async function getAgentProfile(uid: string): Promise<AgentProfile | null> {
+  const db = getFirebaseDb();
+  const snap = await getDoc(doc(db, AGENT_PROFILES_COLLECTION, uid));
+  if (!snap.exists()) return null;
+  return { uid, ...snap.data() } as AgentProfile;
+}
+
+export async function upsertAgentProfile(uid: string, data: Partial<AgentProfile>): Promise<void> {
+  const db = getFirebaseDb();
+  const ref = doc(db, AGENT_PROFILES_COLLECTION, uid);
+  const existing = await getDoc(ref);
+  if (existing.exists()) {
+    await updateDoc(ref, { ...data, uid, updatedAt: serverTimestamp() });
+  } else {
+    await setDoc(ref, {
+      ...emptyAgentProfile(uid, data.email ?? "", data.displayName ?? ""),
+      ...data,
+      uid,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  }
+}
+
+/**
+ * Build the lightweight snapshot to denormalize onto owned records (lead, contact,
+ * property, transaction, cma report). Returns an empty snapshot if no profile.
+ */
+export function buildAgentSnapshot(profile: AgentProfile | null): AgentSnapshot | undefined {
+  if (!profile) return undefined;
+  const name = profile.displayName
+    || `${profile.firstName} ${profile.lastName}`.trim()
+    || profile.email;
+  return {
+    agentId: profile.uid,
+    agentName: name,
+    agentEmail: profile.email,
+    agentPhone: profile.phone,
+    agencyName: profile.agencyName,
+    photoUrl: profile.photoUrl,
+    agencyLogoUrl: profile.agencyLogoUrl,
+    ffcNumber: profile.ffcNumber,
+  };
 }

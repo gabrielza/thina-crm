@@ -25,16 +25,20 @@ import {
   type CmaReport, type CmaComparable, type Property, type Contact,
 } from "@/lib/firestore";
 import { useAuth } from "@/lib/hooks/use-auth";
+import { useAgentProfile } from "@/lib/hooks/use-agent-profile";
 import { AddressAutocomplete, type ResolvedPlace } from "@/components/address-autocomplete";
 
-async function downloadCmaPdf(report: CmaReport, agent?: { name?: string; email?: string }) {
+async function downloadCmaPdf(
+  report: CmaReport,
+  agent?: import("@/lib/firestore").AgentProfile | null
+) {
   try {
     const [{ pdf }, { CmaDocument }] = await Promise.all([
       import("@react-pdf/renderer"),
       import("@/components/cma-pdf-document"),
     ]);
     const blob = await pdf(
-      <CmaDocument report={report} agent={agent} />
+      <CmaDocument report={report} agent={agent ?? undefined} />
     ).toBlob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -87,6 +91,7 @@ const emptyForm = {
 
 export default function CmaPage() {
   const { user } = useAuth();
+  const { profile: agentProfile } = useAgentProfile();
   const [reports, setReports] = useState<CmaReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -256,6 +261,21 @@ export default function CmaPage() {
         contactName: form.contactName,
         contactId: form.contactId || undefined,
         notes: form.notes,
+        agentSnapshot: agentProfile
+          ? {
+              agentId: agentProfile.uid,
+              agentName:
+                agentProfile.displayName ||
+                `${agentProfile.firstName} ${agentProfile.lastName}`.trim() ||
+                agentProfile.email,
+              agentEmail: agentProfile.email,
+              agentPhone: agentProfile.phone,
+              agencyName: agentProfile.agencyName,
+              photoUrl: agentProfile.photoUrl,
+              agencyLogoUrl: agentProfile.agencyLogoUrl,
+              ffcNumber: agentProfile.ffcNumber,
+            }
+          : undefined,
         ownerId: user.uid,
       };
       if (editId) {
@@ -482,7 +502,33 @@ export default function CmaPage() {
                       <TableCell className="text-right whitespace-nowrap">
                         <Button size="sm" variant="ghost" onClick={() => openEdit(r)} title="Edit"><Pencil className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" onClick={() => cloneReport(r)} title="Clone"><Copy className="h-4 w-4" /></Button>
-                        <Button size="sm" variant="ghost" onClick={() => downloadCmaPdf(r, { name: user?.displayName ?? undefined, email: user?.email ?? undefined })} title="Download PDF"><Download className="h-4 w-4" /></Button>
+                        <Button size="sm" variant="ghost" onClick={() => downloadCmaPdf(r, agentProfile ?? (r.agentSnapshot ? {
+                          uid: r.agentSnapshot.agentId,
+                          displayName: r.agentSnapshot.agentName,
+                          firstName: "",
+                          lastName: "",
+                          email: r.agentSnapshot.agentEmail,
+                          phone: r.agentSnapshot.agentPhone,
+                          whatsapp: "",
+                          jobTitle: "",
+                          agencyName: r.agentSnapshot.agencyName,
+                          branch: "",
+                          bio: "",
+                          ffcNumber: r.agentSnapshot.ffcNumber,
+                          ffcExpiry: "",
+                          eaabNumber: "",
+                          vatNumber: "",
+                          companyRegNumber: "",
+                          photoUrl: r.agentSnapshot.photoUrl,
+                          agencyLogoUrl: r.agentSnapshot.agencyLogoUrl,
+                          brandPrimaryColor: "",
+                          brandAccentColor: "",
+                          signatureBlock: "",
+                          website: "",
+                          linkedinUrl: "",
+                          facebookUrl: "",
+                          instagramHandle: "",
+                        } : null))} title="Download PDF"><Download className="h-4 w-4" /></Button>
                         <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(r.id!)} title="Delete"><Trash2 className="h-4 w-4" /></Button>
                       </TableCell>
                     </TableRow>

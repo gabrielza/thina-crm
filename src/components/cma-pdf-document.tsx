@@ -5,9 +5,10 @@ import {
   Page,
   Text,
   View,
+  Image,
   StyleSheet,
 } from "@react-pdf/renderer";
-import type { CmaReport, CmaComparable } from "@/lib/firestore";
+import type { CmaReport, CmaComparable, AgentProfile } from "@/lib/firestore";
 
 // ─── Brand palette ───────────────────────────────────────
 const C = {
@@ -651,9 +652,49 @@ function PageChrome({ address }: { address: string }) {
 // ─── Document ────────────────────────────────────────────
 interface CmaDocumentProps {
   report: CmaReport;
-  agent?: { name?: string; email?: string };
-  /** @deprecated Use agent.name */
+  /** Full agent profile from /settings/profile. Preferred. */
+  agent?: AgentProfile | { name?: string; email?: string; phone?: string; agencyName?: string; ffcNumber?: string; photoUrl?: string; agencyLogoUrl?: string } | null;
+  /** @deprecated Use agent.displayName / agent.name */
   agentName?: string;
+}
+
+// Normalize the agent prop — supports legacy `{ name, email }` shape and the
+// full AgentProfile shape from /settings/profile.
+function normalizeAgent(
+  agent: CmaDocumentProps["agent"],
+  fallbackName?: string
+): {
+  name: string;
+  email: string;
+  phone: string;
+  agencyName: string;
+  ffcNumber: string;
+  photoUrl: string;
+  agencyLogoUrl: string;
+  bio: string;
+  website: string;
+  jobTitle: string;
+} {
+  const a = (agent ?? {}) as Partial<AgentProfile> & { name?: string };
+  const name =
+    a.displayName?.trim()
+    || a.name?.trim()
+    || `${a.firstName ?? ""} ${a.lastName ?? ""}`.trim()
+    || fallbackName?.trim()
+    || a.email?.trim()
+    || "";
+  return {
+    name,
+    email: a.email ?? "",
+    phone: a.phone ?? "",
+    agencyName: a.agencyName ?? "",
+    ffcNumber: a.ffcNumber ?? "",
+    photoUrl: a.photoUrl ?? "",
+    agencyLogoUrl: a.agencyLogoUrl ?? "",
+    bio: a.bio ?? "",
+    website: a.website ?? "",
+    jobTitle: a.jobTitle ?? "",
+  };
 }
 
 export function CmaDocument({ report, agent, agentName }: CmaDocumentProps) {
@@ -672,8 +713,9 @@ export function CmaDocument({ report, agent, agentName }: CmaDocumentProps) {
     : 0;
   const avgDom = validComps.length ? Math.round(validComps.reduce((s, c) => s + (c.daysOnMarket || 0), 0) / validComps.length) : 0;
 
-  const agentName_ = agent?.name || agentName;
-  const agentEmail = agent?.email;
+  const agentInfo = normalizeAgent(agent, agentName);
+  const agentName_ = agentInfo.name;
+  const agentEmail = agentInfo.email;
   const headerAddr = `${report.subjectAddress}  ·  ${report.subjectSuburb}`;
 
   return (
@@ -725,7 +767,14 @@ export function CmaDocument({ report, agent, agentName }: CmaDocumentProps) {
           <View style={{ alignItems: "flex-end" }}>
             <Text style={S.coverPreparedFor}>Prepared By</Text>
             <Text style={S.coverPreparedName}>{agentName_ || "Thina CRM"}</Text>
-            {agentEmail && <Text style={S.coverPreparedAgent}>{agentEmail}</Text>}
+            {agentInfo.jobTitle ? (
+              <Text style={S.coverPreparedAgent}>{agentInfo.jobTitle}</Text>
+            ) : null}
+            {agentInfo.agencyName ? (
+              <Text style={S.coverPreparedAgent}>{agentInfo.agencyName}</Text>
+            ) : null}
+            {agentEmail ? <Text style={S.coverPreparedAgent}>{agentEmail}</Text> : null}
+            {agentInfo.phone ? <Text style={S.coverPreparedAgent}>{agentInfo.phone}</Text> : null}
             <Text style={[S.coverPreparedAgent, { marginTop: 6 }]}>{today}</Text>
           </View>
         </View>
@@ -1074,14 +1123,39 @@ export function CmaDocument({ report, agent, agentName }: CmaDocumentProps) {
 
         {/* Agent card */}
         <View style={S.agentCard}>
-          <View style={S.agentAvatar}>
-            <Text style={S.agentInitials}>{initials(agentName_, agentEmail)}</Text>
-          </View>
+          {agentInfo.photoUrl ? (
+            <Image
+              src={agentInfo.photoUrl}
+              style={{ width: 48, height: 48, borderRadius: 24, marginRight: 14 }}
+            />
+          ) : (
+            <View style={S.agentAvatar}>
+              <Text style={S.agentInitials}>{initials(agentName_, agentEmail)}</Text>
+            </View>
+          )}
           <View style={{ flex: 1 }}>
             <Text style={S.agentName}>{agentName_ || "Thina CRM Agent"}</Text>
-            {agentEmail && <Text style={S.agentEmail}>{agentEmail}</Text>}
+            {agentInfo.jobTitle ? (
+              <Text style={S.agentEmail}>
+                {agentInfo.jobTitle}
+                {agentInfo.agencyName ? `  ·  ${agentInfo.agencyName}` : ""}
+              </Text>
+            ) : agentInfo.agencyName ? (
+              <Text style={S.agentEmail}>{agentInfo.agencyName}</Text>
+            ) : null}
+            {agentEmail ? <Text style={S.agentEmail}>{agentEmail}</Text> : null}
+            {agentInfo.phone ? <Text style={S.agentEmail}>{agentInfo.phone}</Text> : null}
+            {agentInfo.ffcNumber ? (
+              <Text style={S.agentMeta}>FFC #{agentInfo.ffcNumber}</Text>
+            ) : null}
             <Text style={S.agentMeta}>Report generated on {today}</Text>
           </View>
+          {agentInfo.agencyLogoUrl ? (
+            <Image
+              src={agentInfo.agencyLogoUrl}
+              style={{ width: 70, height: 40, objectFit: "contain", marginLeft: 12 }}
+            />
+          ) : null}
         </View>
 
         <Text style={S.disclaimer}>

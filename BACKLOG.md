@@ -176,6 +176,106 @@ Effort key: S = ≤3 days, M = 1–2 weeks, L = >2 weeks.
 - **Effort:** S.
 - **Files touched:** new `src/components/address-autocomplete.tsx`; [src/app/cma/page.tsx](src/app/cma/page.tsx); [src/app/api/cma/research/route.ts](src/app/api/cma/research/route.ts); [src/lib/schemas.ts](src/lib/schemas.ts); [next.config.js](next.config.js); [README.md](README.md); follow-up: properties form.
 
+### Tier 1b — CMA Excellence (mandate-winning improvements)
+
+Research-driven gap analysis vs. Lightstone / PropStats / Cloud CMA. The CMA's real job is to **win the sole mandate**, not just to be technically accurate. Items ordered by effort × impact.
+
+#### R-28 — Static Map of subject + comparables in CMA PDF
+- **Why:** Single highest visual-credibility gain. Sellers expect to see where comps are in relation to their property.
+- **Scope:** Render a Google Static Maps image (subject = gold pin, comps = teal pins, numbered) and embed as `<Image>` in the CMA PDF on the comparables page. Reuses geocoded `lat`/`lng` already persisted from R-27.
+- **Tech:** Server-side Static Maps API call (uses existing `GOOGLE_MAPS_SERVER_KEY`); cache the PNG by `reportId` to avoid re-billing on every download. Add `https://maps.googleapis.com` to `img-src` in CSP if not already covered.
+- **Effort:** S.
+- **Files:** [src/components/cma-pdf-document.tsx](src/components/cma-pdf-document.tsx); new `src/app/api/cma/map/route.ts` (or inline server util).
+
+#### R-29 — Net-to-Seller calculator (SA-specific)
+- **Why:** Sellers obsess over the take-home figure. Today they handwrite this from list price minus bond settlement, rates clearance, compliance certs (electrical/gas/beetle/plumbing/electric fence), commission, VAT on commission. Owning this calculation owns the mandate conversation.
+- **Scope:** New section on the CMA page (form) and a dedicated PDF page. Inputs: outstanding bond, rates owing, CoC quotes, commission %, VAT 15%. Outputs three scenarios (asking / market / quick-sale) side-by-side with net to seller for each.
+- **Effort:** M.
+- **Touches:** `CmaReport` schema (new `netToSeller` block); CMA page; CMA PDF; reuses R-03 commission logic if shipped.
+
+#### R-30 — Tighten Gemini prompt: forbid invented addresses, require source URL per comp
+- **Why:** Single biggest credibility risk today is fabricated comps. Sellers will Google a comp address; if it doesn't exist the mandate is dead.
+- **Scope:** Update [src/app/api/cma/research/route.ts](src/app/api/cma/research/route.ts) prompt: add `sourceUrl` field per comp, instruct "if you cannot verify a real listing/sale, return null — do NOT invent". Pre-seed prompt with `site:property24.com sold ${suburb}` and `site:privateproperty.co.za` to bias the Search tool. Render comps with a "Verify ↗" link in PDF + UI when `sourceUrl` present, and a "AI-suggested, unverified" pill when missing.
+- **Effort:** S.
+- **Touches:** Gemini route; `CmaComparable` schema (`sourceUrl?: string`, `source: "verified" | "ai-suggested" | "manual"`); CMA page comp cards; CMA PDF comp cards.
+
+#### R-31 — Comparable adjustment grid
+- **Why:** Industry-standard appraisal technique — adjust each comp's price for differences from the subject (pool +R150k, smaller floor +R8k/m², older build −R50k). Today agents do this on paper.
+- **Scope:** Per-comp adjustment table (feature, +/- ZAR, justification). Adjusted price + adjusted R/m² shown next to gross. Sum drives a refined estimated value.
+- **Effort:** M.
+- **Touches:** `CmaComparable.adjustments: { feature; amount; note }[]`; CMA page comp editor; CMA PDF comp cards + comparison matrix.
+
+#### R-32 — Comparable quality score + filters
+- **Why:** Not all comps are equal. Industry rule of thumb: ≤1.5 km, sold ≤6 months, ±20% floor size, ±1 bed.
+- **Scope:** Compute a 0–100 quality score per comp (distance via Haversine from subject `lat`/`lng`, recency, size delta, bed delta). Show as a pill on each comp card. Add filter chips ("hide low quality", "verified only").
+- **Effort:** S.
+- **Touches:** new `src/lib/cma-comp-score.ts`; CMA page; CMA PDF.
+
+#### R-33 — Days-on-market forecast
+- **Why:** Top mandate-winning sentence: "If you list at R3.2m, expect to sell in ~45 days based on 8 comparable sales." Currently DoM data on comps is captured but never surfaced.
+- **Scope:** Compute median DoM across comps, display per pricing tier in the Pricing Strategy section (asking / market / quick-sale), with confidence band.
+- **Effort:** S.
+- **Touches:** CMA page Pricing Strategy section; CMA PDF.
+
+#### R-34 — Agent track-record auto-page in CMA PDF
+- **Why:** "Why list with me" page is a standard mandate-pitch tool. We already have all the data in Firestore — listings count, avg sale-to-list ratio, avg DoM, total ZAR transacted across the agent's transactions over the trailing 12 months.
+- **Scope:** New PDF page generated from the agent's `transactions` and `properties` for the trailing 12 months. Headline metrics + small bar chart. Skip gracefully if agent has < 3 closed deals.
+- **Effort:** S.
+- **Touches:** [src/components/cma-pdf-document.tsx](src/components/cma-pdf-document.tsx); new server-side aggregator (or compute client-side at PDF generation time).
+
+#### R-35 — "Generate CMA from Property" one-click button
+- **Why:** Today the agent re-types the subject address even when the property already exists in the system.
+- **Scope:** Add a "Run CMA" button on `/properties/[id]` that pre-fills a new CMA from the property's address, type, beds, baths, sizes and persisted `lat`/`lng`. Save back-link from CMA report to source property.
+- **Effort:** S.
+- **Touches:** properties detail page; CMA page (accept query string seed); `CmaReport.sourcePropertyId?: string`.
+
+#### R-36 — Shareable web CMA + view tracking
+- **Why:** Cloud CMA charges $99/mo principally for this feature. "Seller opened your CMA 3 times, spent 8 min on the marketing plan page" is gold for follow-up timing.
+- **Scope:** Signed-token public route `/cma/share/[token]` rendering the report as HTML (mobile-friendly). Log opens + section dwell time to a `cmaShareEvents` collection. Surface a "Seller activity" widget on the CMA card. Email-from-app with branded template instead of "download then attach".
+- **Effort:** L.
+- **Touches:** new public route; new `cmaShareTokens` + `cmaShareEvents` collections; CMA page (Share button + activity panel); email transport.
+
+#### R-37 — SA compliance & process appendix in CMA PDF
+- **Why:** Cheap credibility win. Static one-pager makes the report feel veteran-grade.
+- **Scope:** Appendix page covering: compliance certs needed at transfer (with cost estimates), mandate types (sole/open/dual) explained, FICA documents required, transfer process timeline (~90 days), POPIA notice on data handling.
+- **Effort:** S (mostly content).
+- **Touches:** [src/components/cma-pdf-document.tsx](src/components/cma-pdf-document.tsx) only.
+
+#### R-38 — Suburb-cached CMA research
+- **Why:** Same suburb + property type queried twice in a week shouldn't burn Gemini tokens twice.
+- **Scope:** Hash `suburb + city + propertyType + bedroomBand` → 7-day TTL cache document in `cmaResearchCache`. Hit before calling Gemini. Show a subtle "from cache" indicator.
+- **Effort:** S.
+- **Touches:** [src/app/api/cma/research/route.ts](src/app/api/cma/research/route.ts); new `cmaResearchCache` collection + Firestore TTL.
+
+#### R-39 — Lightstone / WinDeed / Property24 sold-prices grounding (premium)
+- **Why:** True deeds-verified comps. R-30 makes the AI honest about what it can verify; this gives it real data to verify against.
+- **Scope:** Server-side fetcher: Tier-A = Property24 public sold-prices scraper (free, fragile); Tier-B = Lightstone API (paid, reliable). Anchor at least 1–2 comps to a real registered sale; tag comp `source: "verified-deeds"`.
+- **Effort:** L (commercial + integration). Supersedes/extends R-24.
+- **Touches:** new `src/lib/comp-sources/`; CMA route; comp data model.
+
+#### R-40 — CMA versioning & diff
+- **Why:** Agents revise CMAs after seller feedback. Today the only option is overwrite or duplicate.
+- **Scope:** Each save snapshots the report as a `cmaReportVersions` subdoc. UI shows v1 / v2 / v3 with timestamp + agent note; diff view highlights changed comps and price.
+- **Effort:** M.
+- **Touches:** CMA page; new subcollection.
+
+### Recommended CMA next sprint
+Three items, ~1 day total, biggest perceived quality jump:
+1. **R-28 Static Map** — visual wow, lowest risk, reuses existing geocoding.
+2. **R-29 Net-to-Seller** — SA-specific, mandate-winning conversation.
+3. **R-30 Tighter Gemini prompt + source URLs** — closes the #1 trust gap (fabricated comps).
+
+#### R-41 — Agent Profile system (collection + denorm) — partially shipped
+- **Status:** ✅ MVP shipped — `agentProfiles` collection (keyed by uid), `/settings/profile` page, `useAgentProfile()` hook, photo + agency logo upload to Firebase Storage, CMA PDF renders rich agent block (photo, agency logo, FFC#, full contact details), agent snapshot saved on each `cmaReports` write so historical reports keep their preparer details.
+- **Remaining:** Denormalize `agentSnapshot` onto leads / contacts / properties / transactions on assign (extends today's `assignedAgentId` + `assignedAgentName` pattern). Apply on every create + every reassignment. Backfill script for existing records owned by current user.
+- **Scope (remaining):**
+  1. Add `agentSnapshot?: AgentSnapshot` to `Lead`, `Contact`, `Property`, `Transaction` interfaces and Zod schemas.
+  2. Update create paths in [src/app/leads/page.tsx](src/app/leads/page.tsx), [src/app/contacts/page.tsx](src/app/contacts/page.tsx), [src/app/properties/page.tsx](src/app/properties/page.tsx), [src/app/transactions/page.tsx](src/app/transactions/page.tsx) to call `buildAgentSnapshot(profile)` and embed.
+  3. Update CMA PDF, listing brochure (R-08), and seller weekly report (R-09) to prefer snapshot fields where available.
+  4. Backfill script `scripts/backfill-agent-snapshot.mjs` that, for current uid, reads owned docs in each collection and patches in the snapshot if missing.
+- **Effort:** S (remaining work).
+- **Touches:** schemas + 4 page create handlers + 1 backfill script.
+
 ### Tier 2 — Strong impact, broader CRM features
 
 #### R-11 — 2-way calendar sync (Google + Microsoft)

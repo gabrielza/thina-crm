@@ -173,3 +173,58 @@ export const InboundLeadSchema = z.object({
   reviewedAt: firestoreTimestamp,
   ownerId: z.string(),
 });
+
+// ─── Agent Profile Schema ────────────────────────────────
+//
+// One document per signed-in user, keyed by `uid`. Drives the agent block
+// shown on CMA reports, brochures, signatures, and is denormalized as
+// `agentSnapshot` onto leads/contacts/properties/transactions when assigned.
+
+export const AgentProfileSchema = z.object({
+  uid: z.string(),
+  // Personal
+  firstName: z.string().default(""),
+  lastName: z.string().default(""),
+  displayName: z.string().default(""),
+  email: z.string().default(""),
+  phone: z.string().default(""),
+  whatsapp: z.string().default(""),
+  // Professional
+  jobTitle: z.string().default(""),
+  agencyName: z.string().default(""),
+  branch: z.string().default(""),
+  bio: z.string().default(""),
+  // SA compliance
+  ffcNumber: z.string().default(""),
+  ffcExpiry: z.string().default(""),
+  eaabNumber: z.string().default(""),
+  vatNumber: z.string().default(""),
+  companyRegNumber: z.string().default(""),
+  // Branding
+  photoUrl: z.string().default(""),
+  agencyLogoUrl: z.string().default(""),
+  brandPrimaryColor: z.string().default(""),
+  brandAccentColor: z.string().default(""),
+  signatureBlock: z.string().default(""),
+  // Marketing
+  website: z.string().default(""),
+  linkedinUrl: z.string().default(""),
+  facebookUrl: z.string().default(""),
+  instagramHandle: z.string().default(""),
+  // Meta
+  createdAt: firestoreTimestamp,
+  updatedAt: firestoreTimestamp,
+});
+
+// Lightweight snapshot embedded on owned records (lead/contact/property/transaction/cma)
+// so CMA PDFs and listings render the agent block without an extra read.
+export const AgentSnapshotSchema = z.object({
+  agentId: z.string(),
+  agentName: z.string().default(""),
+  agentEmail: z.string().default(""),
+  agentPhone: z.string().default(""),
+  agencyName: z.string().default(""),
+  photoUrl: z.string().default(""),
+  agencyLogoUrl: z.string().default(""),
+  ffcNumber: z.string().default(""),
+});

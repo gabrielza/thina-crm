@@ -1,0 +1,44 @@
+{"version":8,"type":"context-options","origin":"testRunner","browserName":"","playwrightVersion":"1.59.1","options":{},"platform":"win32","wallTime":1777221286590,"monotonicTime":34955.968,"sdkLanguage":"javascript","testTimeout":60000}
+{"type":"before","callId":"hook@1","stepId":"hook@1","startTime":34960.043,"class":"Test","method":"hook","title":"Before Hooks","params":{},"stack":[]}
+{"type":"before","callId":"hook@2","stepId":"hook@2","parentId":"hook@1","startTime":34961.116,"class":"Test","method":"hook","title":"beforeAll hook","params":{},"stack":[{"file":"C:\\dev\\thina-crm\\e2e\\app.spec.ts","line":30,"column":6}]}
+{"type":"before","callId":"fixture@34","stepId":"fixture@34","parentId":"hook@2","startTime":34983.395,"class":"Test","method":"fixture","title":"Fixture \"baseURL\"","params":{},"stack":[{"file":"project#chromium","line":1,"column":1}],"group":"configuration"}
+{"type":"after","callId":"fixture@34","endTime":34983.499,"annotations":[]}
+{"type":"after","callId":"hook@2","endTime":34989.987,"annotations":[]}
+{"type":"before","callId":"fixture@85","stepId":"fixture@85","parentId":"hook@1","startTime":35005.866,"class":"Test","method":"fixture","title":"Fixture \"browser\"","params":{},"stack":[]}
+{"type":"before","callId":"pw:api@86","stepId":"pw:api@86","parentId":"fixture@85","startTime":35016.243,"class":"Test","method":"pw:api","title":"Launch browser","params":{"handleSIGINT":"false","tracesDir":"C:\\dev\\thina-crm\\test-results\\.playwright-artifacts-1\\traces","artifactsDir":"C:\\dev\\thina-crm\\test-results\\.playwright-artifacts-1","headless":"true","ignoreDefaultArgs":"undefined","ignoreAllDefaultArgs":"false","env":"undefined","timeout":"180000"},"stack":[]}
+{"type":"after","callId":"pw:api@86","endTime":35204.787,"annotations":[]}
+{"type":"after","callId":"fixture@85","endTime":35204.999,"annotations":[]}
+{"type":"before","callId":"fixture@89","stepId":"fixture@89","parentId":"hook@1","startTime":35206.725,"class":"Test","method":"fixture","title":"Fixture \"context\"","params":{},"stack":[]}
+{"type":"before","callId":"pw:api@90","stepId":"pw:api@90","parentId":"fixture@89","startTime":35209.695,"class":"Test","method":"pw:api","title":"Create context","params":{"selectorEngines":"[]","testIdAttributeName":"data-testid","acceptDownloads":"accept","bypassCSP":"false","colorScheme":"light","hasTouch":"false","ignoreHTTPSErrors":"false","isMobile":"false","javaScriptEnabled":"true","locale":"en-US","offline":"false","viewport":"Object","baseURL":"https://thina-crm--thina-crm.europe-west4.hosted.app","serviceWorkers":"allow","noDefaultViewport":"false","extraHTTPHeaders":"undefined","storageState":"undefined","reducedMotion":"undefined","forcedColors":"undefined","contrast":"undefined","clientCertificates":"undefined"},"stack":[]}
+{"type":"after","callId":"pw:api@90","endTime":35218.923,"annotations":[]}
+{"type":"after","callId":"fixture@89","endTime":35224.025,"annotations":[]}
+{"type":"before","callId":"fixture@91","stepId":"fixture@91","parentId":"hook@1","startTime":35224.462,"class":"Test","method":"fixture","title":"Fixture \"page\"","params":{},"stack":[]}
+{"type":"before","callId":"pw:api@92","stepId":"pw:api@92","parentId":"fixture@91","startTime":35226.844,"class":"Test","method":"pw:api","title":"Create page","params":{},"stack":[]}
+{"type":"after","callId":"pw:api@92","endTime":35346.501,"annotations":[]}
+{"type":"after","callId":"fixture@91","endTime":35346.579,"annotations":[]}
+{"type":"after","callId":"hook@1","endTime":35346.644,"annotations":[]}
+{"type":"before","callId":"pw:api@93","stepId":"pw:api@93","startTime":35350.631,"class":"Test","method":"pw:api","title":"Navigate to \"/login\"","params":{"url":"/login","waitUntil":"load","timeout":"0"},"stack":[{"file":"C:\\dev\\thina-crm\\e2e\\app.spec.ts","line":43,"column":16}]}
+{"type":"after","callId":"pw:api@93","endTime":36265.686,"annotations":[]}
+{"type":"before","callId":"expect@94","stepId":"expect@94","startTime":36272.985,"class":"Test","method":"expect","title":"Expect \"toContainText\"","params":{"expected":"Welcome to Thina"},"stack":[{"file":"C:\\dev\\thina-crm\\e2e\\app.spec.ts","line":44,"column":38}]}
+{"type":"after","callId":"expect@94","endTime":66308.728,"annotations":[],"error":{"name":"","message":"Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1')\nExpected substring: \u001b[32m\"Welcome to Thina\"\u001b[39m\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n","stack":"Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1')\nExpected substring: \u001b[32m\"Welcome to Thina\"\u001b[39m\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n\n    at C:\\dev\\thina-crm\\e2e\\app.spec.ts:44:38"}}
+{"type":"error","message":"Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: locator('h1')\nExpected substring: \u001b[32m\"Welcome to Thina\"\u001b[39m\nTimeout: 30000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toContainText\" with timeout 30000ms\u001b[22m\n\u001b[2m  - waiting for locator('h1')\u001b[22m\n","stack":[{"file":"C:\\dev\\thina-crm\\e2e\\app.spec.ts","line":44,"column":38}]}
+{"type":"before","callId":"hook@95","stepId":"hook@95","startTime":66309.741,"class":"Test","method":"hook","title":"After Hooks","params":{},"stack":[]}
+{"type":"before","callId":"fixture@96","stepId":"fixture@96","parentId":"hook@95","startTime":66350.476,"class":"Test","method":"fixture","title":"Fixture \"page\"","params":{},"stack":[]}
+{"type":"after","callId":"fixture@96","endTime":66350.567,"annotations":[]}
+{"type":"before","callId":"fixture@97","stepId":"fixture@97","parentId":"hook@95","startTime":66351.451,"class":"Test","method":"fixture","title":"Fixture \"context\"","params":{},"stack":[]}
+{"type":"before","callId":"pw:api@98","stepId":"pw:api@98","parentId":"fixture@97","startTime":66415.321,"class":"Test","method":"pw:api","title":"Close context","params":{"reason":"Test ended."},"stack":[]}
+{"type":"after","callId":"pw:api@98","endTime":66420.103,"annotations":[]}
+{"type":"after","callId":"fixture@97","endTime":66420.144,"annotations":[]}
+{"type":"before","callId":"attach@260bf0c5527d09abfd13665ceded5703","stepId":"attach@260bf0c5527d09abfd13665ceded5703","startTime":66424.373,"class":"Test","method":"test.attach","title":"Attach \"error-context\"","params":{},"stack":[]}
+{"type":"after","callId":"attach@260bf0c5527d09abfd13665ceded5703","endTime":66424.385,"attachments":[{"name":"error-context","contentType":"text/markdown","sha1":"366752bb010216b3e799fc143e6de9588c64d247"}]}
+{"type":"before","callId":"fixture@103","stepId":"fixture@103","parentId":"hook@95","startTime":66425.173,"class":"Test","method":"fixture","title":"Fixture \"baseURL\"","params":{},"stack":[{"file":"project#chromium","line":1,"column":1}],"group":"configuration"}
+{"type":"after","callId":"fixture@103","endTime":66425.184,"annotations":[]}
+{"type":"after","callId":"hook@95","endTime":66430.159,"attachments":[{"name":"screenshot","contentType":"image/png","sha1":"9f568bab220ea94c2604bcb4d873152eb4298e6e"}],"annotations":[]}
+{"type":"before","callId":"hook@129","stepId":"hook@129","startTime":66430.342,"class":"Test","method":"hook","title":"Worker Cleanup","params":{},"stack":[]}
+{"type":"before","callId":"fixture@133","stepId":"fixture@133","parentId":"hook@129","startTime":66430.996,"class":"Test","method":"fixture","title":"Fixture \"browser\"","params":{},"stack":[]}
+{"type":"after","callId":"fixture@133","endTime":66519.165,"annotations":[]}
+{"type":"before","callId":"fixture@136","stepId":"fixture@136","parentId":"hook@129","startTime":66520.501,"class":"Test","method":"fixture","title":"Fixture \"browserName\"","params":{},"stack":[{"file":"project#chromium","line":1,"column":1}],"group":"configuration"}
+{"type":"after","callId":"fixture@136","endTime":66520.544,"annotations":[]}
+{"type":"before","callId":"fixture@137","stepId":"fixture@137","parentId":"hook@129","startTime":66520.703,"class":"Test","method":"fixture","title":"Fixture \"screenshot\"","params":{},"stack":[{"file":"project#chromium","line":1,"column":1}],"group":"configuration"}
+{"type":"after","callId":"fixture@137","endTime":66520.743,"annotations":[]}
+{"type":"after","callId":"hook@129","endTime":66521.296,"annotations":[]}

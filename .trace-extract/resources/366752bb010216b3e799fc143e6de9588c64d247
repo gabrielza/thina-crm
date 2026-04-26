@@ -1,0 +1,176 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: app.spec.ts >> Authentication >> login page loads
+- Location: e2e\app.spec.ts:42:7
+
+# Error details
+
+```
+Error: expect(locator).toContainText(expected) failed
+
+Locator: locator('h1')
+Expected substring: "Welcome to Thina"
+Timeout: 30000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toContainText" with timeout 30000ms
+  - waiting for locator('h1')
+
+```
+
+# Test source
+
+```ts
+  1   | import { test, expect, type Page } from "@playwright/test";
+  2   | 
+  3   | /**
+  4   |  * Functional E2E tests for Thina CRM.
+  5   |  * Run on-demand only: npm run test:e2e
+  6   |  *
+  7   |  * Requires E2E_EMAIL and E2E_PASSWORD environment variables
+  8   |  * for a test user account (email/password Firebase Auth).
+  9   |  *
+  10  |  * Example: E2E_EMAIL=test@example.com E2E_PASSWORD=secret npm run test:e2e
+  11  |  */
+  12  | 
+  13  | const E2E_EMAIL = process.env.E2E_EMAIL || "";
+  14  | const E2E_PASSWORD = process.env.E2E_PASSWORD || "";
+  15  | 
+  16  | // ─── Helper: sign in via the login page ──────────────────
+  17  | 
+  18  | async function signIn(page: Page) {
+  19  |   await page.goto("/login");
+  20  |   await page.waitForSelector("#email", { timeout: 30000 });
+  21  |   await page.fill("#email", E2E_EMAIL);
+  22  |   await page.fill("#password", E2E_PASSWORD);
+  23  |   await page.click('button[type="submit"]');
+  24  |   // Wait for redirect away from login
+  25  |   await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 30000 });
+  26  | }
+  27  | 
+  28  | // ─── Pre-check ──────────────────────────────────────────
+  29  | 
+  30  | test.beforeAll(() => {
+  31  |   if (!E2E_EMAIL || !E2E_PASSWORD) {
+  32  |     throw new Error(
+  33  |       "E2E_EMAIL and E2E_PASSWORD environment variables are required.\n" +
+  34  |         "Usage: E2E_EMAIL=you@example.com E2E_PASSWORD=yourpass npm run test:e2e"
+  35  |     );
+  36  |   }
+  37  | });
+  38  | 
+  39  | // ─── Tests ──────────────────────────────────────────────
+  40  | 
+  41  | test.describe("Authentication", () => {
+  42  |   test("login page loads", async ({ page }) => {
+  43  |     await page.goto("/login");
+> 44  |     await expect(page.locator("h1")).toContainText("Welcome to Thina");
+      |                                      ^ Error: expect(locator).toContainText(expected) failed
+  45  |     await expect(page.locator("#email")).toBeVisible();
+  46  |     await expect(page.locator("#password")).toBeVisible();
+  47  |   });
+  48  | 
+  49  |   test("can sign in with email/password", async ({ page }) => {
+  50  |     await signIn(page);
+  51  |     // Should land on dashboard
+  52  |     await expect(page.locator("text=Welcome back")).toBeVisible({ timeout: 30000 });
+  53  |   });
+  54  | });
+  55  | 
+  56  | test.describe("Dashboard", () => {
+  57  |   test.beforeEach(async ({ page }) => {
+  58  |     await signIn(page);
+  59  |   });
+  60  | 
+  61  |   test("dashboard loads with KPI cards", async ({ page }) => {
+  62  |     await expect(page.locator("text=Welcome back")).toBeVisible();
+  63  |     // Check for key KPI labels
+  64  |     await expect(page.locator("text=TOTAL LEADS")).toBeVisible({ timeout: 10000 });
+  65  |     await expect(page.locator("text=WON DEALS")).toBeVisible();
+  66  |     await expect(page.getByRole("heading", { name: "Pipeline Value" })).toBeVisible();
+  67  |   });
+  68  | 
+  69  |   test("pipeline forecast section loads", async ({ page }) => {
+  70  |     await expect(page.locator("text=Pipeline Forecast")).toBeVisible({ timeout: 10000 });
+  71  |   });
+  72  | });
+  73  | 
+  74  | test.describe("Leads", () => {
+  75  |   test.beforeEach(async ({ page }) => {
+  76  |     await signIn(page);
+  77  |   });
+  78  | 
+  79  |   test("leads page loads with table", async ({ page }) => {
+  80  |     await page.goto("/leads");
+  81  |     await expect(page.locator("h1")).toContainText("Leads");
+  82  |     // Should have table headers or data rows
+  83  |     await expect(page.locator("table").or(page.getByText("No leads yet"))).toBeVisible({ timeout: 10000 });
+  84  |   });
+  85  | 
+  86  |   test("can navigate to a lead detail page", async ({ page }) => {
+  87  |     await page.goto("/leads");
+  88  |     // Wait for table to render
+  89  |     const firstRow = page.locator("table tbody tr").first();
+  90  |     const hasRows = await firstRow.isVisible({ timeout: 10000 }).catch(() => false);
+  91  | 
+  92  |     if (hasRows) {
+  93  |       await firstRow.click();
+  94  |       // Should show lead detail — NOT "Lead not found"
+  95  |       await page.waitForURL(/\/leads\//, { timeout: 10000 });
+  96  |       const notFound = page.locator("text=Lead not found");
+  97  |       const leadName = page.locator("h1");
+  98  |       // Either we see a lead name or the detail page content — not "not found"
+  99  |       await expect(notFound).not.toBeVisible({ timeout: 10000 });
+  100 |       await expect(leadName).toBeVisible();
+  101 |     }
+  102 |   });
+  103 | 
+  104 |   test("can toggle star on a lead and persists after reload", async ({ page }) => {
+  105 |     await page.goto("/leads");
+  106 |     const firstRow = page.locator("table tbody tr").first();
+  107 |     // isVisible() returns immediately — must use waitFor for true polling.
+  108 |     const hasRows = await firstRow.waitFor({ state: "visible", timeout: 30000 }).then(() => true).catch(() => false);
+  109 |     if (!hasRows) test.skip();
+  110 | 
+  111 |     const star = firstRow.locator('[data-testid="lead-star-toggle"]');
+  112 |     await expect(star).toBeVisible();
+  113 |     const initialPressed = (await star.getAttribute("aria-pressed")) === "true";
+  114 | 
+  115 |     await star.click();
+  116 |     // aria-pressed should flip
+  117 |     await expect(star).toHaveAttribute("aria-pressed", String(!initialPressed), { timeout: 10000 });
+  118 | 
+  119 |     // Reload — the new state should persist (Firestore round-trip)
+  120 |     await page.reload();
+  121 |     const reloadedFirstRow = page.locator("table tbody tr").first();
+  122 |     await reloadedFirstRow.waitFor({ state: "visible", timeout: 30000 });
+  123 |     const reloadedStar = reloadedFirstRow.locator('[data-testid="lead-star-toggle"]');
+  124 |     await expect(reloadedStar).toBeVisible({ timeout: 30000 });
+  125 | 
+  126 |     // Restore original state to keep dataset clean for other tests
+  127 |     if (!initialPressed) {
+  128 |       // We starred it; unstar it now
+  129 |       const starredStar = page.locator('[data-testid="lead-star-toggle"][aria-pressed="true"]').first();
+  130 |       await starredStar.click();
+  131 |     }
+  132 |   });
+  133 | });
+  134 | 
+  135 | test.describe("Contacts", () => {
+  136 |   test.beforeEach(async ({ page }) => {
+  137 |     await signIn(page);
+  138 |   });
+  139 | 
+  140 |   test("contacts page loads with table", async ({ page }) => {
+  141 |     await page.goto("/contacts");
+  142 |     await expect(page.locator("h1")).toContainText("Contacts");
+  143 |     await expect(page.locator("table").or(page.getByText("No contacts yet"))).toBeVisible({ timeout: 10000 });
+  144 |   });
+```
